@@ -1,4 +1,5 @@
 "use client";
+import { AutomaticCallSettings } from "./automatic-call-settings";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -1232,50 +1233,7 @@ export function SettingsPage() {
           </form>
         </Card>
         <div className="space-y-5">
-          <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-              THOUGHTFUL FOLLOW-UPS
-            </p>
-            <h2 className="mb-2 mt-2 text-[23px] font-semibold tracking-tight text-foreground">
-              Reminders & confirmations.
-            </h2>
-            <p className="text-[12px] text-muted-foreground">
-              Save your preferences for when your receptionist is connected.
-            </p>
-            {[
-              {
-                key: "reminders" as const,
-                title: "Appointment reminders",
-                text: "A friendly call before an upcoming visit.",
-              },
-              {
-                key: "confirmations" as const,
-                title: "Ask for confirmation",
-                text: "Check in with customers before their appointment.",
-              },
-            ].map((item) => (
-              <div
-                className="flex items-center gap-3 border-b border-border py-4"
-                key={item.key}
-              >
-                <span className="flex-1">
-                  <strong className="block text-[12px] font-semibold text-foreground">{item.title}</strong>
-                  <small className="mt-1 block text-[12px] text-muted-foreground">{item.text}</small>
-                </span>
-                <Switch
-                  aria-label={item.title}
-                  checked={state.settings[item.key]}
-                  onCheckedChange={(checked) => {
-                    update((s) => ({
-                      ...s,
-                      settings: { ...s.settings, [item.key]: checked },
-                    }));
-                    toast.success("Preference saved");
-                  }}
-                />
-              </div>
-            ))}
-          </Card>
+          <AutomaticCallSettings />
           <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-[15px] font-semibold text-foreground">A space to experiment.</h3>

@@ -83,6 +83,18 @@ export interface AgentActivity {
   time: string;
   kind: "confirmed" | "rescheduled" | "created";
 }
+export interface CallPreferences {
+  enabled: boolean;
+  reminderMinutes: number;
+  unpaidEnabled: boolean;
+  unpaidIntervalMinutes: number;
+}
+export const DEFAULT_CALL_PREFERENCES: CallPreferences = {
+  enabled: false,
+  reminderMinutes: 120,
+  unpaidEnabled: false,
+  unpaidIntervalMinutes: 1440,
+};
 export interface AppState {
   business: Business;
   services: Service[];
@@ -90,7 +102,7 @@ export interface AppState {
   customers: Customer[];
   bookings: Booking[];
   agentActivity: AgentActivity[];
-  settings: { reminders: boolean; confirmations: boolean; owner: string };
+  settings: { reminders: boolean; confirmations: boolean; owner: string; calls?: CallPreferences };
   loaded: boolean;
 }
 // A fixed demo clock keeps the seeded schedule meaningful on every visit.

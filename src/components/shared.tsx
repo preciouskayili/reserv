@@ -199,11 +199,11 @@ export function ActionCard({
 }) {
   const content = (
     <>
-      <Icon size={24} stroke={1.6} />
+      <Icon size={24} className="size-6 shrink-0" stroke={1.6} />
       <span>{label}</span>
     </>
   );
-  const baseClasses = `flex min-h-[145px] flex-col items-center justify-center gap-2 rounded-[28px] border-0 px-2 text-[18px] font-medium tracking-tight transition max-[760px]:min-h-[110px] max-[760px]:rounded-[20px] max-[760px]:text-[13px] max-[560px]:min-h-[95px] max-[560px]:rounded-[17px] max-[560px]:text-[12px] ${
+  const baseClasses = `flex min-h-[104px] flex-col items-center justify-center gap-3 rounded-2xl border-0 px-3 text-[14px] font-medium transition max-[560px]:min-h-[92px] max-[560px]:text-[12px] ${
     danger
       ? "bg-danger-surface text-destructive hover:bg-destructive/10"
       : "bg-muted text-foreground hover:bg-muted"

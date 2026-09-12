@@ -1,7 +1,6 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Link from "next/link";
@@ -10,9 +9,9 @@ import {
   IconArrowLeft,
   IconArrowUpRight,
   IconBell,
+  IconNotes,
   IconCalendarEvent,
   IconCheck,
-  IconClock,
   IconCreditCard,
   IconPhone,
   IconTrash,
@@ -20,6 +19,7 @@ import {
 import { toast } from "sonner";
 import {
   type Booking,
+  DEFAULT_CALL_PREFERENCES,
   dateLabel,
   duration,
   NOW,
@@ -48,14 +48,11 @@ export function BookingDetails({
   const { state, update } = useStore();
   const [reschedule, setReschedule] = useState(false);
   const [cancel, setCancel] = useState(false);
-  const [reminder, setReminder] = useState(false);
-  const [reminderTime, setReminderTime] = useState(
-    booking.reminder || `${TODAY}T11:00:00`,
-  );
   const [notes, setNotes] = useState(booking.notes);
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
   const service = state.services.find((s) => s.id === booking.serviceId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
+  const calls = { ...DEFAULT_CALL_PREFERENCES, ...state.settings.calls };
   const terminal = ["Cancelled", "Completed"].includes(booking.status);
   function setStatus(status: Booking["status"]) {
     update((s) => ({
@@ -296,56 +293,18 @@ export function BookingDetails({
               )}
             </div>
           )}
-        </Card>
-
-        {!publicView && (
-          <aside className="mt-5 grid grid-cols-2 items-start gap-4 max-[760px]:grid-cols-1">
-            {!terminal && (
-              <div className="rounded-[24px] bg-card p-6">
-                <span className="mb-6 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
-                  <IconBell size={22} />
-                </span>
-                <h3 className="text-[17px] font-semibold text-foreground">
-                  A thoughtful reminder.
-                </h3>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                  {booking.reminder
-                    ? "AI call reminder planned"
-                    : "No reminder planned yet"}
-                </p>
-                {booking.reminder && (
-                  <strong className="my-2 block text-[13px] font-semibold text-foreground">
-                    {dateLabel(booking.reminder)}, {time(booking.reminder)}
-                  </strong>
-                )}
-                <span className="my-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
-                  Receptionist not connected
-                </span>
-                <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
-                  Reminder times are saved in this demo. Calls will be available
-                  when your receptionist is connected.
-                </p>
-                <Button
-                  variant="secondary"
-                  className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-                  onClick={() => setReminder(true)}
-                >
-                  Change reminder <IconClock size={16} />
-                </Button>
-                <button
-                  className="mt-3 inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
-                  onClick={() =>
-                    toast.info(
-                      "Your receptionist isn’t connected yet. Use Contact to call the customer directly.",
-                    )
-                  }
-                >
-                  Ask agent to call <IconArrowUpRight size={14} />
-                </button>
+          {!publicView && <section className="mt-6 space-y-4">
+            {!terminal && <div className="flex items-start gap-3 rounded-2xl bg-muted/70 p-5">
+              <IconBell size={20} stroke={1.6} className="mt-0.5 shrink-0 text-muted-foreground" />
+              <div className="flex-1">
+                <h3 className="text-[14px] font-medium">Automatic reminder calls</h3>
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{calls.enabled ? `Set to remind customers ${duration(calls.reminderMinutes)} before their visit. Calls will start when your agent is connected.` : "Turn on reminder calls for all bookings in Settings."}</p>
+                <Link href="/settings#automatic-calls" className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-primary">Manage call settings <IconArrowUpRight size={15} /></Link>
               </div>
-            )}
-            <div className="rounded-[24px] bg-card p-6">
-              <h3 className="text-[17px] font-semibold text-foreground">
+            </div>}
+            <div className="rounded-2xl bg-muted/70 p-5">
+              <h3 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+                <IconNotes size={19} stroke={1.6} />
                 A note for the visit
               </h3>
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
@@ -357,12 +316,12 @@ export function BookingDetails({
                 rows={3}
                 placeholder="Anything to keep in mind…"
                 onChange={(e) => setNotes(e.target.value)}
-                className="mt-3 w-full resize-y rounded-xl border border-border bg-background p-3 text-[12px] outline-none focus:border-border"
+                className="mt-3 w-full resize-y rounded-xl border-0 bg-white p-3 text-[12px] outline-none focus:border-border"
               />
               <Button
                 variant="secondary"
                 size="sm"
-                className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
+                className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -373,11 +332,11 @@ export function BookingDetails({
                   toast.success("Visit note saved");
                 }}
               >
-                Save note
+                <IconCheck size={16} /> Save note
               </Button>
             </div>
-          </aside>
-        )}
+          </section>}
+        </Card>
       </div>
       {reschedule && (
         <BookingFlow
@@ -422,61 +381,6 @@ export function BookingDetails({
               Cancel reservation
             </Button>
           </div>
-        </Modal>
-      )}
-      {reminder && (
-        <Modal
-          title="A timely little reminder."
-          description="Plan a reminder for this reservation. Calls are not connected yet."
-          onClose={() => setReminder(false)}
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              update((s) => ({
-                ...s,
-                bookings: s.bookings.map((b) =>
-                  b.id === booking.id
-                    ? {
-                        ...b,
-                        reminder: reminderTime,
-                        activity: [
-                          ...b.activity,
-                          {
-                            id: crypto.randomUUID(),
-                            title: "Reminder planned",
-                            detail: `${dateLabel(reminderTime)}, ${time(reminderTime)} · Call pending connection`,
-                            time: NOW,
-                            actor: "owner",
-                          },
-                        ],
-                      }
-                    : b,
-                ),
-              }));
-              setReminder(false);
-              toast.success("Reminder time saved; calling is not connected");
-            }}
-          >
-            <label className="mb-4 block text-[12px] font-semibold text-foreground">
-              Reminder date & time
-              <Input
-                required
-                type="datetime-local"
-                min={NOW.slice(0, 16)}
-                max={booking.startTime.slice(0, 16)}
-                value={reminderTime.slice(0, 16)}
-                onChange={(e) => setReminderTime(`${e.target.value}:00`)}
-                className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
-              />
-            </label>
-            <Button
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
-              type="submit"
-            >
-              Save reminder
-            </Button>
-          </form>
         </Modal>
       )}
     </>
