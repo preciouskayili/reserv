@@ -1,5 +1,4 @@
 "use client";
-import { ui } from "./tw";
 import Link from "next/link";
 import {
   Dialog,
@@ -29,8 +28,8 @@ import {
   initials,
   money,
   time,
-} from "@/lib/reserv/model";
-import { useStore } from "@/lib/reserv/store";
+} from "@/lib/model";
+import { useStore } from "@/lib/store";
 import { GoogleLocationCard } from "./google-map";
 import type { ReactNode } from "react";
 
@@ -38,22 +37,24 @@ export function Brand({ small = false }: { small?: boolean }) {
   return (
     <Link
       href="/"
-      className={ui(`brand ${small ? "small" : ""}`)}
+      className={`inline-flex items-baseline font-semibold leading-none text-[#1e1e1e] tracking-[-0.085em] ${
+        small ? "text-[19px]" : "text-[30px]"
+      }`}
       aria-label="Reserv home"
     >
       reserv
-      <span
-        className={
-          "brand-dot ml-[2px] h-[5px] w-[5px] rounded-full bg-[#999999]"
-        }
-      />
+      <span className="ml-[2px] h-[5px] w-[5px] rounded-full bg-[#999999]" />
     </Link>
   );
 }
 export function StudioMark({ large = false }: { large?: boolean }) {
   return (
-    <span className={ui(`studio-mark ${large ? "large" : ""}`)}>
-      <IconFlower stroke={1.1} />
+    <span
+      className={`inline-flex items-center justify-center bg-[#ececf0] text-[#4e4e52] ${
+        large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"
+      }`}
+    >
+      <IconFlower stroke={1.1} size={large ? 28 : 20} />
     </span>
   );
 }
@@ -69,74 +70,67 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header
-      className={
-        "page-header mb-9 flex flex-wrap items-end justify-between gap-4 [&_h1]:mt-3 [&_h1]:text-[clamp(36px,4vw,55px)] [&_h1]:leading-[1.09] [&_h1]:font-medium [&_h1]:tracking-[-0.062em] max-[760px]:mb-6 max-[760px]:[&_h1]:text-[39px] max-[560px]:[&_h1]:text-[34px] [&_h1]:text-[#1e1e20]"
-      }
-    >
+    <header className="page-header mb-9 flex flex-wrap items-end justify-between gap-4 max-[760px]:mb-6">
       <div>
         {eyebrow && (
-          <p
-            className={
-              "eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"
-            }
-          >
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
             {eyebrow}
           </p>
         )}
-        <h1>{title}</h1>
+        <h1 className="mt-3 text-[clamp(36px,4vw,55px)] font-medium leading-[1.09] tracking-[-0.062em] text-[#1e1e20] max-[760px]:text-[39px] max-[560px]:text-[34px]">
+          {title}
+        </h1>
         {description && (
-          <p className={"page-description mt-3 text-[14px] text-[#8a8a8a]"}>
+          <p className="page-description mt-3 text-[14px] text-[#8a8a8a]">
             {description}
           </p>
         )}
       </div>
       {action && (
-        <div
-          className={"header-actions flex flex-wrap items-center gap-2 pb-1"}
-        >
+        <div className="header-actions flex flex-wrap items-center gap-2 pb-1">
           {action}
         </div>
       )}
     </header>
   );
 }
+const statusColors: Record<Status, string> = {
+  Confirmed: "bg-[#eef8f2] text-[#3b7a57]",
+  Pending: "bg-[#fff4ec] text-[#ab765b]",
+  "Needs confirmation": "bg-[#fff4ec] text-[#ab765b]",
+  Cancelled: "bg-[#fcf0ef] text-[#aa6661]",
+  Completed: "bg-[#f0f0f1] text-[#656569]",
+  Rescheduled: "bg-[#f0f0f1] text-[#656569]",
+};
+
 export function BookingStatus({ status }: { status: Status }) {
   return (
     <Badge
       variant="secondary"
-      className={ui(
-        `status status-${status.toLowerCase().replaceAll(" ", "-")} !border-0`,
-      )}
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-[9px] font-semibold ${
+        statusColors[status] || "bg-[#f1f1f1] text-[#787878]"
+      }`}
     >
-      <span />
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {status}
     </Badge>
   );
 }
 export function BookingCode({ code }: { code: string }) {
   return (
-    <Card
-      className={
-        "booking-code !flex-row !gap-0 !border-0 !py-3 shadow-[0_10px_24px_-22px_#00000020] flex items-center justify-between rounded-[15px] border-dashed px-4 py-3.5 [&_strong]:mt-1 [&_strong]:block [&_strong]:font-mono [&_strong]:text-[20px] [&_strong]:font-semibold [&_strong]:tracking-[0.2em] [&_.eyebrow]:text-[8px] border-[#dcdcdf] [&_strong]:text-[#323235] border-0 bg-[#f1f1f4]"
-      }
-    >
+    <Card className="flex flex-row items-center justify-between gap-0 rounded-[18px] border-0 bg-[#f1f1f4] px-5 py-4 shadow-none">
       <div>
-        <p
-          className={
-            "eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"
-          }
-        >
+        <p className="text-[9px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
           Booking code
         </p>
-        <strong>{code}</strong>
+        <strong className="mt-1 block font-mono text-[20px] font-semibold tracking-[0.2em] text-[#323235]">
+          {code}
+        </strong>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className={
-          "icon-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
-        }
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
         aria-label="Copy booking code"
         onClick={async () => {
           try {
@@ -152,8 +146,30 @@ export function BookingCode({ code }: { code: string }) {
     </Card>
   );
 }
-export function Avatar({ name, size = "" }: { name: string; size?: string }) {
-  return <span className={ui(`avatar ${size}`)}>{initials(name)}</span>;
+export function Avatar({
+  name,
+  size = "",
+  className = "",
+}: {
+  name: string;
+  size?: "large" | "tiny" | string;
+  className?: string;
+}) {
+  const sizeClasses =
+    size === "large"
+      ? "h-14 w-14 text-[18px]"
+      : size === "tiny"
+        ? "h-6 w-6 text-[8px]"
+        : size
+          ? size
+          : "h-9 w-9 text-[11px]";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#ebebed] font-bold text-[#555558] ${sizeClasses} ${className}`}
+    >
+      {initials(name)}
+    </span>
+  );
 }
 export function ServiceIcon({
   serviceId,
@@ -162,7 +178,9 @@ export function ServiceIcon({
   serviceId: string;
   size?: number;
 }) {
-  const Icon = ["nails", "pedicure"].includes(serviceId) ? IconSparkles : IconScissors;
+  const Icon = ["nails", "pedicure"].includes(serviceId)
+    ? IconSparkles
+    : IconScissors;
   return <Icon size={size} stroke={1.5} />;
 }
 export function ActionCard({
@@ -180,20 +198,23 @@ export function ActionCard({
 }) {
   const content = (
     <>
-      <Icon size={23} stroke={1.6} />
+      <Icon size={24} stroke={1.6} />
       <span>{label}</span>
     </>
   );
+  const baseClasses = `flex min-h-[145px] flex-col items-center justify-center gap-2 rounded-[28px] border-0 px-2 text-[18px] font-medium tracking-[-0.04em] transition max-[760px]:min-h-[110px] max-[760px]:rounded-[20px] max-[760px]:text-[13px] max-[560px]:min-h-[95px] max-[560px]:rounded-[17px] max-[560px]:text-[10px] ${
+    danger
+      ? "bg-[#faeeee] text-[#b34d4a] hover:bg-[#f6e4e4]"
+      : "bg-[#f1f1f4] text-[#313134] hover:bg-[#efeff1]"
+  }`;
   return href ? (
-    <a href={href} className={ui(`action-card ${danger ? "danger" : ""}`)}>
+    <a href={href} className={baseClasses}>
       {content}
     </a>
   ) : (
     <Button
       variant="secondary"
-      className={ui(
-        `action-card !h-auto !flex-col !border-0 ${danger ? "danger" : ""}`,
-      )}
+      className={`!h-auto !w-full !p-0 ${baseClasses}`}
       onClick={onClick}
     >
       {content}
@@ -221,16 +242,14 @@ export function Modal({
       }}
     >
       <DialogContent
-        className={ui(`reserv-modal ${wide ? "reserv-modal-wide" : ""}`)}
+        className={`rounded-[28px] border-0 bg-white p-7 shadow-[0_30px_70px_-20px_#00000033] max-[560px]:rounded-[22px] max-[560px]:p-5 ${
+          wide ? "max-w-[650px]" : "max-w-[520px]"
+        }`}
       >
-        <DialogTitle
-          className={
-            "reserv-modal-title pr-8 text-[26px] leading-tight font-medium tracking-[-0.055em]"
-          }
-        >
+        <DialogTitle className="pr-8 text-[26px] font-medium leading-tight tracking-[-0.055em] text-[#202022]">
           {title}
         </DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="text-[12px] text-[#8e8e8e]">
           {description || "Manage the details below."}
         </DialogDescription>
         {children}
@@ -248,15 +267,13 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div
-      className={
-        "empty-state flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-[#a0a0a0] [&_h3]:mt-4 [&_h3]:text-[17px] [&_h3]:font-semibold [&_h3]:text-[#343434] [&_p]:mt-1 [&_p]:max-w-[270px] [&_p]:text-[12px] [&_p]:leading-5 [&_p]:text-[#949494] [&_.button]:mt-5"
-      }
-    >
+    <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-[#a0a0a0]">
       <IconFlower size={32} stroke={1.2} />
-      <h3>{title}</h3>
-      <p>{description}</p>
-      {action}
+      <h3 className="mt-4 text-[17px] font-semibold text-[#343434]">{title}</h3>
+      <p className="mt-1 max-w-[270px] text-[12px] leading-5 text-[#949494]">
+        {description}
+      </p>
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
@@ -271,18 +288,12 @@ export function SegmentedControl<T extends string>({
 }) {
   return (
     <Tabs value={value} onValueChange={(next) => onChange(next as T)}>
-      <TabsList
-        className={
-          "segmented !rounded-full !border-0 !bg-[#efeff1] !p-1 flex gap-1 rounded-lg bg-[#f3f3f3] p-1 [&_button]:min-w-12 [&_button]:rounded-md [&_button]:px-3 [&_button]:py-1.5 [&_button]:text-[10px] [&_button]:font-semibold [&_button]:text-[#969696] [&_button.selected]:bg-white [&_button.selected]:text-[#343434] [&_button.selected]:shadow-[0_1px_3px_#ddd]"
-        }
-      >
+      <TabsList className="flex gap-1 rounded-full border-0 bg-[#efeff1] p-1">
         {options.map((option) => (
           <TabsTrigger
             key={option}
             value={option}
-            className={
-              "!rounded-full !border-0 !px-4 !text-[11px] data-active:!bg-white data-active:!text-[#252527] data-active:shadow-[0_3px_12px_#00000010]"
-            }
+            className="rounded-full border-0 px-4 py-1.5 text-[11px] font-semibold text-[#808084] transition data-active:bg-white data-active:text-[#252527] data-active:shadow-[0_2px_8px_#0000000d]"
           >
             {option}
           </TabsTrigger>
@@ -305,54 +316,32 @@ export function BookingCard({
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
   return (
-    <Card
-      className={
-        "!gap-0 !rounded-[24px] !border-0 !py-0 shadow-[0_14px_32px_-26px_#00000024]"
-      }
-    >
+    <Card className="rounded-[24px] border-0 bg-white p-0 shadow-none">
       <button
-        className={ui(
-          `booking-card !border-0 ${compact ? "compact" : ""} ${booking.status === "Completed" ? "is-completed" : ""}`,
-        )}
+        className={`flex w-full items-start gap-4 rounded-[24px] p-5 text-left transition hover:bg-[#fafafc] ${
+          compact ? "p-3.5" : ""
+        } ${booking.status === "Completed" ? "opacity-75" : ""}`}
         onClick={onClick}
       >
-        <span
-          className={
-            "service-symbol inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]"
-          }
-        >
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
           <ServiceIcon serviceId={service.id} />
         </span>
-        <div
-          className={
-            "booking-card-main min-w-0 flex-1 [&_>_p]:mt-1 [&_>_p]:text-[12px] [&_>_p]:text-[#8a8a8a]"
-          }
-        >
-          <div
-            className={
-              "booking-card-title flex flex-wrap items-center justify-between gap-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_h3]:tracking-[-0.025em] max-[560px]:[&_h3]:text-[12px] max-[560px]:[&_.status]:text-[8px]"
-            }
-          >
-            <h3>{service.name}</h3>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-[14px] font-semibold tracking-[-0.025em] text-[#252528] max-[560px]:text-[12px]">
+              {service.name}
+            </h3>
             <BookingStatus status={booking.status} />
           </div>
-          <p>
+          <p className="mt-1 text-[12px] text-[#8a8a8a]">
             {customer.name}
-            <span className={"middle-dot px-2 text-[#bababa]"}>·</span>
+            <span className="px-2 text-[#bababa]">·</span>
             {duration(service.duration)}
           </p>
           {!compact && (
-            <div
-              className={
-                "booking-card-bottom mt-4 flex flex-wrap items-center justify-between gap-2 border-[#f1f1f1] pt-3 text-[10px] text-[#909090] max-[560px]:mt-2 border-0"
-              }
-            >
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#f1f1f1] pt-3 text-[10px] text-[#909090] max-[560px]:mt-2">
               <span>
-                <span
-                  className={
-                    "mini-avatar mr-1.5 inline-flex h-[18px] w-[18px] items-center justify-center rounded-full text-[7px] font-bold bg-[#ebebed] text-[#555558]"
-                  }
-                >
+                <span className="mr-1.5 inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#ebebed] text-[7px] font-bold text-[#555558]">
                   {staff.initials}
                 </span>
                 with {staff.name}
@@ -365,7 +354,7 @@ export function BookingCard({
         </div>
         <IconChevronRight
           size={18}
-          className={"card-chevron mt-3 shrink-0 text-[#aeaeae]"}
+          className="mt-3 shrink-0 text-[#aeaeae]"
         />
       </button>
     </Card>
@@ -381,44 +370,34 @@ export function ServiceCard({
   const { state } = useStore();
   return (
     <Card
-      className={ui(
-        `service-card !gap-0 !rounded-[28px] !border-0 !p-5 shadow-[0_16px_36px_-28px_#00000024] ${!service.active ? "disabled-service" : ""}`,
-      )}
+      className={`flex min-h-[230px] flex-col rounded-[28px] border-0 bg-[#f8f8fa] p-5 shadow-none ${
+        !service.active ? "opacity-60" : ""
+      }`}
     >
-      <div className={"row-between flex items-center justify-between gap-4"}>
-        <span
-          className={
-            "service-symbol inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]"
-          }
-        >
+      <div className="flex items-center justify-between gap-4">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
           <ServiceIcon serviceId={service.id} size={24} />
         </span>
         {!service.active && (
-          <span
-            className={
-              "soft-label inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]"
-            }
-          >
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
             Hidden
           </span>
         )}
         {action}
       </div>
-      <h3>{service.name}</h3>
-      <p>{service.description}</p>
-      <div
-        className={
-          "service-price mt-5 flex items-center justify-between text-[17px] font-semibold tracking-[-0.04em] [&_span]:text-[10px] [&_span]:font-medium [&_span]:tracking-normal [&_span]:text-[#989898]"
-        }
-      >
+      <h3 className="mt-5 text-[17px] font-semibold tracking-[-0.04em] text-[#252528]">
+        {service.name}
+      </h3>
+      <p className="mt-2 flex-1 text-[11px] leading-[1.7] text-[#949494]">
+        {service.description}
+      </p>
+      <div className="mt-5 flex items-center justify-between text-[17px] font-semibold tracking-[-0.04em] text-[#252528]">
         {money(service.price)}
-        <span>{duration(service.duration)}</span>
+        <span className="text-[10px] font-medium tracking-normal text-[#989898]">
+          {duration(service.duration)}
+        </span>
       </div>
-      <div
-        className={
-          "service-card-footer mt-4 flex justify-between gap-2 border-[#f0f0f0] pt-3 text-[9px] text-[#a1a1a1] border-0"
-        }
-      >
+      <div className="mt-4 flex justify-between gap-2 border-t border-[#ededf0] pt-3 text-[9px] text-[#a1a1a1]">
         <span>
           {service.staffIds
             .map((id) => state.staff.find((s) => s.id === id)?.name)
@@ -437,21 +416,23 @@ export function LocationCard() {
 export function BusinessHours() {
   const { state } = useStore();
   return (
-    <div
-      className={
-        "hours-list [&_>_div]:flex [&_>_div]:items-center [&_>_div]:justify-between [&_>_div]:border-b [&_>_div]:border-[#f0f0f0] [&_>_div]:py-2.5 [&_>_div]:text-[10px] [&_>_div:last-child]:border-0 [&_>_div_>_span:first-child]:text-[#8f8f8f] [&_>_div_>_span:last-child]:font-semibold [&_small]:ml-1.5 [&_small]:rounded-full [&_small]:bg-[#eeeeee] [&_small]:px-1.5 [&_small]:py-0.5 [&_small]:text-[8px] [&_small]:text-[#767676]"
-      }
-    >
+    <div className="space-y-0">
       {state.business.hours.map((h) => (
         <div
           key={h.day}
-          className={ui(h.day === "Saturday" ? "today-hours" : "")}
+          className={`flex items-center justify-between border-b border-[#f0f0f0] py-2.5 text-[10px] last:border-0 ${
+            h.day === "Saturday" ? "font-semibold text-[#252527]" : ""
+          }`}
         >
-          <span>
+          <span className="flex items-center gap-1.5 text-[#8f8f8f]">
             {h.day}
-            {h.day === "Saturday" && <small>Today</small>}
+            {h.day === "Saturday" && (
+              <small className="rounded-full bg-[#eeeeee] px-1.5 py-0.5 text-[8px] font-medium text-[#767676]">
+                Today
+              </small>
+            )}
           </span>
-          <span>
+          <span className="font-semibold text-[#323235]">
             {h.closed
               ? "Closed"
               : `${time(`2026-09-12T${h.open}:00`)} – ${time(`2026-09-12T${h.close}:00`)}`}
@@ -463,25 +444,25 @@ export function BusinessHours() {
 }
 export function BookingActivityList({ booking }: { booking: Booking }) {
   return (
-    <div className={"activity-list mt-5"}>
-      {booking.activity.map((item) => (
-        <div
-          className={
-            "activity-item relative flex gap-3 pb-6 [&:not(:last-child)::before]:absolute [&:not(:last-child)::before]:bottom-0 [&:not(:last-child)::before]:left-[13px] [&:not(:last-child)::before]:top-7 [&:not(:last-child)::before]:w-px [&:not(:last-child)::before]:bg-[#e7e7e7] [&:not(:last-child)::before]:content-[''] [&_strong]:block [&_strong]:pt-0.5 [&_strong]:text-[11px] [&_strong]:font-semibold [&_p]:mt-1 [&_small]:mt-2 [&_small]:block [&_small]:text-[9px] [&_small]:text-[#afafaf]"
-          }
-          key={item.id}
-        >
-          <span
-            className={
-              "activity-dot relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-[#7b7b7b]"
-            }
-          >
+    <div className="mt-5">
+      {booking.activity.map((item, idx) => (
+        <div key={item.id} className="relative flex gap-3 pb-6 last:pb-0">
+          {idx < booking.activity.length - 1 && (
+            <span className="absolute bottom-0 left-[13px] top-7 w-px bg-[#e7e7e7]" />
+          )}
+          <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-[#7b7b7b]">
             <IconCheck size={12} />
           </span>
           <div>
-            <strong>{item.title}</strong>
-            {item.detail && <p>{item.detail}</p>}
-            <small>
+            <strong className="block pt-0.5 text-[11px] font-semibold text-[#2d2d30]">
+              {item.title}
+            </strong>
+            {item.detail && (
+              <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+                {item.detail}
+              </p>
+            )}
+            <small className="mt-1 block text-[9px] text-[#afafaf]">
               {new Date(item.time).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",

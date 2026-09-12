@@ -1,5 +1,5 @@
 "use client";
-import { ui } from "./tw";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,8 @@ import {
   NOW,
   time,
   TODAY,
-} from "@/lib/reserv/model";
-import { useStore } from "@/lib/reserv/store";
+} from "@/lib/model";
+import { useStore } from "@/lib/store";
 import {
   ActionCard,
   Avatar,
@@ -82,29 +82,48 @@ export function BookingDetails({
   return (
     <>
       <Link
-        className={"back-link inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929] mb-5"}
+        className={
+          "back-link inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929] mb-5"
+        }
         href={publicView ? `/b/${state.business.slug}` : "/bookings"}
       >
         <IconArrowLeft size={16} />
         {publicView ? `Back to ${state.business.name}` : "All reservations"}
       </Link>
-      <div className={ui(`details-layout ${publicView ? "public-details" : ""}`)}>
-        <Card className={"details-card !border-0 !bg-white !pt-[94px] !pb-12 max-[760px]:!pt-[72px] max-[760px]:!pb-8 border-[#ececec] p-8 [&_h1]:my-4 [&_>_.text-link]:mt-5 max-[560px]:p-5 relative rounded-[78px] bg-white px-[48px] pb-12 pt-[94px] [&::before]:absolute [&::before]:left-1/2 [&::before]:top-6 [&::before]:h-[7px] [&::before]:w-[78px] [&::before]:-translate-x-1/2 [&::before]:rounded-full [&::before]:bg-[#dadadc] [&::before]:content-[''] [&_h1]:mb-8 [&_h1]:mt-3 [&_h1]:text-[clamp(43px,4.8vw,63px)] [&_h1]:leading-[1.02] [&_h1]:font-medium [&_h1]:tracking-[-0.07em] [&_h1_span]:text-[#2d2d30] [&_>_.booking-code]:mt-8 max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-[72px] max-[560px]:rounded-[35px] max-[560px]:px-5 max-[560px]:[&_h1]:text-[39px] border-0 shadow-[0_28px_70px_-50px_#00000033]"}>
-          <div className={"row-between flex items-center justify-between gap-4"}>
-            <p className={"detail-day text-[40px] font-medium leading-none tracking-[-0.065em] text-[#a6a6a8] max-[760px]:text-[30px]"}>
+      <div
+        className={
+          publicView
+            ? "mx-auto block max-w-[940px]"
+            : "mx-auto block max-w-[940px]"
+        }
+      >
+        <Card className="relative rounded-[78px] border-0 bg-white px-12 pb-12 pt-[94px] max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-[72px] max-[560px]:rounded-[35px] max-[560px]:px-5">
+          <div className="absolute left-1/2 top-6 h-[7px] w-[78px] -translate-x-1/2 rounded-full bg-[#dadadc]" />
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[40px] font-medium leading-none tracking-tight text-[#a6a6a8] max-[760px]:text-[30px]">
               {booking.startTime.startsWith(TODAY)
                 ? "Today"
                 : dateLabel(booking.startTime).split(",")[0]}
             </p>
             <BookingStatus status={booking.status} />
           </div>
-          <h1>
+          <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-[-0.07em] max-[560px]:text-[39px]">
             {publicView ? "Your reservation" : "Reservation with"}
             <br />
-            <span>{publicView ? service.name : customer.name}</span>
+            <span className="text-[#2d2d30]">
+              {publicView ? service.name : customer.name}
+            </span>
           </h1>
-          {!publicView && <p className={"detail-service mt-[-20px] mb-8 text-[14px] text-[#8f8f92]"}>{service.name}</p>}
-          <div className={ui(`detail-actions ${terminal ? "single" : ""}`)}>
+          {!publicView && (
+            <p className="mb-8 mt-[-20px] text-[14px] text-[#8f8f92]">
+              {service.name}
+            </p>
+          )}
+          <div
+            className={`my-8 grid gap-4 ${
+              terminal ? "grid-cols-1" : "grid-cols-3 max-[560px]:gap-2"
+            }`}
+          >
             <ActionCard
               icon={IconPhone}
               label={publicView ? "Call studio" : "Contact"}
@@ -126,50 +145,74 @@ export function BookingDetails({
               </>
             )}
           </div>
-          <Card className={"detail-facts !grid !grid-cols-2 !gap-2 !rounded-[28px] !border-0 !bg-transparent !p-0 !py-0 grid grid-cols-2 [&_>_div]:rounded-[22px] [&_>_div]:bg-[#f7f7f8] [&_strong]:mt-3 [&_strong]:flex [&_strong]:items-center [&_strong]:gap-2 [&_strong]:tracking-[-0.035em] [&_.avatar]:h-6 [&_.avatar]:w-6 [&_.avatar]:text-[8px] [&_span:not(.avatar)]:mt-1 [&_span:not(.avatar)]:block mt-0 [&_>_div]:min-h-[145px] [&_>_div]:px-6 [&_>_div]:py-7 [&_>_div]:text-center [&_p]:text-[16px] [&_p]:text-[#96969a] [&_strong]:justify-center [&_strong]:text-[23px] [&_strong]:font-medium [&_strong]:text-[#333336] [&_span:not(.avatar)]:text-[14px] [&_span:not(.avatar)]:text-[#9b9b9f] max-[760px]:[&_p]:text-[12px] max-[760px]:[&_strong]:text-[17px] max-[760px]:[&_span:not(.avatar)]:text-[11px] max-[560px]:[&_>_div]:min-h-[110px] max-[560px]:[&_>_div]:px-2 max-[560px]:[&_>_div]:py-5 max-[560px]:[&_strong]:text-[13px] max-[560px]:[&_span:not(.avatar)]:text-[10px]"}>
-            <div>
-              <p>Date & time</p>
-              <strong>{time(booking.startTime)}</strong>
-              <span>{dateLabel(booking.startTime, true)}</span>
+          <div className="mt-0 grid grid-cols-2 gap-2">
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+                Date & time
+              </p>
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+                {time(booking.startTime)}
+              </strong>
+              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+                {dateLabel(booking.startTime, true)}
+              </span>
             </div>
-            <div>
-              <p>Service</p>
-              <strong>{service.name}</strong>
-              <span>
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+                Service
+              </p>
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+                {service.name}
+              </strong>
+              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
                 {duration(service.duration)} · until {time(booking.endTime)}
               </span>
             </div>
-            <div>
-              <p>{publicView ? "Reserved for" : "Customer"}</p>
-              <strong>{customer.name}</strong>
-              <span>{customer.phone}</span>
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+                {publicView ? "Reserved for" : "Customer"}
+              </p>
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+                {customer.name}
+              </strong>
+              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+                {customer.phone}
+              </span>
             </div>
-            <div>
-              <p>Your specialist</p>
-              <strong className={"staff-detail"}>
-                <Avatar name={staff.name} />
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+                Your specialist
+              </p>
+              <strong className="mt-3 flex items-center justify-center gap-2 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+                <Avatar name={staff.name} className="h-6 w-6 text-[8px]" />
                 {staff.name}
               </strong>
-              <span>{staff.role}</span>
+              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+                {staff.role}
+              </span>
             </div>
-          </Card>
-          <div className={"detail-location my-7 [&_h3]:mb-5 [&_h3]:text-[24px] [&_h3]:font-medium [&_h3]:tracking-[-0.05em] [&_h3]:text-[#9b9b9e]"}>
-            <h3>Find your way here</h3>
+          </div>
+          <div className="my-7">
+            <h3 className="mb-5 text-[24px] font-medium tracking-[-0.05em] text-[#9b9b9e]">
+              Find your way here
+            </h3>
             <LocationCard />
           </div>
-          <BookingCode code={booking.code} />
+          <div className="mt-8">
+            <BookingCode code={booking.code} />
+          </div>
           {publicView && (
-            <p className={"fine-print text-[11px] leading-6 text-[#9d9d9d]"}>
+            <p className="mt-3 text-[11px] leading-6 text-[#9d9d9d]">
               Keep this code handy. You can use it to find your reservation or
               mention it when you call the studio.
             </p>
           )}
           {!terminal && (
-            <div className={"details-bottom-actions mt-6 flex flex-wrap gap-2"}>
+            <div className="mt-6 flex flex-wrap gap-2">
               {publicView &&
                 ["Pending", "Needs confirmation"].includes(booking.status) && (
                   <Button
-                    className={"button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#1e1e20] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:border-[#424246] hover:bg-[#424246]"
                     onClick={() => setStatus("Confirmed")}
                   >
                     <IconCheck size={17} />
@@ -178,16 +221,18 @@ export function BookingDetails({
                 )}
               {!publicView && (
                 <>
-                  <Button variant="secondary"
-                    className={"button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"}
+                  <Button
+                    variant="secondary"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
                     onClick={() => setStatus("Completed")}
                   >
                     <IconCheck size={16} />
                     Mark completed
                   </Button>
                   {booking.status !== "Confirmed" && (
-                    <Button variant="secondary"
-                      className={"button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"}
+                    <Button
+                      variant="secondary"
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
                       onClick={() => setStatus("Confirmed")}
                     >
                       Confirm booking
@@ -198,60 +243,124 @@ export function BookingDetails({
             </div>
           )}
           {!publicView && (
-            <Link href={`/r/${booking.code}`} className={"inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"}>
-              View customer reservation page <IconArrowUpRight size={15} />
-            </Link>
+            <div className="mt-5">
+              <Link
+                href={`/r/${booking.code}`}
+                className="inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
+              >
+                View customer reservation page <IconArrowUpRight size={15} />
+              </Link>
+            </div>
+          )}
+
+          {/* Booking Activity in main card */}
+          <div className="mt-8 rounded-[24px] bg-[#f7f7f8] p-6">
+            <p className="text-[10px] font-semibold text-[#a0a0a0] uppercase">
+              {publicView ? "YOUR RESERVATION" : "THE STORY SO FAR"}
+            </p>
+            <h3 className="mt-1 text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+              Booking activity
+            </h3>
+            <BookingActivityList booking={booking} />
+          </div>
+
+          {/* A little heads-up in main card */}
+          {(publicView ||
+            state.business.bookingPolicy ||
+            state.business.cancellationPolicy) && (
+            <div className="mt-4 rounded-[24px] bg-[#f7f7f8] p-6">
+              <h3 className="text-[17px] font-semibold text-[#2d2d30]">
+                A little heads-up
+              </h3>
+              {state.business.bookingPolicy && (
+                <div className="mt-3">
+                  <h4 className="text-[11px] font-semibold text-[#525256]">
+                    Booking policy
+                  </h4>
+                  <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+                    {state.business.bookingPolicy}
+                  </p>
+                </div>
+              )}
+              {state.business.cancellationPolicy && (
+                <div className="mt-3">
+                  <h4 className="text-[11px] font-semibold text-[#525256]">
+                    Cancellation policy
+                  </h4>
+                  <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+                    {state.business.cancellationPolicy}
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </Card>
-        <aside className={"details-aside flex-col [&_.panel_h3]:mb-2 [&_.panel_h3]:text-[17px] [&_.panel_h3]:font-semibold [&_.panel_h3]:tracking-[-0.035em] [&_.panel_p:not(.eyebrow)]:text-[11px] [&_.panel_p:not(.eyebrow)]:leading-5 [&_.panel_p:not(.eyebrow)]:text-[#989898] [&_textarea]:mt-2 [&_textarea]:w-full [&_textarea]:resize-y [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-[#ececec] [&_textarea]:bg-[#fafbf9] [&_textarea]:p-3 [&_textarea]:text-[11px] [&_textarea]:outline-none [&_textarea]:focus:border-[#afafaf] [&_.small-button]:mt-2 max-[1023px]:grid max-[1023px]:grid-cols-2 mt-5 grid grid-cols-2 items-start gap-4 [&_.panel]:rounded-[28px] [&_.panel]:border-0 [&_.panel]:bg-white max-[760px]:grid-cols-1"}>
-          {!publicView && !terminal && (
-            <Card className={"panel reminder-card rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a] [&_>_.service-symbol]:mb-6 [&_strong]:my-2 [&_strong]:block [&_strong]:text-[13px] [&_.soft-label]:my-2 [&_.button]:mt-5 [&_.text-link]:mt-3"}>
-              <span className={"service-symbol inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]"}>
-                <IconBell size={22} />
-              </span>
-              <h3>A thoughtful reminder.</h3>
-              <p>
-                {booking.reminder
-                  ? "AI call reminder planned"
-                  : "No reminder planned yet"}
+
+        {!publicView && (
+          <aside className="mt-5 grid grid-cols-2 items-start gap-4 max-[760px]:grid-cols-1">
+            {!terminal && (
+              <div className="rounded-[24px] bg-[#f8f8fa] p-6">
+                <span className="mb-6 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
+                  <IconBell size={22} />
+                </span>
+                <h3 className="text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+                  A thoughtful reminder.
+                </h3>
+                <p className="mt-1 text-[11px] leading-5 text-[#989898]">
+                  {booking.reminder
+                    ? "AI call reminder planned"
+                    : "No reminder planned yet"}
+                </p>
+                {booking.reminder && (
+                  <strong className="my-2 block text-[13px] font-semibold text-[#2d2d30]">
+                    {dateLabel(booking.reminder)}, {time(booking.reminder)}
+                  </strong>
+                )}
+                <span className="my-2 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
+                  Receptionist not connected
+                </span>
+                <p className="mt-2 text-[11px] leading-6 text-[#9d9d9d]">
+                  Reminder times are saved in this demo. Calls will be available
+                  when your receptionist is connected.
+                </p>
+                <Button
+                  variant="secondary"
+                  className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+                  onClick={() => setReminder(true)}
+                >
+                  Change reminder <IconClock size={16} />
+                </Button>
+                <button
+                  className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
+                  onClick={() =>
+                    toast.info(
+                      "Your receptionist isn’t connected yet. Use Contact to call the customer directly.",
+                    )
+                  }
+                >
+                  Ask agent to call <IconArrowUpRight size={14} />
+                </button>
+              </div>
+            )}
+            <div className="rounded-[24px] bg-[#f8f8fa] p-6">
+              <h3 className="text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+                A note for the visit
+              </h3>
+              <p className="mt-1 text-[11px] leading-5 text-[#989898]">
+                Keep notes on preferences or anything to keep in mind.
               </p>
-              {booking.reminder && (
-                <strong>
-                  {dateLabel(booking.reminder)}, {time(booking.reminder)}
-                </strong>
-              )}
-              <span className={"soft-label inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]"}>Receptionist not connected</span>
-              <p className={"fine-print text-[11px] leading-6 text-[#9d9d9d]"}>
-                Reminder times are saved in this demo. Calls will be available
-                when your receptionist is connected.
-              </p>
-              <Button variant="secondary" className={"button full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} onClick={() => setReminder(true)}>
-                Change reminder <IconClock size={16} />
-              </Button>
-              <button
-                className={"inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"}
-                onClick={() =>
-                  toast.info(
-                    "Your receptionist isn’t connected yet. Use Contact to call the customer directly.",
-                  )
-                }
-              >
-                Ask agent to call <IconArrowUpRight size={14} />
-              </button>
-            </Card>
-          )}
-          {!publicView && (
-            <Card className={"panel rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}>
-              <h3>A note for the visit</h3>
               <Textarea
                 aria-label="Booking notes"
                 value={notes}
                 rows={3}
                 placeholder="Anything to keep in mind…"
                 onChange={(e) => setNotes(e.target.value)}
+                className="mt-3 w-full resize-y rounded-xl border border-[#ececec] bg-[#fafbf9] p-3 text-[11px] outline-none focus:border-[#afafaf]"
               />
-              <Button variant="secondary" size="sm"
-                className={"small-button inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -264,23 +373,9 @@ export function BookingDetails({
               >
                 Save note
               </Button>
-            </Card>
-          )}
-          <Card className={"panel rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}>
-            <p className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>
-              {publicView ? "YOUR RESERVATION" : "THE STORY SO FAR"}
-            </p>
-            <h3>Booking activity</h3>
-            <BookingActivityList booking={booking} />
-          </Card>
-          {publicView && (
-            <Card className={"panel policy-card rounded-[20px] p-6 [&_h4]:mt-5 [&_h4]:text-[11px] [&_h4]:font-semibold [&_p]:mt-2 [&_p]:text-[10px] [&_p]:leading-5 [&_p]:text-[#9a9a9a] border-[#e8e8ea] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}>
-              <h3>A little heads-up</h3>
-              <p>{state.business.bookingPolicy}</p>
-              <p>{state.business.cancellationPolicy}</p>
-            </Card>
-          )}
-        </aside>
+            </div>
+          </aside>
+        )}
       </div>
       {reschedule && (
         <BookingFlow
@@ -295,19 +390,28 @@ export function BookingDetails({
           description="A little change of plans."
           onClose={() => setCancel(false)}
         >
-          <div className={"cancel-summary my-5 rounded-xl bg-[#f9f9f9] p-4 text-[12px] [&_p]:mt-1 [&_p]:text-[11px] [&_p]:text-[#959595]"}>
-            <strong>{service.name}</strong>
-            <p>
+          <div className="my-5 rounded-xl bg-[#f9f9f9] p-4 text-[12px]">
+            <strong className="font-semibold text-[#2d2d30]">
+              {service.name}
+            </strong>
+            <p className="mt-1 text-[11px] text-[#959595]">
               {dateLabel(booking.startTime)} · {time(booking.startTime)}
             </p>
           </div>
-          <p className={"muted text-[#8e8e8e]"}>{state.business.cancellationPolicy}</p>
-          <div className={"flow-footer mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5 [&_.button:last-child]:ml-auto"}>
-            <Button variant="secondary" className={"button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} onClick={() => setCancel(false)}>
+          <p className="text-[12px] leading-5 text-[#8e8e8e]">
+            {state.business.cancellationPolicy}
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5">
+            <Button
+              variant="secondary"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+              onClick={() => setCancel(false)}
+            >
               Keep reservation
             </Button>
-            <Button variant="destructive"
-              className={"button danger-button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"}
+            <Button
+              variant="destructive"
+              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f]"
               onClick={() => {
                 setStatus("Cancelled");
                 setCancel(false);
@@ -352,7 +456,7 @@ export function BookingDetails({
               toast.success("Reminder time saved; calling is not connected");
             }}
           >
-            <label className={"field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"}>
+            <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
               Reminder date & time
               <Input
                 required
@@ -361,9 +465,13 @@ export function BookingDetails({
                 max={booking.startTime.slice(0, 16)}
                 value={reminderTime.slice(0, 16)}
                 onChange={(e) => setReminderTime(`${e.target.value}:00`)}
+                className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
               />
             </label>
-            <Button className={"button primary full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} type="submit">
+            <Button
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#1e1e20] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:border-[#424246] hover:bg-[#424246]"
+              type="submit"
+            >
               Save reminder
             </Button>
           </form>

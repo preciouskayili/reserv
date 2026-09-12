@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import { StoreProvider } from "@/lib/reserv/store";
+import { StoreProvider } from "@/lib/store";
 
-const inter = Inter({
-  variable: "--font-inter",
+const figtree = Figtree({
   subsets: ["latin"],
 });
 
@@ -18,7 +17,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased font-sans`}>
+    <html
+      lang="en"
+      className={`${figtree.className} h-full antialiased font-sans`}
+    >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
           <StoreProvider>{children}</StoreProvider>

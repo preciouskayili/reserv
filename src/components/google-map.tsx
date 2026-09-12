@@ -2,7 +2,7 @@
 
 import { IconArrowUpRight, IconMapPin } from "@tabler/icons-react";
 import { Card } from "@/components/ui/card";
-import { useStore } from "@/lib/reserv/store";
+import { useStore } from "@/lib/store";
 
 export function GoogleLocationCard() {
   const { state } = useStore();
@@ -13,14 +13,38 @@ export function GoogleLocationCard() {
     ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent(address)}&zoom=14`
     : "";
 
-  return <Card className={"location-card !block !border-0 !p-0 !py-0 relative block h-[300px] overflow-hidden rounded-[30px] bg-[#ececf0] [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0 max-[560px]:h-[210px] max-[560px]:rounded-[20px] [&>.location-address]:z-10 border-0"}>
-    {key ? <iframe
-      title={`Google Map of ${state.business.name}`}
-      loading="lazy"
-      allowFullScreen
-      referrerPolicy="strict-origin-when-cross-origin"
-      src={embedUrl}
-    /> : <a className={"map-fallback flex h-full w-full flex-col items-center justify-center gap-3 bg-[#eeeeef] px-8 pb-10 text-center text-[13px] font-medium text-[#515154]"} href={directionsUrl} target="_blank" rel="noreferrer"><IconMapPin size={26} />View this location in Google Maps</a>}
-    <a className={"location-address flex items-center gap-2 [&_span]:flex-1 [&_span]:truncate absolute bottom-auto left-5 right-auto top-5 max-w-[calc(100%-40px)] rounded-[18px] bg-white px-5 py-4 text-[15px] font-medium text-[#434346] shadow-none [&_>_svg:last-child]:text-[#555558] max-[760px]:text-[11px] max-[560px]:left-2 max-[560px]:right-2 max-[560px]:top-2 max-[560px]:max-w-none max-[560px]:px-3 max-[560px]:py-2.5 max-[560px]:text-[9px]"} href={directionsUrl} target="_blank" rel="noreferrer"><IconMapPin size={17} /><span>{address}</span><IconArrowUpRight size={18} /></a>
-  </Card>;
+  return (
+    <Card className="relative block h-[300px] overflow-hidden rounded-[30px] border-0 bg-[#ececf0] p-0 max-[560px]:h-[210px] max-[560px]:rounded-[20px]">
+      {key ? (
+        <iframe
+          title={`Google Map of ${state.business.name}`}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          src={embedUrl}
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      ) : (
+        <a
+          className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#eeeeef] px-8 pb-10 text-center text-[13px] font-medium text-[#515154]"
+          href={directionsUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <IconMapPin size={26} />
+          View this location in Google Maps
+        </a>
+      )}
+      <a
+        className="absolute left-5 top-5 z-10 flex max-w-[calc(100%-40px)] items-center gap-2 rounded-[18px] bg-white px-5 py-4 text-[15px] font-medium text-[#434346] max-[760px]:text-[11px] max-[560px]:left-2 max-[560px]:right-2 max-[560px]:top-2 max-[560px]:max-w-none max-[560px]:px-3 max-[560px]:py-2.5 max-[560px]:text-[9px]"
+        href={directionsUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <IconMapPin size={17} className="shrink-0 text-[#555558]" />
+        <span className="flex-1 truncate">{address}</span>
+        <IconArrowUpRight size={18} className="shrink-0 text-[#555558]" />
+      </a>
+    </Card>
+  );
 }

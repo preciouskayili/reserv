@@ -45,7 +45,7 @@
     @apply scroll-smooth;
   }
   body {
-    @apply bg-[#f2f2f4] text-[#252527] antialiased;
+    @apply bg-white text-foreground antialiased;
   }
   button,
   input,

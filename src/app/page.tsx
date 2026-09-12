@@ -1,2 +1,4 @@
-import { ReservApp } from "@/components/reserv/app";
-export default function Home() { return <ReservApp />; }
+import { ReservApp } from "@/components/app";
+export default function Home() {
+  return <ReservApp />;
+}

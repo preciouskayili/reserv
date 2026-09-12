@@ -1,5 +1,4 @@
 "use client";
-import { ui } from "./tw";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,79 +14,930 @@ import {
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
-import { useStore } from "@/lib/reserv/store";
-import { addDays, type Booking, dateLabel, duration, NOW, time, TODAY } from "@/lib/reserv/model";
-import { Avatar, BookingCard, EmptyState, PageHeader, SegmentedControl, ServiceIcon } from "./shared";
+import { useStore } from "@/lib/store";
+import {
+  addDays,
+  type Booking,
+  dateLabel,
+  duration,
+  NOW,
+  time,
+  TODAY,
+} from "@/lib/model";
+import {
+  Avatar,
+  BookingCard,
+  EmptyState,
+  PageHeader,
+  SegmentedControl,
+  ServiceIcon,
+} from "./shared";
 import { type BookingPreset } from "./booking-flow";
 
-type Props = { onNew: (preset?: BookingPreset) => void; onBooking: (booking: Booking) => void };
+type Props = {
+  onNew: (preset?: BookingPreset) => void;
+  onBooking: (booking: Booking) => void;
+};
 const START_HOUR = 8;
 const END_HOUR = 19;
 const HOUR_HEIGHT = 78;
-function offset(dateTime: string) { const d = new Date(dateTime); return ((d.getHours() - START_HOUR) + d.getMinutes() / 60) * HOUR_HEIGHT; }
-function weekDays(date: string) { const weekday = (new Date(`${date}T12:00:00`).getDay() + 6) % 7; const monday = addDays(date, -weekday); return Array.from({ length: 7 }, (_, i) => addDays(monday, i)); }
-function WeekStrip({ selected, setSelected, dayOnly = false }: { selected: string; setSelected: (date: string) => void; dayOnly?: boolean }) {
-  const { state } = useStore(); const days = dayOnly ? [selected] : weekDays(selected);
-  return <div className={ui(`week-strip ${dayOnly ? "single" : ""}`)}><div className={"week-spacer w-10 max-[560px]:hidden"} />{days.map(day => {
-    const count = state.bookings.filter(b => b.startTime.startsWith(day) && b.status !== "Cancelled").length;
-    const attention = state.bookings.some(b => b.startTime.startsWith(day) && ["Needs confirmation", "Pending"].includes(b.status));
-    return <button key={day} aria-pressed={selected === day} className={ui(`week-day ${selected === day ? "active" : ""}`)} onClick={() => setSelected(day)}><span>{new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })}</span><strong>{Number(day.slice(8))}</strong><i className={"week-dots flex h-[7px] items-center gap-0.5 [&_b]:h-[5px] [&_b]:w-[5px] [&_b]:rounded-full [&_b]:bg-[#bcbcbf] [&_b.needs]:bg-[#dd8b84]"} aria-label={`${count} reservations`}>{Array.from({ length: Math.min(4, count) }, (_, i) => <b className={ui(attention && i === 0 ? "needs" : "")} key={i} />)}</i></button>;
-  })}<div className={"week-spacer w-10 max-[560px]:hidden"} /></div>;
+function offset(dateTime: string) {
+  const d = new Date(dateTime);
+  return (d.getHours() - START_HOUR + d.getMinutes() / 60) * HOUR_HEIGHT;
 }
-function ScheduleTimeline({ day, staff, onNew, onBooking }: { day: string; staff: string } & Props) {
+function weekDays(date: string) {
+  const weekday = (new Date(`${date}T12:00:00`).getDay() + 6) % 7;
+  const monday = addDays(date, -weekday);
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+}
+function WeekStrip({
+  selected,
+  setSelected,
+  dayOnly = false,
+}: {
+  selected: string;
+  setSelected: (date: string) => void;
+  dayOnly?: boolean;
+}) {
   const { state } = useStore();
-  const events = state.bookings.filter(b => b.startTime.startsWith(day) && b.status !== "Cancelled" && (staff === "all" || b.staffId === staff)).sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const hours = state.business.hours[(new Date(`${day}T12:00:00`).getDay() + 6) % 7];
-  const nowOffset = day === TODAY ? offset(NOW) : -1;
-  return <div className={"reference-timeline relative mx-auto w-full max-w-[950px]"} style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}><div className={"timeline-spine absolute bottom-0 top-0 w-px bg-[#cbcbce] [left:27%] max-[560px]:[left:25%]"} />
-    {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => <span key={i} className={"reference-hour absolute w-14 -translate-y-2 text-right text-[9px] font-medium text-[#a0a0a3] [left:calc(27%_-_83px)] max-[760px]:[left:calc(27%_-_75px)] max-[560px]:w-12 max-[560px]:text-[8px] max-[560px]:[left:calc(25%_-_66px)]"} style={{ top: i * HOUR_HEIGHT }}>{String(START_HOUR + i).padStart(2, "0")}:00</span>)}
-    {!hours.closed && Array.from({ length: (END_HOUR - START_HOUR) * 2 }, (_, i) => { const hour = START_HOUR + Math.floor(i / 2); const minute = i % 2 ? 30 : 0; const start = `${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`; const inside = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` >= hours.open && `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` < hours.close && start > NOW; return <button key={i} className={"reference-slot absolute z-0 flex items-center gap-2 pl-14 text-[10px] font-medium text-[#858589] opacity-0 transition hover:bg-[#e5e5e7] hover:opacity-100 disabled:hover:bg-transparent disabled:hover:opacity-0 [left:27%] [right:6%] [&_svg]:rounded-full [&_svg]:bg-white [&_svg]:p-0.5 max-[560px]:[left:25%]"} aria-label={`Add reservation at ${time(start)}`} disabled={!inside} style={{ top: i * HOUR_HEIGHT / 2, height: HOUR_HEIGHT / 2 }} onClick={() => onNew({ date: day, startTime: start, ...(staff === "all" ? {} : { staffId: staff }) })}><IconPlus size={14} /><span>Add a booking</span></button>; })}
-    {nowOffset >= 0 && <div className={"reference-now pointer-events-none absolute z-20 h-px bg-[#d3a39e] [left:27%] [right:7%] [&_i]:absolute [&_i]:-left-[5px] [&_i]:-top-[5px] [&_i]:h-[11px] [&_i]:w-[11px] [&_i]:rounded-full [&_i]:bg-[#d7958e] [&_span]:absolute [&_span]:right-0 [&_span]:-top-[17px] [&_span]:text-[8px] [&_span]:font-bold [&_span]:tracking-[0.06em] [&_span]:text-[#bf817b] max-[560px]:[left:25%] max-[560px]:[right:3%]"} style={{ top: nowOffset }}><i /><span>NOW · 10:15</span></div>}
-    {events.map((b, index) => { const service = state.services.find(s => s.id === b.serviceId)!; const customer = state.customers.find(c => c.id === b.customerId)!; const staffMember = state.staff.find(s => s.id === b.staffId)!; const height = Math.max(50, (new Date(b.endTime).getTime() - new Date(b.startTime).getTime()) / 60000 / 60 * HOUR_HEIGHT - 4); const previous = events[index - 1]; const overlaps = previous && previous.endTime > b.startTime; return <button key={b.id} onClick={() => onBooking(b)} className={ui(`reference-event ${b.status === "Completed" ? "finished" : ""} ${["Needs confirmation", "Pending"].includes(b.status) ? "attention" : ""} ${overlaps ? "overlap" : ""}`)} style={{ top: offset(b.startTime) + 2, height }}><span className={"reference-event-pill absolute bottom-0 left-0 top-0 flex w-9 items-center justify-center rounded-full border border-[#dedee0] bg-white text-[#4a4a4d]"}><ServiceIcon serviceId={service.id} size={18} /></span><span className={"reference-event-content ml-12 flex min-w-0 flex-1 flex-col justify-center py-1 [&_small]:text-[9px] [&_small]:font-medium [&_small]:text-[#99999d] [&_strong]:mt-1 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-[12px] [&_strong]:font-semibold [&_strong]:tracking-[-0.02em] [&_strong]:text-[#28282a] [&_em]:mt-1 [&_em]:text-[10px] [&_em]:not-italic [&_em]:text-[#858589] [&_em_span]:text-[#aaaab0] max-[560px]:ml-11 max-[560px]:[&_strong]:text-[10px] max-[560px]:[&_small]:text-[8px] max-[560px]:[&_em]:text-[8px] max-[560px]:[&_em_span]:hidden"}><small>{time(b.startTime)} – {time(b.endTime)} · {duration(service.duration)}</small><strong>{service.name}</strong><em>{customer.name} <span>· {staffMember.name}</span></em></span><span className={"reference-event-status ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#7c7c80] text-[#626266]"} aria-label={b.status}>{b.status === "Completed" ? <IconCheck size={13} /> : b.status === "Confirmed" ? <IconCheck size={13} /> : <IconCircle size={13} />}</span></button>; })}
-    {events.map((b, i) => { const next = events[i + 1]; if (!next) return null; const gap = (new Date(next.startTime).getTime() - new Date(b.endTime).getTime()) / 60000; if (gap < 30) return null; return <button key={`gap-${b.id}`} className={"reference-gap absolute z-20 flex items-center gap-2 rounded-full bg-[#e6e6e8] px-2 py-1 text-[9px] text-[#98989c] transition hover:bg-white hover:text-[#28282a] [left:calc(27%_+_32px)] [&_span]:ml-1 [&_span]:font-semibold [&_span]:text-[#737377] max-[560px]:[left:calc(25%_+_22px)]"} style={{ top: offset(b.endTime) + Math.min(gap / 120 * HOUR_HEIGHT, 16) }} onClick={() => onNew({ date: day, startTime: b.endTime })}><IconClock size={13} /> {duration(gap)} free <span>＋ Add booking</span></button>; })}
-    {hours.closed && <div className={"reference-empty absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-[-0.05em] text-[#7e7e82] [&_span]:mt-2 [&_span]:block [&_span]:text-[11px] [&_span]:font-normal [&_span]:tracking-normal [&_span]:text-[#aaaab0]"}>A day to pause.<span>The studio is closed today.</span></div>}
-    {!hours.closed && !events.length && <div className={"reference-empty absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-[-0.05em] text-[#7e7e82] [&_span]:mt-2 [&_span]:block [&_span]:text-[11px] [&_span]:font-normal [&_span]:tracking-normal [&_span]:text-[#aaaab0]"}>A little room in your day.<span>Click an open time to add a reservation.</span></div>}
-  </div>;
+  const days = dayOnly ? [selected] : weekDays(selected);
+  return (
+    <div
+      className={`mx-auto mb-5 flex max-w-[1070px] items-center border-b border-[#e5e5e7] pb-5 ${
+        dayOnly ? "justify-center" : "justify-between"
+      }`}
+    >
+      {!dayOnly && <div className="w-10 max-[560px]:hidden" />}
+      {days.map((day) => {
+        const isSelected = selected === day;
+        const count = state.bookings.filter(
+          (b) => b.startTime.startsWith(day) && b.status !== "Cancelled",
+        ).length;
+        const attention = state.bookings.some(
+          (b) =>
+            b.startTime.startsWith(day) &&
+            ["Needs confirmation", "Pending"].includes(b.status),
+        );
+        return (
+          <button
+            key={day}
+            aria-pressed={isSelected}
+            className="flex w-[70px] flex-col items-center gap-1 max-[560px]:w-[calc(100%/7)]"
+            onClick={() => setSelected(day)}
+          >
+            <span
+              className={`text-[10px] font-medium max-[560px]:text-[8px] ${
+                isSelected ? "text-[#1f1f21]" : "text-[#97979a]"
+              }`}
+            >
+              {new Date(`${day}T12:00:00`).toLocaleDateString("en-US", {
+                weekday: "short",
+              })}
+            </span>
+            <strong
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold transition max-[560px]:h-7 max-[560px]:w-7 max-[560px]:text-[11px] ${
+                isSelected
+                  ? "bg-[#202022] text-white"
+                  : "text-[#4a4a4d] hover:bg-[#f0f0f2]"
+              }`}
+            >
+              {Number(day.slice(8))}
+            </strong>
+            <i
+              className="flex h-[7px] items-center gap-0.5"
+              aria-label={`${count} reservations`}
+            >
+              {Array.from({ length: Math.min(4, count) }, (_, i) => (
+                <b
+                  key={i}
+                  className={`h-[5px] w-[5px] rounded-full ${
+                    attention && i === 0 ? "bg-[#dd8b84]" : "bg-[#bcbcbf]"
+                  }`}
+                />
+              ))}
+            </i>
+          </button>
+        );
+      })}
+      {!dayOnly && <div className="w-10 max-[560px]:hidden" />}
+    </div>
+  );
 }
-function ScheduleScaffold({ day, setDay, onNew, onBooking, calendar = false, dayOnly = false, modeControl }: { day: string; setDay: (day: string) => void; calendar?: boolean; dayOnly?: boolean; modeControl?: React.ReactNode } & Props) {
-  const { state } = useStore(); const [staff, setStaff] = useState("all");
-  const all = state.bookings.filter(b => b.startTime.startsWith(day) && b.status !== "Cancelled");
-  const attention = all.filter(b => ["Needs confirmation", "Pending"].includes(b.status));
-  const next = all.find(b => b.startTime > NOW && b.status !== "Completed");
-  return <><div className={"reference-topline relative mb-7 grid grid-cols-[1fr_auto_1fr] items-center gap-4 [&_>_div:first-child_h1]:mt-2 [&_>_div:first-child_h1]:text-[27px] [&_>_div:first-child_h1]:font-medium [&_>_div:first-child_h1]:tracking-[-0.055em] [&_>_div:first-child_h1]:text-[#252527] max-[760px]:grid-cols-[1fr_auto] max-[760px]:[&_>_div:first-child]:col-span-2 max-[760px]:[&_>_div:first-child_h1]:text-[24px] max-[760px]:[&:has(.reference-mode)_.reference-top-actions]:justify-between max-[760px]:[&:has(.reference-mode)_.reference-top-actions]:[grid-column:1_/_-1]"}><div><span className={"reference-kicker text-[9px] font-semibold tracking-[0.17em] text-[#9b9b9e]"}>{calendar ? "YOUR WEEK, YOUR WAY" : "A GOOD DAY BEGINS HERE"}</span><h1>{calendar ? "Calendar" : `Good morning, ${state.settings.owner}.`}</h1></div><div className={"reference-date-nav flex items-center gap-2 [&_>_button:not(.reference-date-button)]:flex [&_>_button:not(.reference-date-button)]:h-8 [&_>_button:not(.reference-date-button)]:w-8 [&_>_button:not(.reference-date-button)]:items-center [&_>_button:not(.reference-date-button)]:justify-center [&_>_button:not(.reference-date-button)]:rounded-full [&_>_button:not(.reference-date-button)]:border [&_>_button:not(.reference-date-button)]:border-[#e3e3e5] [&_>_button:not(.reference-date-button)]:bg-white [&_>_button:not(.reference-date-button)]:text-[#6f6f72] [&_>_button:not(.reference-date-button)]:hover:text-[#1b1b1d] max-[760px]:col-start-1 max-[560px]:gap-0 max-[560px]:[&_>_button:not(.reference-date-button)]:h-6 max-[560px]:[&_>_button:not(.reference-date-button)]:w-6"}><button aria-label="Previous day or week" onClick={() => setDay(addDays(day, calendar && !dayOnly ? -7 : -1))}><IconChevronLeft size={18} /></button><button className={"reference-date-button min-w-[162px] text-center text-[14px] font-semibold tracking-[-0.035em] max-[560px]:min-w-[132px] max-[560px]:text-[11px]"} onClick={() => setDay(TODAY)}>{new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}</button><button aria-label="Next day or week" onClick={() => setDay(addDays(day, calendar && !dayOnly ? 7 : 1))}><IconChevronRight size={18} /></button></div><div className={"reference-top-actions flex justify-end max-[760px]:col-start-2 max-[560px]:[&_.button]:px-2 gap-2"}>{modeControl}<Button className={"button primary !h-10 !rounded-full !border-0 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} onClick={() => onNew({ date: day })}><IconPlus size={17} />New booking</Button></div></div><WeekStrip selected={day} setSelected={setDay} dayOnly={dayOnly} /><div className={"timeline-workspace grid grid-cols-[230px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[180px_minmax(0,1fr)] max-[1023px]:gap-3 max-[760px]:grid-cols-1"}><aside className={"reference-side flex flex-col gap-4 pt-2 max-[760px]:grid max-[760px]:grid-cols-2 max-[560px]:grid-cols-1"}><div className={"reference-side-card rounded-[20px] border-[#e8e8ea] p-5 [&_.row-between_>_span:last-child]:rounded-full [&_.row-between_>_span:last-child]:bg-[#f0f0f1] [&_.row-between_>_span:last-child]:px-2.5 [&_.row-between_>_span:last-child]:py-1 [&_.row-between_>_span:last-child]:text-[9px] [&_.row-between_>_span:last-child]:font-medium [&_.row-between_>_span:last-child]:text-[#8a8a8e] [&_h2]:mt-7 [&_h2]:text-[20px] [&_h2]:font-medium [&_h2]:tracking-[-0.045em] [&_p]:mt-2 [&_p]:text-[11px] [&_p]:leading-5 [&_p]:text-[#98989c] max-[560px]:hidden border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><div className={"row-between flex items-center justify-between gap-4"}><span className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>{calendar ? "SELECTED DAY" : "TODAY"}</span><span>{all.length} bookings</span></div><h2>{dateLabel(day).split(",")[0]}</h2><p>{all.length ? `Your first appointment is at ${time(all[0].startTime)}.` : "A little room to breathe."}</p></div>{attention.length > 0 && <div className={"reference-attention rounded-[20px] border-[#e8e8ea] p-5 [&_>_button]:mt-4 [&_>_button]:flex [&_>_button]:w-full [&_>_button]:items-center [&_>_button]:gap-2 [&_>_button]:rounded-[12px] [&_>_button]:bg-[#f4f4f5] [&_>_button]:p-2 [&_>_button]:text-left [&_>_button_>_span:nth-child(2)]:flex-1 [&_strong]:block [&_small]:block [&_strong]:text-[10px] [&_strong]:font-semibold [&_small]:mt-0.5 [&_small]:text-[9px] [&_small]:text-[#a47f74] [&_>_button_>_svg]:text-[#b2b2b4] max-[560px]:p-3 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><span className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>NEEDS A REPLY</span>{attention.map(b => { const c = state.customers.find(c => c.id === b.customerId)!; return <button key={b.id} onClick={() => onBooking(b)}><Avatar name={c.name} /><span><strong>{c.name}</strong><small>{b.status}</small></span><IconArrowRight size={15} /></button>; })}</div>}{next && <div className={"reference-next rounded-[20px] border-[#e8e8ea] p-5 [&_strong]:mt-5 [&_strong]:block [&_strong]:text-[23px] [&_strong]:font-medium [&_strong]:tracking-[-0.05em] [&_p]:mt-1 [&_p]:text-[10px] [&_p]:leading-5 [&_p]:text-[#929295] [&_button]:mt-5 [&_button]:inline-flex [&_button]:items-center [&_button]:gap-2 [&_button]:text-[10px] [&_button]:font-semibold [&_button]:text-[#545457] max-[760px]:hidden border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><span className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>COMING UP</span><strong>{time(next.startTime)}</strong><p>{state.services.find(s => s.id === next.serviceId)?.name} with {state.customers.find(c => c.id === next.customerId)?.name}</p><button onClick={() => onBooking(next)}>View reservation <IconArrowRight size={13} /></button></div>}<Link href={calendar ? "/" : "/calendar"} className={"reference-side-link inline-flex items-center gap-2 text-[10px] font-semibold text-[#545457] mt-1 px-3 max-[760px]:hidden"}>{calendar ? "Back to week" : "Open calendar"}<IconArrowRight size={15} /></Link></aside><section className={"reference-canvas overflow-hidden rounded-[36px] border-[#e6e6e8] max-[760px]:rounded-[26px] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><div className={"reference-canvas-header flex items-center justify-between border-b border-[#e2e2e4] px-8 py-4 text-[10px] font-medium text-[#7f7f82] [&_>_span]:flex [&_>_span]:items-center [&_>_span]:gap-2 [&_>_span_i]:h-1.5 [&_>_span_i]:w-1.5 [&_>_span_i]:rounded-full [&_>_span_i]:bg-[#252527] [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_select]:rounded-full [&_select]:border [&_select]:border-[#dcdcdf] [&_select]:bg-[#f9f9fa] [&_select]:px-3 [&_select]:py-1.5 [&_select]:text-[10px] [&_select]:font-medium [&_select]:text-[#545457] [&_select]:outline-none max-[560px]:px-4"}><span><i />{day === TODAY ? "Today’s timeline" : dateLabel(day)}</span><label>Staff <select aria-label="Filter timeline by staff" value={staff} onChange={e => setStaff(e.target.value)}><option value="all">All staff</option>{state.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label></div><ScheduleTimeline day={day} staff={staff} onNew={onNew} onBooking={onBooking} /></section></div></>;
+function ScheduleTimeline({
+  day,
+  staff,
+  onNew,
+  onBooking,
+}: { day: string; staff: string } & Props) {
+  const { state } = useStore();
+  const events = state.bookings
+    .filter(
+      (b) =>
+        b.startTime.startsWith(day) &&
+        b.status !== "Cancelled" &&
+        (staff === "all" || b.staffId === staff),
+    )
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const hours =
+    state.business.hours[(new Date(`${day}T12:00:00`).getDay() + 6) % 7];
+  const nowOffset = day === TODAY ? offset(NOW) : -1;
+  return (
+    <div
+      className={"reference-timeline relative mx-auto w-full max-w-[950px]"}
+      style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}
+    >
+      <div
+        className={
+          "timeline-spine absolute bottom-0 top-0 w-px bg-[#cbcbce] [left:27%] max-[560px]:[left:25%]"
+        }
+      />
+      {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => (
+        <span
+          key={i}
+          className={
+            "reference-hour absolute w-14 -translate-y-2 text-right text-[9px] font-medium text-[#a0a0a3] [left:calc(27%_-_83px)] max-[760px]:[left:calc(27%_-_75px)] max-[560px]:w-12 max-[560px]:text-[8px] max-[560px]:[left:calc(25%_-_66px)]"
+          }
+          style={{ top: i * HOUR_HEIGHT }}
+        >
+          {String(START_HOUR + i).padStart(2, "0")}:00
+        </span>
+      ))}
+      {!hours.closed &&
+        Array.from({ length: (END_HOUR - START_HOUR) * 2 }, (_, i) => {
+          const hour = START_HOUR + Math.floor(i / 2);
+          const minute = i % 2 ? 30 : 0;
+          const start = `${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
+          const inside =
+            `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` >=
+              hours.open &&
+            `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` <
+              hours.close &&
+            start > NOW;
+          return (
+            <button
+              key={i}
+              className="absolute z-0 flex items-center gap-2 pl-14 text-[10px] font-medium text-[#858589] opacity-0 transition hover:bg-[#e5e5e7] hover:opacity-100 disabled:hover:bg-transparent disabled:hover:opacity-0 [left:27%] [right:6%] max-[560px]:[left:25%]"
+              aria-label={`Add reservation at ${time(start)}`}
+              disabled={!inside}
+              style={{ top: (i * HOUR_HEIGHT) / 2, height: HOUR_HEIGHT / 2 }}
+              onClick={() =>
+                onNew({
+                  date: day,
+                  startTime: start,
+                  ...(staff === "all" ? {} : { staffId: staff }),
+                })
+              }
+            >
+              <IconPlus size={14} className="rounded-full bg-white p-0.5" />
+              <span>Add a booking</span>
+            </button>
+          );
+        })}
+      {nowOffset >= 0 && (
+        <div
+          className="pointer-events-none absolute z-20 h-px bg-[#d3a39e] [left:27%] [right:7%] max-[560px]:[left:25%] max-[560px]:[right:3%]"
+          style={{ top: nowOffset }}
+        >
+          <i className="absolute -left-[5px] -top-[5px] h-[11px] w-[11px] rounded-full bg-[#d7958e]" />
+          <span className="absolute -top-[17px] right-0 text-[8px] font-bold tracking-[0.06em] text-[#bf817b]">NOW · 10:15</span>
+        </div>
+      )}
+      {events.map((b, index) => {
+        const service = state.services.find((s) => s.id === b.serviceId)!;
+        const customer = state.customers.find((c) => c.id === b.customerId)!;
+        const staffMember = state.staff.find((s) => s.id === b.staffId)!;
+        const height = Math.max(
+          50,
+          ((new Date(b.endTime).getTime() - new Date(b.startTime).getTime()) /
+            60000 /
+            60) *
+            HOUR_HEIGHT -
+            4,
+        );
+        const previous = events[index - 1];
+        const overlaps = previous && previous.endTime > b.startTime;
+        const isFinished = b.status === "Completed";
+        const needsAttention = ["Needs confirmation", "Pending"].includes(b.status);
+        return (
+          <button
+            key={b.id}
+            onClick={() => onBooking(b)}
+            className={`absolute z-10 flex items-center text-left transition hover:brightness-[0.96] [left:calc(27%_-_18px)] max-[560px]:[left:calc(25%_-_17px)] max-[560px]:[right:3%] ${
+              overlaps ? "[right:46%]" : "[right:7%]"
+            }`}
+            style={{ top: offset(b.startTime) + 2, height }}
+          >
+            <span
+              className={`absolute bottom-0 left-0 top-0 flex w-9 items-center justify-center rounded-full border ${
+                isFinished
+                  ? "border-[#dedee0] bg-[#e1e1e3] text-[#66666a]"
+                  : needsAttention
+                    ? "border-[#f0cfca] bg-[#f8e4e2] text-[#b26e68]"
+                    : "border-[#dedee0] bg-white text-[#4a4a4d]"
+              }`}
+            >
+              <ServiceIcon serviceId={service.id} size={18} />
+            </span>
+            <span className="ml-12 flex min-w-0 flex-1 flex-col justify-center py-1 max-[560px]:ml-11">
+              <small className="text-[9px] font-medium text-[#99999d] max-[560px]:text-[8px]">
+                {time(b.startTime)} – {time(b.endTime)} ·{" "}
+                {duration(service.duration)}
+              </small>
+              <strong
+                className={`mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold tracking-[-0.02em] max-[560px]:text-[10px] ${
+                  isFinished
+                    ? "text-[#8f8f93] line-through"
+                    : "text-[#28282a]"
+                }`}
+              >
+                {service.name}
+              </strong>
+              <em className="mt-1 text-[10px] not-italic text-[#858589] max-[560px]:text-[8px]">
+                {customer.name} <span className="text-[#aaaab0] max-[560px]:hidden">· {staffMember.name}</span>
+              </em>
+            </span>
+            <span
+              className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                isFinished
+                  ? "border-[#d59a93] bg-[#e8aaa3] text-white"
+                  : needsAttention
+                    ? "border-[#c9877e] text-[#b8746b]"
+                    : "border-[#7c7c80] text-[#626266]"
+              }`}
+              aria-label={b.status}
+            >
+              {b.status === "Completed" || b.status === "Confirmed" ? (
+                <IconCheck size={13} />
+              ) : (
+                <IconCircle size={13} />
+              )}
+            </span>
+          </button>
+        );
+      })}
+      {events.map((b, i) => {
+        const next = events[i + 1];
+        if (!next) return null;
+        const gap =
+          (new Date(next.startTime).getTime() - new Date(b.endTime).getTime()) /
+          60000;
+        if (gap < 30) return null;
+        return (
+          <button
+            key={`gap-${b.id}`}
+            className="absolute z-20 flex items-center gap-2 rounded-full bg-[#e6e6e8] px-2 py-1 text-[9px] text-[#98989c] transition hover:bg-white hover:text-[#28282a] [left:calc(27%_+_32px)] max-[560px]:[left:calc(25%_+_22px)]"
+            style={{
+              top: offset(b.endTime) + Math.min((gap / 120) * HOUR_HEIGHT, 16),
+            }}
+            onClick={() => onNew({ date: day, startTime: b.endTime })}
+          >
+            <IconClock size={13} /> {duration(gap)} free{" "}
+            <span className="ml-1 font-semibold text-[#737377]">＋ Add booking</span>
+          </button>
+        );
+      })}
+      {hours.closed && (
+        <div className="absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-[-0.05em] text-[#7e7e82]">
+          A day to pause.
+          <span className="mt-2 block text-[11px] font-normal tracking-normal text-[#aaaab0]">The studio is closed today.</span>
+        </div>
+      )}
+      {!hours.closed && !events.length && (
+        <div className="absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-[-0.05em] text-[#7e7e82]">
+          A little room in your day.
+          <span className="mt-2 block text-[11px] font-normal tracking-normal text-[#aaaab0]">Click an open time to add a reservation.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+function ScheduleScaffold({
+  day,
+  setDay,
+  onNew,
+  onBooking,
+  calendar = false,
+  dayOnly = false,
+  modeControl,
+}: {
+  day: string;
+  setDay: (day: string) => void;
+  calendar?: boolean;
+  dayOnly?: boolean;
+  modeControl?: React.ReactNode;
+} & Props) {
+  const { state } = useStore();
+  const [staff, setStaff] = useState("all");
+  const all = state.bookings.filter(
+    (b) => b.startTime.startsWith(day) && b.status !== "Cancelled",
+  );
+  const attention = all.filter((b) =>
+    ["Needs confirmation", "Pending"].includes(b.status),
+  );
+  const next = all.find((b) => b.startTime > NOW && b.status !== "Completed");
+  return (
+    <>
+      <div className="relative mb-7 grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[760px]:grid-cols-[1fr_auto]">
+        <div className="max-[760px]:col-span-2">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.17em] text-[#9b9b9e]">
+            {calendar ? "YOUR WEEK, YOUR WAY" : "A GOOD DAY BEGINS HERE"}
+          </span>
+          <h1 className="mt-2 text-[27px] font-medium tracking-[-0.055em] text-[#252527] max-[760px]:text-[24px]">
+            {calendar ? "Calendar" : `Good morning, ${state.settings.owner}.`}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 max-[760px]:col-start-1 max-[560px]:gap-0">
+          <button
+            aria-label="Previous day or week"
+            onClick={() => setDay(addDays(day, calendar && !dayOnly ? -7 : -1))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#e3e3e5] bg-white text-[#6f6f72] transition hover:text-[#1b1b1d] max-[560px]:h-6 max-[560px]:w-6"
+          >
+            <IconChevronLeft size={18} />
+          </button>
+          <button
+            className="min-w-[162px] text-center text-[14px] font-semibold tracking-[-0.035em] text-[#252527] max-[560px]:min-w-[132px] max-[560px]:text-[11px]"
+            onClick={() => setDay(TODAY)}
+          >
+            {new Date(`${day}T12:00:00`).toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </button>
+          <button
+            aria-label="Next day or week"
+            onClick={() => setDay(addDays(day, calendar && !dayOnly ? 7 : 1))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#e3e3e5] bg-white text-[#6f6f72] transition hover:text-[#1b1b1d] max-[560px]:h-6 max-[560px]:w-6"
+          >
+            <IconChevronRight size={18} />
+          </button>
+        </div>
+        <div className="flex justify-end gap-2 max-[760px]:col-start-2">
+          {modeControl}
+          <Button
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#38383c]"
+            onClick={() => onNew({ date: day })}
+          >
+            <IconPlus size={17} />
+            New booking
+          </Button>
+        </div>
+      </div>
+      <WeekStrip selected={day} setSelected={setDay} dayOnly={dayOnly} />
+      <div className="grid grid-cols-[230px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[180px_minmax(0,1fr)] max-[1023px]:gap-3 max-[760px]:grid-cols-1">
+        <aside className="flex flex-col gap-4 pt-2 max-[760px]:grid max-[760px]:grid-cols-2 max-[560px]:grid-cols-1">
+          <div className="rounded-[20px] border-0 bg-[#f8f8fa] p-5 max-[560px]:hidden">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+                {calendar ? "SELECTED DAY" : "TODAY"}
+              </span>
+              <span className="rounded-full bg-[#f0f0f1] px-2.5 py-1 text-[9px] font-medium text-[#8a8a8e]">
+                {all.length} bookings
+              </span>
+            </div>
+            <h2 className="mt-7 text-[20px] font-medium tracking-[-0.045em] text-[#252527]">{dateLabel(day).split(",")[0]}</h2>
+            <p className="mt-2 text-[11px] leading-5 text-[#98989c]">
+              {all.length
+                ? `Your first appointment is at ${time(all[0].startTime)}.`
+                : "A little room to breathe."}
+            </p>
+          </div>
+          {attention.length > 0 && (
+            <div className="rounded-[20px] border-0 bg-[#f8f8fa] p-5 max-[560px]:p-3">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+                NEEDS A REPLY
+              </span>
+              {attention.map((b) => {
+                const c = state.customers.find((c) => c.id === b.customerId)!;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => onBooking(b)}
+                    className="mt-4 flex w-full items-center gap-2 rounded-[12px] bg-[#f4f4f5] p-2 text-left transition hover:bg-[#ececee]"
+                  >
+                    <Avatar name={c.name} />
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-[10px] font-semibold text-[#252527]">{c.name}</strong>
+                      <small className="mt-0.5 block text-[9px] text-[#a47f74]">{b.status}</small>
+                    </span>
+                    <IconArrowRight size={15} className="text-[#b2b2b4]" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {next && (
+            <div className="rounded-[20px] border-0 bg-[#f8f8fa] p-5 max-[760px]:hidden">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+                COMING UP
+              </span>
+              <strong className="mt-5 block text-[23px] font-medium tracking-[-0.05em] text-[#252527]">{time(next.startTime)}</strong>
+              <p className="mt-1 text-[10px] leading-5 text-[#929295]">
+                {state.services.find((s) => s.id === next.serviceId)?.name} with{" "}
+                {state.customers.find((c) => c.id === next.customerId)?.name}
+              </p>
+              <button
+                onClick={() => onBooking(next)}
+                className="mt-5 inline-flex items-center gap-2 text-[10px] font-semibold text-[#545457] hover:text-[#1e1e20]"
+              >
+                View reservation <IconArrowRight size={13} />
+              </button>
+            </div>
+          )}
+          <Link
+            href={calendar ? "/" : "/calendar"}
+            className="mt-1 inline-flex items-center gap-2 px-3 text-[10px] font-semibold text-[#545457] hover:text-[#1e1e20] max-[760px]:hidden"
+          >
+            {calendar ? "Back to week" : "Open calendar"}
+            <IconArrowRight size={15} />
+          </Link>
+        </aside>
+        <section className="overflow-hidden rounded-[36px] border-0 bg-[#f8f8fa] max-[760px]:rounded-[26px]">
+          <div className="flex items-center justify-between border-b border-[#e2e2e4] px-8 py-4 text-[10px] font-medium text-[#7f7f82] max-[560px]:px-4">
+            <span className="flex items-center gap-2">
+              <i className="h-1.5 w-1.5 rounded-full bg-[#252527]" />
+              {day === TODAY ? "Today’s timeline" : dateLabel(day)}
+            </span>
+            <label className="flex items-center gap-2">
+              Staff{" "}
+              <select
+                aria-label="Filter timeline by staff"
+                value={staff}
+                onChange={(e) => setStaff(e.target.value)}
+                className="rounded-full border border-[#dcdcdf] bg-[#f9f9fa] px-3 py-1.5 text-[10px] font-medium text-[#545457] outline-none"
+              >
+                <option value="all">All staff</option>
+                {state.staff.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <ScheduleTimeline
+            day={day}
+            staff={staff}
+            onNew={onNew}
+            onBooking={onBooking}
+          />
+        </section>
+      </div>
+    </>
+  );
 }
 function placeEvents(events: Booking[]) {
-  const ordered = [...events].sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const groups: Booking[][] = []; let group: Booking[] = []; let groupEnd = "";
+  const ordered = [...events].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime),
+  );
+  const groups: Booking[][] = [];
+  let group: Booking[] = [];
+  let groupEnd = "";
   for (const event of ordered) {
-    if (group.length && event.startTime >= groupEnd) { groups.push(group); group = []; groupEnd = ""; }
-    group.push(event); if (event.endTime > groupEnd) groupEnd = event.endTime;
+    if (group.length && event.startTime >= groupEnd) {
+      groups.push(group);
+      group = [];
+      groupEnd = "";
+    }
+    group.push(event);
+    if (event.endTime > groupEnd) groupEnd = event.endTime;
   }
   if (group.length) groups.push(group);
-  return groups.flatMap(items => {
+  return groups.flatMap((items) => {
     const laneEnds: string[] = [];
-    const placed = items.map(booking => {
-      let lane = laneEnds.findIndex(end => end <= booking.startTime);
+    const placed = items.map((booking) => {
+      let lane = laneEnds.findIndex((end) => end <= booking.startTime);
       if (lane === -1) lane = laneEnds.length;
       laneEnds[lane] = booking.endTime;
       return { booking, lane };
     });
-    return placed.map(item => ({ ...item, lanes: laneEnds.length }));
+    return placed.map((item) => ({ ...item, lanes: laneEnds.length }));
   });
 }
 export function CalendarPage({ onNew, onBooking }: Props) {
-  const { state } = useStore(); const [day, setDay] = useState(TODAY); const [mode, setMode] = useState<"Week" | "Day">("Week"); const [staff, setStaff] = useState("all");
-  const days = weekDays(day); const first = new Date(`${days[0]}T12:00:00`); const last = new Date(`${days[6]}T12:00:00`);
+  const { state } = useStore();
+  const [day, setDay] = useState(TODAY);
+  const [mode, setMode] = useState<"Week" | "Day">("Week");
+  const [staff, setStaff] = useState("all");
+  const days = weekDays(day);
+  const first = new Date(`${days[0]}T12:00:00`);
+  const last = new Date(`${days[6]}T12:00:00`);
   const range = `${first.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${last.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
-  if (mode === "Day") return <ScheduleScaffold day={day} setDay={setDay} calendar dayOnly modeControl={<span className={"reference-mode right-10 top-[153px] z-10 [&_.segmented]:bg-[#e8e8ea] [&_.segmented_button.selected]:text-[#202022] max-[1023px]:right-6 max-[760px]:right-4 max-[760px]:top-[205px] static"}><SegmentedControl options={["Week", "Day"]} value={mode} onChange={setMode} /></span>} onNew={onNew} onBooking={onBooking} />;
-  return <><div className={"calendar-screen-heading mb-7 flex flex-wrap items-end justify-between gap-4 [&_h1]:mt-2 [&_h1]:text-[48px] [&_h1]:font-medium [&_h1]:tracking-[-0.065em] [&_h1]:text-[#202022] [&_p:last-child]:mt-2 [&_p:last-child]:text-[13px] [&_p:last-child]:text-[#939396] max-[760px]:[&_h1]:text-[38px]"}><div><p className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>YOUR WEEK AT A GLANCE</p><h1>Your calendar.</h1><p>All seven days, with room for what’s next.</p></div><Button className={"button primary !h-10 !rounded-full !border-0 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} onClick={() => onNew({ date: day })}><IconPlus size={17} />New booking</Button></div>
-    <Card className={"week-calendar-panel !gap-0 !border-0 !py-0 overflow-hidden rounded-[28px] border-[#e3e3e5] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><div className={"week-calendar-toolbar flex flex-wrap items-center justify-between gap-4 border-[#e8e8ea] px-6 py-5 max-[760px]:px-3 border-0"}><div className={"week-calendar-navigation flex items-center gap-2 [&_h2]:min-w-[180px] [&_h2]:text-center [&_h2]:text-[17px] [&_h2]:font-semibold [&_h2]:tracking-[-0.04em] [&_.icon-button]:rounded-full [&_.icon-button]:border [&_.icon-button]:border-[#e7e7e9] [&_.small-button]:ml-2"}><Button variant="ghost" size="icon" className={"icon-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"} aria-label="Previous week" onClick={() => setDay(addDays(day, -7))}><IconChevronLeft size={18} /></Button><h2>{range}</h2><Button variant="ghost" size="icon" className={"icon-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"} aria-label="Next week" onClick={() => setDay(addDays(day, 7))}><IconChevronRight size={18} /></Button><Button variant="secondary" size="sm" className={"small-button inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"} onClick={() => setDay(TODAY)}>Today</Button></div><div className={"week-calendar-controls flex items-center gap-2 [&_select]:h-9 [&_select]:rounded-lg [&_select]:border-[#e4e4e6] [&_select]:px-3 [&_select]:text-[11px] [&_select]:font-medium [&_select]:text-[#535357] [&_select]:outline-none [&_.segmented]:bg-[#f1f1f2] [&_.segmented_button.selected]:text-[#1f1f21] [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none"}><select aria-label="Filter calendar by staff" value={staff} onChange={e => setStaff(e.target.value)}><option value="all">All staff</option>{state.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><SegmentedControl options={["Week", "Day"]} value={mode} onChange={setMode} /></div></div>
-    <div className={"week-calendar-scroller max-h-[min(930px,calc(100vh-310px))] overflow-auto max-[760px]:max-h-[min(800px,calc(100vh-280px))]"}><div className={"week-calendar-grid grid min-w-[1120px] [grid-template-columns:64px_repeat(7,minmax(145px,1fr))]"}><div className={"week-calendar-corner sticky top-0 z-30 h-[72px] border-[#e5e5e7] flex items-center justify-center text-[9px] font-semibold text-[#aaaab0] border-b-0 bg-[#f8f8fa]"}>WAT</div>{days.map(date => { const count = state.bookings.filter(b => b.startTime.startsWith(date) && b.status !== "Cancelled").length; return <button className={ui(`week-calendar-day-header ${date === TODAY ? "today" : ""}`)} key={date} onClick={() => { setDay(date); setMode("Day"); }} aria-label={`Show ${dateLabel(date)} in day view`}><span>{new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })}</span><strong>{Number(date.slice(8))}</strong><small>{count ? `${count} booking${count > 1 ? "s" : ""}` : "Open day"}</small></button>; })}<div className={"week-calendar-axis relative border-[#e9e9eb] bg-[#fbfbfc] [&_span]:absolute [&_span]:right-2 [&_span]:-translate-y-2 [&_span]:text-[9px] [&_span]:font-medium [&_span]:text-[#aaaab0] [&_span:first-child]:translate-y-1 border-r-0"} style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>{Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => <span key={i} style={{ top: i * HOUR_HEIGHT }}>{String(START_HOUR + i).padStart(2, "0")}:00</span>)}</div>{days.map(date => { const hours = state.business.hours[(new Date(`${date}T12:00:00`).getDay() + 6) % 7]; const events = placeEvents(state.bookings.filter(b => b.startTime.startsWith(date) && b.status !== "Cancelled" && (staff === "all" || staff === b.staffId))); return <div key={date} className={ui(`week-calendar-column ${date === TODAY ? "today" : ""} ${hours.closed ? "closed" : ""}`)} style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>{Array.from({ length: (END_HOUR - START_HOUR) * 2 }, (_, i) => { const hour = START_HOUR + Math.floor(i / 2), minute = i % 2 ? 30 : 0; const clock = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`; const start = `${date}T${clock}:00`; const enabled = !hours.closed && start > NOW && clock >= hours.open && clock < hours.close; return <button key={i} className={"week-calendar-slot absolute z-0 flex w-full items-center justify-center border-dashed border-[#f0f0f1] text-[#5f5f63] opacity-0 transition hover:bg-[#eeeeef] hover:opacity-100 disabled:hover:bg-transparent disabled:hover:opacity-0 [&_svg]:h-5 [&_svg]:w-5 [&_svg]:rounded-full [&_svg]:bg-white [&_svg]:p-0.5 border-0"} style={{ top: i * HOUR_HEIGHT / 2, height: HOUR_HEIGHT / 2 }} disabled={!enabled} aria-label={`New booking ${dateLabel(date)} at ${time(start)}`} onClick={() => onNew({ date, startTime: start, ...(staff === "all" ? {} : { staffId: staff }) })}><IconPlus size={15} /></button>; })}{hours.closed && <span className={"week-closed-label absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 text-[11px] font-medium tracking-[0.18em] text-[#bababe] uppercase"}>Closed</span>}{events.map(({ booking, lane, lanes }) => { const service = state.services.find(s => s.id === booking.serviceId)!; const customer = state.customers.find(c => c.id === booking.customerId)!; const minutes = (new Date(booking.endTime).getTime() - new Date(booking.startTime).getTime()) / 60000; return <button key={booking.id} className={ui(`week-calendar-event ${booking.status === "Completed" ? "completed" : ""} ${["Pending", "Needs confirmation"].includes(booking.status) ? "pending" : ""}`)} style={{ top: offset(booking.startTime) + 2, height: Math.max(32, minutes / 60 * HOUR_HEIGHT - 4), left: `calc(${lane / lanes * 100}% + 3px)`, width: `calc(${100 / lanes}% - 6px)` }} onClick={() => onBooking(booking)} aria-label={`${service.name} with ${customer.name}, ${time(booking.startTime)} to ${time(booking.endTime)}. ${booking.status}.`}><small>{time(booking.startTime)} – {time(booking.endTime)}</small><strong>{service.name}</strong>{minutes >= 60 && <span>{customer.name}</span>}{minutes >= 120 && <em>{state.staff.find(s => s.id === booking.staffId)?.name}</em>}</button>; })}{date === TODAY && <div className={"week-current-time pointer-events-none absolute z-20 h-px w-full bg-[#d48880] [&_i]:absolute [&_i]:-left-1 [&_i]:-top-[3px] [&_i]:h-2 [&_i]:w-2 [&_i]:rounded-full [&_i]:bg-[#d48880]"} style={{ top: offset(NOW) }}><i /></div>}</div>; })}</div></div><div className={"week-calendar-footer flex flex-wrap items-center gap-5 border-[#e8e8ea] px-6 py-4 text-[10px] text-[#77777b] [&_span]:flex [&_span]:items-center [&_span]:gap-1.5 [&_i]:h-2 [&_i]:w-2 [&_i]:rounded-[2px] [&_i]:bg-[#b9b9bc] [&_i.pending]:bg-[#dba9a3] [&_p]:ml-auto [&_p]:text-[#a3a3a7] max-[760px]:[&_p]:ml-0 border-0"}><span><i />Confirmed</span><span><i className={"pending"} />Needs attention</span><p>Click an open time to add a reservation · All times WAT</p></div></Card></>;
+  if (mode === "Day")
+    return (
+      <ScheduleScaffold
+        day={day}
+        setDay={setDay}
+        calendar
+        dayOnly
+        modeControl={
+          <span className="static z-10">
+            <SegmentedControl
+              options={["Week", "Day"]}
+              value={mode}
+              onChange={setMode}
+            />
+          </span>
+        }
+        onNew={onNew}
+        onBooking={onBooking}
+      />
+    );
+  return (
+    <>
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+            YOUR WEEK AT A GLANCE
+          </p>
+          <h1 className="mt-2 text-[48px] font-medium tracking-[-0.065em] text-[#202022] max-[760px]:text-[38px]">
+            Your calendar.
+          </h1>
+          <p className="mt-2 text-[13px] text-[#939396]">All seven days, with room for what’s next.</p>
+        </div>
+        <Button
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#38383c]"
+          onClick={() => onNew({ date: day })}
+        >
+          <IconPlus size={17} />
+          New booking
+        </Button>
+      </div>
+      <Card className="overflow-hidden rounded-[28px] border-0 bg-[#f8f8fa] !gap-0 !py-0">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-0 border-[#e8e8ea] px-6 py-5 max-[760px]:px-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e7e7e9] text-[#7c7c7c] transition hover:bg-white hover:text-[#303030]"
+              aria-label="Previous week"
+              onClick={() => setDay(addDays(day, -7))}
+            >
+              <IconChevronLeft size={18} />
+            </Button>
+            <h2 className="min-w-[180px] text-center text-[17px] font-semibold tracking-[-0.04em] text-[#202022]">{range}</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e7e7e9] text-[#7c7c7c] transition hover:bg-white hover:text-[#303030]"
+              aria-label="Next week"
+              onClick={() => setDay(addDays(day, 7))}
+            >
+              <IconChevronRight size={18} />
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="ml-2 inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
+              onClick={() => setDay(TODAY)}
+            >
+              Today
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Filter calendar by staff"
+              value={staff}
+              onChange={(e) => setStaff(e.target.value)}
+              className="h-9 rounded-lg border-0 bg-[#f1f1f4] px-3 text-[11px] font-medium text-[#535357] shadow-none outline-none"
+            >
+              <option value="all">All staff</option>
+              {state.staff.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <SegmentedControl
+              options={["Week", "Day"]}
+              value={mode}
+              onChange={setMode}
+            />
+          </div>
+        </div>
+        <div className="max-h-[min(930px,calc(100vh-310px))] overflow-auto max-[760px]:max-h-[min(800px,calc(100vh-280px))]">
+          <div className="grid min-w-[1120px] [grid-template-columns:64px_repeat(7,minmax(145px,1fr))]">
+            <div className="sticky top-0 z-30 flex h-[72px] items-center justify-center border-b-0 border-[#e5e5e7] bg-[#f8f8fa] text-[9px] font-semibold text-[#aaaab0]">
+              WAT
+            </div>
+            {days.map((date) => {
+              const isToday = date === TODAY;
+              const count = state.bookings.filter(
+                (b) => b.startTime.startsWith(date) && b.status !== "Cancelled",
+              ).length;
+              return (
+                <button
+                  key={date}
+                  className={`sticky top-0 z-30 flex h-[72px] flex-col items-center justify-center border-b-0 border-l-0 border-[#e9e9eb] text-[10px] transition hover:bg-[#f1f1f3] [box-shadow:inset_-1px_0_#ededf0] ${
+                    isToday ? "bg-[#f5f5f6] text-[#252527]" : "bg-[#f8f8fa] text-[#909094]"
+                  }`}
+                  onClick={() => {
+                    setDay(date);
+                    setMode("Day");
+                  }}
+                  aria-label={`Show ${dateLabel(date)} in day view`}
+                >
+                  <span className="text-[10px]">
+                    {new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+                      weekday: "short",
+                    })}
+                  </span>
+                  <strong
+                    className={`my-1 flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold ${
+                      isToday
+                        ? "bg-[#252527] text-white"
+                        : "text-[#303033]"
+                    }`}
+                  >
+                    {Number(date.slice(8))}
+                  </strong>
+                  <small className="text-[9px] text-[#aaaab0]">
+                    {count
+                      ? `${count} booking${count > 1 ? "s" : ""}`
+                      : "Open day"}
+                  </small>
+                </button>
+              );
+            })}
+            <div
+              className="relative border-r-0 border-[#e9e9eb] bg-[#fbfbfc]"
+              style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
+            >
+              {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => (
+                <span
+                  key={i}
+                  className={`absolute right-2 text-[9px] font-medium text-[#aaaab0] ${
+                    i === 0 ? "translate-y-1" : "-translate-y-2"
+                  }`}
+                  style={{ top: i * HOUR_HEIGHT }}
+                >
+                  {String(START_HOUR + i).padStart(2, "0")}:00
+                </span>
+              ))}
+            </div>
+            {days.map((date) => {
+              const hours =
+                state.business.hours[
+                  (new Date(`${date}T12:00:00`).getDay() + 6) % 7
+                ];
+              const events = placeEvents(
+                state.bookings.filter(
+                  (b) =>
+                    b.startTime.startsWith(date) &&
+                    b.status !== "Cancelled" &&
+                    (staff === "all" || staff === b.staffId),
+                ),
+              );
+              const isToday = date === TODAY;
+              return (
+                <div
+                  key={date}
+                  className={`relative border-r-0 border-[#e9e9eb] [box-shadow:inset_-1px_0_#ededf0] [background-image:repeating-linear-gradient(_to_bottom,#e9e9eb_0,#e9e9eb_1px,transparent_1px,transparent_78px_)] ${
+                    isToday ? "bg-[#fafafa]" : hours.closed ? "bg-[#f7f7f8]" : "bg-[#fbfbfc]"
+                  }`}
+                  style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
+                >
+                  {Array.from(
+                    { length: (END_HOUR - START_HOUR) * 2 },
+                    (_, i) => {
+                      const hour = START_HOUR + Math.floor(i / 2),
+                        minute = i % 2 ? 30 : 0;
+                      const clock = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+                      const start = `${date}T${clock}:00`;
+                      const enabled =
+                        !hours.closed &&
+                        start > NOW &&
+                        clock >= hours.open &&
+                        clock < hours.close;
+                      return (
+                        <button
+                          key={i}
+                          className="absolute z-0 flex w-full items-center justify-center border-0 border-dashed border-[#f0f0f1] text-[#5f5f63] opacity-0 transition hover:bg-[#eeeeef] hover:opacity-100 disabled:hover:bg-transparent disabled:hover:opacity-0"
+                          style={{
+                            top: (i * HOUR_HEIGHT) / 2,
+                            height: HOUR_HEIGHT / 2,
+                          }}
+                          disabled={!enabled}
+                          aria-label={`New booking ${dateLabel(date)} at ${time(start)}`}
+                          onClick={() =>
+                            onNew({
+                              date,
+                              startTime: start,
+                              ...(staff === "all" ? {} : { staffId: staff }),
+                            })
+                          }
+                        >
+                          <IconPlus size={15} className="h-5 w-5 rounded-full bg-white p-0.5" />
+                        </button>
+                      );
+                    },
+                  )}
+                  {hours.closed && (
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 text-[11px] font-medium uppercase tracking-[0.18em] text-[#bababe]">
+                      Closed
+                    </span>
+                  )}
+                  {events.map(({ booking, lane, lanes }) => {
+                    const service = state.services.find(
+                      (s) => s.id === booking.serviceId,
+                    )!;
+                    const customer = state.customers.find(
+                      (c) => c.id === booking.customerId,
+                    )!;
+                    const minutes =
+                      (new Date(booking.endTime).getTime() -
+                        new Date(booking.startTime).getTime()) /
+                      60000;
+                    const isCompleted = booking.status === "Completed";
+                    const isPending = ["Pending", "Needs confirmation"].includes(booking.status);
+                    return (
+                      <button
+                        key={booking.id}
+                        className={`absolute z-10 overflow-hidden rounded-[9px] border-0 p-2 text-left transition hover:z-20 hover:bg-[#e0e0e3] ${
+                          isCompleted
+                            ? "bg-[#f3f3f4] text-[#858589]"
+                            : isPending
+                              ? "bg-[#faf0ef] text-[#8d6762]"
+                              : "bg-[#ebebed] text-[#353538]"
+                        }`}
+                        style={{
+                          top: offset(booking.startTime) + 2,
+                          height: Math.max(
+                            32,
+                            (minutes / 60) * HOUR_HEIGHT - 4,
+                          ),
+                          left: `calc(${(lane / lanes) * 100}% + 3px)`,
+                          width: `calc(${100 / lanes}% - 6px)`,
+                        }}
+                        onClick={() => onBooking(booking)}
+                        aria-label={`${service.name} with ${customer.name}, ${time(booking.startTime)} to ${time(booking.endTime)}. ${booking.status}.`}
+                      >
+                        <small className={`block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] font-medium ${isPending ? "text-[#a88580]" : "text-[#757579]"}`}>
+                          {time(booking.startTime)} – {time(booking.endTime)}
+                        </small>
+                        <strong className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-semibold leading-[1.15] tracking-[-0.025em] ${isCompleted ? "line-through" : ""}`}>
+                          {service.name}
+                        </strong>
+                        {minutes >= 60 && (
+                          <span className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[10px] ${isPending ? "text-[#a88580]" : "text-[#636367]"}`}>
+                            {customer.name}
+                          </span>
+                        )}
+                        {minutes >= 120 && (
+                          <em className="mt-2 block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] not-italic text-[#858589]">
+                            {
+                              state.staff.find((s) => s.id === booking.staffId)
+                                ?.name
+                            }
+                          </em>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {date === TODAY && (
+                    <div
+                      className="pointer-events-none absolute z-20 h-px w-full bg-[#d48880]"
+                      style={{ top: offset(NOW) }}
+                    >
+                      <i className="absolute -left-1 -top-[3px] h-2 w-2 rounded-full bg-[#d48880]" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-5 border-0 border-[#e8e8ea] px-6 py-4 text-[10px] text-[#77777b]">
+          <span className="flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-[2px] bg-[#b9b9bc]" />
+            Confirmed
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-[2px] bg-[#dba9a3]" />
+            Needs attention
+          </span>
+          <p className="ml-auto text-[#a3a3a7] max-[760px]:ml-0">Click an open time to add a reservation · All times WAT</p>
+        </div>
+      </Card>
+    </>
+  );
 }
 
 export function BookingsPage({ onNew, onBooking }: Props) {
-  const { state } = useStore(); const [query, setQuery] = useState(""); const [filter, setFilter] = useState("Upcoming");
-  const bookings = state.bookings.filter(b => { const c = state.customers.find(c => c.id === b.customerId)!; const s = state.services.find(s => s.id === b.serviceId)!; const searchMatch = `${c.name} ${c.phone} ${b.code} ${s.name}`.toLowerCase().includes(query.toLowerCase()); const statusMatch = filter === "All" || filter === "Upcoming" && b.startTime >= NOW && !["Cancelled", "Completed"].includes(b.status) || filter === "Needs attention" && ["Pending", "Needs confirmation"].includes(b.status) || filter === "Past" && (b.startTime < NOW || b.status === "Completed") || filter === "Cancelled" && b.status === "Cancelled"; return searchMatch && statusMatch; }).sort((a, b) => filter === "Past" ? b.startTime.localeCompare(a.startTime) : a.startTime.localeCompare(b.startTime));
-  const dates = [...new Set(bookings.map(b => b.startTime.slice(0, 10)))];
-  return <><PageHeader eyebrow="EVERY VISIT, IN ONE PLACE" title="Reservations." description="Good things on the calendar." action={<Button className={"button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"} onClick={() => onNew()}><IconPlus size={18} />New booking</Button>} /><Card className={"list-panel overflow-hidden rounded-[22px] border-[#ececec] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"}><div className={"list-toolbar flex flex-wrap items-center justify-between gap-3 border-b border-[#f0f0f0] px-6 py-5 [&_h2]:text-[16px] [&_h2]:font-semibold max-[560px]:px-4"}><div className={"filter-tabs flex flex-wrap items-center gap-1 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-[11px] [&_button]:font-medium [&_button]:text-[#999999] [&_button]:hover:bg-[#f6f6f6] [&_button.active]:bg-[#f0f0f0] [&_button.active]:font-semibold [&_button.active]:text-[#686868] max-[560px]:overflow-x-auto max-[560px]:[&_button]:whitespace-nowrap"}>{["Upcoming", "Needs attention", "Past", "Cancelled", "All"].map(f => <button key={f} className={ui(filter === f ? "active" : "")} onClick={() => setFilter(f)}>{f}</button>)}</div><label className={"search-field flex h-9 min-w-[230px] items-center gap-2 border-[#e9e9e9] px-3 text-[#a7a7a7] [&_input]:w-full [&_input]:bg-transparent [&_input]:text-[11px] [&_input]:text-[#2e2e2e] [&_input]:outline-none [&_input]:placeholder:text-[#b5b5b5] border-0 bg-[#f1f1f4] shadow-none rounded-xl"}><IconSearch size={17} /><Input aria-label="Search reservations" placeholder="Name, phone or booking code" value={query} onChange={e => setQuery(e.target.value)} /></label></div>{dates.map(d => <div className={"booking-date-group px-6 py-5 [&_+_.booking-date-group]:border-t [&_+_.booking-date-group]:border-[#f1f1f1] [&_>_.row-between]:mb-3 [&_>_.row-between_>_span]:text-[10px] [&_.booking-card_+_.booking-card]:mt-2 max-[560px]:px-4 border-0"} key={d}><div className={"row-between flex items-center justify-between gap-4"}><p className={"eyebrow text-[10px] font-semibold tracking-[0.17em] text-[#a0a0a0] uppercase"}>{d === TODAY ? "TODAY · " : ""}{dateLabel(d)}</p><span className={"muted text-[#8e8e8e]"}>{bookings.filter(b => b.startTime.startsWith(d)).length} reservations</span></div>{bookings.filter(b => b.startTime.startsWith(d)).map(b => <BookingCard key={b.id} booking={b} onClick={() => onBooking(b)} />)}</div>)}{!bookings.length && <EmptyState title="Nothing here just yet." description="Try another filter or search, or make a new reservation." />}</Card></>;
+  const { state } = useStore();
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("Upcoming");
+  const bookings = state.bookings
+    .filter((b) => {
+      const c = state.customers.find((c) => c.id === b.customerId)!;
+      const s = state.services.find((s) => s.id === b.serviceId)!;
+      const searchMatch = `${c.name} ${c.phone} ${b.code} ${s.name}`
+        .toLowerCase()
+        .includes(query.toLowerCase());
+      const statusMatch =
+        filter === "All" ||
+        (filter === "Upcoming" &&
+          b.startTime >= NOW &&
+          !["Cancelled", "Completed"].includes(b.status)) ||
+        (filter === "Needs attention" &&
+          ["Pending", "Needs confirmation"].includes(b.status)) ||
+        (filter === "Past" &&
+          (b.startTime < NOW || b.status === "Completed")) ||
+        (filter === "Cancelled" && b.status === "Cancelled");
+      return searchMatch && statusMatch;
+    })
+    .sort((a, b) =>
+      filter === "Past"
+        ? b.startTime.localeCompare(a.startTime)
+        : a.startTime.localeCompare(b.startTime),
+    );
+  const dates = [...new Set(bookings.map((b) => b.startTime.slice(0, 10)))];
+  return (
+    <>
+      <PageHeader
+        eyebrow="EVERY VISIT, IN ONE PLACE"
+        title="Reservations."
+        description="Good things on the calendar."
+        action={
+          <Button
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#38383c]"
+            onClick={() => onNew()}
+          >
+            <IconPlus size={18} />
+            New booking
+          </Button>
+        }
+      />
+      <Card className="overflow-hidden rounded-[22px] border-0 bg-[#f8f8fa]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0f0f0] px-6 py-5 max-[560px]:px-4">
+          <div className="flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
+            {["Upcoming", "Needs attention", "Past", "Cancelled", "All"].map(
+              (f) => {
+                const isActive = filter === f;
+                return (
+                  <button
+                    key={f}
+                    className={`rounded-lg px-3 py-2 text-[11px] transition max-[560px]:whitespace-nowrap ${
+                      isActive
+                        ? "bg-[#f0f0f0] font-semibold text-[#686868]"
+                        : "font-medium text-[#999999] hover:bg-[#f6f6f6]"
+                    }`}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f}
+                  </button>
+                );
+              },
+            )}
+          </div>
+          <label className="flex h-9 min-w-[230px] items-center gap-2 rounded-xl border-0 bg-[#f1f1f4] px-3 text-[#a7a7a7] shadow-none">
+            <IconSearch size={17} />
+            <Input
+              aria-label="Search reservations"
+              placeholder="Name, phone or booking code"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full border-0 bg-transparent text-[11px] text-[#2e2e2e] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-0"
+            />
+          </label>
+        </div>
+        {dates.map((d, index) => (
+          <div
+            className={`px-6 py-5 max-[560px]:px-4 ${
+              index > 0 ? "border-t border-[#f1f1f1]" : ""
+            }`}
+            key={d}
+          >
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+                {d === TODAY ? "TODAY · " : ""}
+                {dateLabel(d)}
+              </p>
+              <span className="text-[10px] text-[#8e8e8e]">
+                {bookings.filter((b) => b.startTime.startsWith(d)).length}{" "}
+                reservations
+              </span>
+            </div>
+            <div className="space-y-2">
+              {bookings
+                .filter((b) => b.startTime.startsWith(d))
+                .map((b) => (
+                  <BookingCard
+                    key={b.id}
+                    booking={b}
+                    onClick={() => onBooking(b)}
+                  />
+                ))}
+            </div>
+          </div>
+        ))}
+        {!bookings.length && (
+          <EmptyState
+            title="Nothing here just yet."
+            description="Try another filter or search, or make a new reservation."
+          />
+        )}
+      </Card>
+    </>
+  );
 }

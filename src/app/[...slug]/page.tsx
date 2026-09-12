@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ReservApp } from "@/components/reserv/app";
-import { seed } from "@/lib/reserv/seed";
+import { ReservApp } from "@/components/app";
+import { seed } from "@/lib/seed";
 
 export async function generateMetadata({
   params,
