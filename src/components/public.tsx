@@ -103,9 +103,7 @@ export function PublicProfile() {
               Call studio
             </a>
             <Button
-              className={
-                "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246]"
               onClick={() => setService(null)}
             >
               Book an appointment <IconArrowUpRight size={17} />

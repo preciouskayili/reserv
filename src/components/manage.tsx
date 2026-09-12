@@ -1,5 +1,4 @@
 "use client";
-import { ui } from "./tw";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -61,9 +60,7 @@ export function ServicesPage() {
         description="Thoughtful services. Ready to reserve."
         action={
           <Button
-            className={
-              "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-            }
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
             onClick={() => setEditing("new")}
           >
             <IconPlus size={18} />
@@ -71,35 +68,27 @@ export function ServicesPage() {
           </Button>
         }
       />
-      <div
-        className={
-          "section-toolbar flex flex-wrap items-center justify-between gap-3"
-        }
-      >
-        <div
-          className={
-            "filter-tabs flex flex-wrap items-center gap-1 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-[11px] [&_button]:font-medium [&_button]:text-[#999999] [&_button]:hover:bg-[#f6f6f6] [&_button.active]:bg-[#f0f0f0] [&_button.active]:font-semibold [&_button.active]:text-[#686868] max-[560px]:overflow-x-auto max-[560px]:[&_button]:whitespace-nowrap"
-          }
-        >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
           {["All services", "Available", "Hidden"].map((f) => (
             <button
               key={f}
-              className={ui(filter === f ? "active" : "")}
+              className={`rounded-lg px-3 py-2 text-[11px] transition max-[560px]:whitespace-nowrap ${
+                filter === f
+                  ? "bg-[#f0f0f0] font-semibold text-[#686868]"
+                  : "font-medium text-[#999999] hover:bg-[#f6f6f6]"
+              }`}
               onClick={() => setFilter(f)}
             >
               {f}
             </button>
           ))}
         </div>
-        <span className={"muted text-[#8e8e8e]"}>
+        <span className="text-[11px] text-[#8e8e8e]">
           {state.services.length} services · {state.staff.length} specialists
         </span>
       </div>
-      <div
-        className={
-          "services-grid mt-5 grid grid-cols-3 gap-4 [&_.service-card]:rounded-b-none max-[1180px]:grid-cols-2 max-[760px]:grid-cols-2 max-[560px]:grid-cols-1"
-        }
-      >
+      <div className="mt-5 grid grid-cols-3 gap-4 max-[1180px]:grid-cols-2 max-[760px]:grid-cols-2 max-[560px]:grid-cols-1">
         {state.services
           .filter(
             (s) =>
@@ -114,9 +103,7 @@ export function ServicesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={
-                      "icon-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
-                    }
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
                     aria-label={`Edit ${s.name}`}
                     onClick={() => setEditing(s)}
                   >
@@ -124,12 +111,9 @@ export function ServicesPage() {
                   </Button>
                 }
               />
-              <div
-                className={
-                  "service-manage-actions flex items-center justify-between rounded-b-[20px] border border-t-0 border-[#ebebeb] bg-white px-5 py-3 text-[10px] font-semibold text-[#7f7f7f] [&_button]:hover:text-[#343434]"
-                }
-              >
+              <div className="flex items-center justify-between rounded-b-[20px] border border-t-0 border-[#ebebeb] bg-white px-5 py-3 text-[10px] font-semibold text-[#7f7f7f]">
                 <button
+                  className="transition hover:text-[#343434]"
                   onClick={() => {
                     update((st) => ({
                       ...st,
@@ -147,6 +131,7 @@ export function ServicesPage() {
                   {s.active ? "Hide from booking page" : "Make available"}
                 </button>
                 <button
+                  className="transition hover:text-[#343434]"
                   aria-label={`Delete ${s.name}`}
                   onClick={() => setDeleting(s)}
                 >
@@ -171,14 +156,12 @@ export function ServicesPage() {
         >
           {state.bookings.some((b) => b.serviceId === deleting.id) ? (
             <>
-              <p className={"muted text-[#8e8e8e]"}>
+              <p className="mb-4 text-[12px] leading-5 text-[#8e8e8e]">
                 This service has reservation history. Hide it from the booking
                 page to preserve those records.
               </p>
               <Button
-                className={
-                  "button primary full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-                }
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -197,14 +180,12 @@ export function ServicesPage() {
             </>
           ) : (
             <>
-              <p className={"muted text-[#8e8e8e]"}>
+              <p className="mb-4 text-[12px] leading-5 text-[#8e8e8e]">
                 This service will be removed from your studio and public page.
               </p>
               <Button
                 variant="destructive"
-                className={
-                  "button danger-button full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-                }
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-50"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -257,7 +238,7 @@ function ServiceEditor({
       onClose={onClose}
     >
       <form
-        className={"editor-form mt-6 [&_>_.button]:mt-4"}
+        className="mt-6 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (!draft.staffIds.length) {
@@ -283,24 +264,17 @@ function ServiceEditor({
           onClose();
         }}
       >
-        <label
-          className={
-            "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-          }
-        >
+        <label className="block text-[11px] font-semibold text-[#636363]">
           Service name
           <Input
             required
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="e.g. Silk press"
+            className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
           />
         </label>
-        <label
-          className={
-            "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-          }
-        >
+        <label className="block text-[11px] font-semibold text-[#636363]">
           Description
           <Textarea
             required
@@ -310,18 +284,11 @@ function ServiceEditor({
               setDraft({ ...draft, description: e.target.value })
             }
             placeholder="Tell customers what makes this service special…"
+            className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
           />
         </label>
-        <div
-          className={
-            "form-grid three grid grid-cols-2 gap-3 [&.three]:grid-cols-3 max-[560px]:grid-cols-1 max-[560px]:[&.three]:grid-cols-1"
-          }
-        >
-          <label
-            className={
-              "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-            }
-          >
+        <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
+          <label className="block text-[11px] font-semibold text-[#636363]">
             Duration (minutes)
             <Input
               type="number"
@@ -333,13 +300,10 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, duration: Number(e.target.value) })
               }
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
-          <label
-            className={
-              "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-            }
-          >
+          <label className="block text-[11px] font-semibold text-[#636363]">
             Price (₦)
             <Input
               type="number"
@@ -349,13 +313,10 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, price: Number(e.target.value) })
               }
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
-          <label
-            className={
-              "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-            }
-          >
+          <label className="block text-[11px] font-semibold text-[#636363]">
             Deposit (₦)
             <Input
               type="number"
@@ -366,25 +327,22 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, deposit: Number(e.target.value) })
               }
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
         </div>
-        <p
-          className={
-            "field-label mb-2 block text-[11px] font-semibold text-[#636363]"
-          }
-        >
+        <p className="mb-2 block text-[11px] font-semibold text-[#636363]">
           Who offers this service?
         </p>
-        <div
-          className={
-            "staff-checkboxes mb-4 flex flex-wrap gap-2 [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_label]:rounded-xl [&_label]:border [&_label]:border-[#ebebeb] [&_label]:px-3 [&_label]:py-2 [&_label]:text-[11px] [&_input]:accent-[#666666]"
-          }
-        >
+        <div className="mb-4 flex flex-wrap gap-2">
           {state.staff.map((s) => (
-            <label key={s.id}>
+            <label
+              key={s.id}
+              className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#ebebeb] bg-white px-3 py-2 text-[11px] text-[#444444] transition hover:border-[#dcdcdc]"
+            >
               <input
                 type="checkbox"
+                className="accent-[#666666]"
                 checked={draft.staffIds.includes(s.id)}
                 onChange={(e) =>
                   setDraft({
@@ -401,18 +359,11 @@ function ServiceEditor({
           ))}
         </div>
         {error && (
-          <p
-            className={"form-error mt-3 text-[11px] font-medium text-[#af625b]"}
-            role="alert"
-          >
+          <p className="mt-3 text-[11px] font-medium text-[#af625b]" role="alert">
             {error}
           </p>
         )}
-        <Button
-          className={
-            "button primary full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-          }
-        >
+        <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
           {service ? "Save changes" : "Create service"}
           <IconCheck size={17} />
         </Button>
@@ -444,9 +395,7 @@ export function CustomersPage({
         description="A little care goes a long way."
         action={
           <Button
-            className={
-              "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-            }
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
             onClick={() => setAdding(true)}
           >
             <IconPlus size={18} />
@@ -454,28 +403,19 @@ export function CustomersPage({
           </Button>
         }
       />
-      <Card
-        className={
-          "list-panel overflow-hidden rounded-[22px] border-[#ececec] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
-        }
-      >
-        <div
-          className={
-            "list-toolbar flex flex-wrap items-center justify-between gap-3 border-b border-[#f0f0f0] px-6 py-5 [&_h2]:text-[16px] [&_h2]:font-semibold max-[560px]:px-4"
-          }
-        >
-          <h2>{state.customers.length} lovely people</h2>
-          <label
-            className={
-              "search-field flex h-9 min-w-[230px] items-center gap-2 border-[#e9e9e9] px-3 text-[#a7a7a7] [&_input]:w-full [&_input]:bg-transparent [&_input]:text-[11px] [&_input]:text-[#2e2e2e] [&_input]:outline-none [&_input]:placeholder:text-[#b5b5b5] border-0 bg-[#f1f1f4] shadow-none rounded-xl"
-            }
-          >
+      <Card className="overflow-hidden rounded-[22px] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0f0f0] px-6 py-5 max-[560px]:px-4">
+          <h2 className="text-[16px] font-semibold text-[#1e1e20]">
+            {state.customers.length} lovely people
+          </h2>
+          <label className="flex h-9 min-w-[230px] items-center gap-2 rounded-xl bg-[#f1f1f4] px-3 text-[#a7a7a7]">
             <IconSearch size={17} />
             <Input
               aria-label="Search customers"
               placeholder="Search by name or phone"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              className="h-full w-full border-0 bg-transparent p-0 text-[11px] text-[#2e2e2e] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-0"
             />
           </label>
         </div>
@@ -493,40 +433,26 @@ export function CustomersPage({
             .sort((a, b) => b.startTime.localeCompare(a.startTime))[0];
           return (
             <button
-              className={
-                "customer-row flex w-full items-center gap-4 border-[#f1f1f1] px-6 py-4 text-left hover:bg-[#fcfcfc] [&:last-child]:border-b-0 [&_>_svg]:text-[#aaaaaa] max-[560px]:gap-2 max-[560px]:px-4 border-0 rounded-xl"
-              }
               key={c.id}
+              className="flex w-full items-center gap-4 border-b border-[#f1f1f1] px-6 py-4 text-left transition hover:bg-[#fcfcfc] last:border-b-0 max-[560px]:gap-2 max-[560px]:px-4"
               onClick={() => setSelected(c.id)}
             >
               <Avatar name={c.name} />
-              <span
-                className={
-                  "customer-row-name min-w-[170px] flex-1 [&_strong]:block [&_small]:block [&_strong]:text-[12px] [&_strong]:font-semibold [&_small]:mt-1 [&_small]:text-[10px] [&_small]:text-[#a6a6a6] max-[560px]:min-w-0"
-                }
-              >
-                <strong>{c.name}</strong>
-                <small>{c.phone}</small>
+              <span className="min-w-[170px] flex-1 max-[560px]:min-w-0">
+                <strong className="block text-[12px] font-semibold text-[#222222]">{c.name}</strong>
+                <small className="mt-1 block text-[10px] text-[#a6a6a6]">{c.phone}</small>
               </span>
-              <span
-                className={
-                  "customer-visits w-[145px] text-[10px] text-[#919191] max-[560px]:w-auto"
-                }
-              >
+              <span className="w-[145px] text-[10px] text-[#919191] max-[560px]:w-auto">
                 {bookings.length} reservations
               </span>
-              <span
-                className={
-                  "customer-next text-[10px] text-[#919191] w-[210px] max-[760px]:hidden"
-                }
-              >
+              <span className="w-[210px] text-[10px] text-[#919191] max-[760px]:hidden">
                 {next
                   ? `Next visit: ${new Date(next.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                   : last
                     ? `Last visit: ${new Date(last.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                     : "Let’s plan a first visit"}
               </span>
-              <IconChevronRight size={18} />
+              <IconChevronRight size={18} className="text-[#aaaaaa]" />
             </button>
           );
         })}
@@ -559,7 +485,7 @@ export function CustomersPage({
           onClose={() => setAdding(false)}
         >
           <form
-            className={"editor-form mt-6 [&_>_.button]:mt-4"}
+            className="mt-6 space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
@@ -589,19 +515,16 @@ export function CustomersPage({
               toast.success("Customer added");
             }}
           >
-            <label
-              className={
-                "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-              }
-            >
+            <label className="block text-[11px] font-semibold text-[#636363]">
               Full name
-              <Input name="name" required minLength={2} />
+              <Input
+                name="name"
+                required
+                minLength={2}
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              />
             </label>
-            <label
-              className={
-                "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-              }
-            >
+            <label className="block text-[11px] font-semibold text-[#636363]">
               Phone number
               <Input
                 name="phone"
@@ -609,13 +532,10 @@ export function CustomersPage({
                 required
                 pattern="[+0-9 ()-]{10,20}"
                 placeholder="+234 800 000 0000"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <Button
-              className={
-                "button primary full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
-            >
+            <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
               Add customer
             </Button>
           </form>
@@ -624,6 +544,7 @@ export function CustomersPage({
     </>
   );
 }
+
 function CustomerDetails({
   customer,
   onClose,
@@ -647,44 +568,35 @@ function CustomerDetails({
       description={customer.phone}
       onClose={onClose}
     >
-      <div className={"customer-detail-actions my-6 flex gap-2"}>
+      <div className="my-6 flex gap-2">
         <a
-          className={
-            "button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-          }
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
           href={`tel:${customer.phone.replaceAll(" ", "")}`}
         >
           <IconPhone size={16} />
           Call customer
         </a>
         <Button
-          className={
-            "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-          }
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
           onClick={onNew}
         >
           <IconPlus size={16} />
           New booking
         </Button>
       </div>
-      <label
-        className={
-          "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-        }
-      >
+      <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
         A little something to remember
         <Textarea
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
         />
       </label>
       <Button
         variant="secondary"
         size="sm"
-        className={
-          "small-button inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
-        }
+        className="inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
         onClick={() => {
           update((s) => ({
             ...s,
@@ -697,21 +609,12 @@ function CustomerDetails({
       >
         Save note
       </Button>
-      <h3
-        className={
-          "history-heading mt-7 border-t border-[#efefef] pt-6 text-[15px] font-semibold"
-        }
-      >
+      <h3 className="mt-7 border-t border-[#efefef] pt-6 text-[15px] font-semibold text-[#1e1e20]">
         Reservation history
       </h3>
       {bookings.map((b) => (
-        <div
-          className={
-            "customer-history mt-3 [&_>_.muted]:mb-2 [&_>_.muted]:block [&_>_.muted]:text-[9px]"
-          }
-          key={b.id}
-        >
-          <small className={"muted text-[#8e8e8e]"}>
+        <div className="mt-3" key={b.id}>
+          <small className="mb-2 block text-[9px] text-[#8e8e8e]">
             {dateLabel(b.startTime)}
           </small>
           <BookingCard compact booking={b} onClick={() => onBooking(b)} />
@@ -748,9 +651,7 @@ export function BusinessProfilePage() {
         description="Everything your customers — and receptionist — should know."
         action={
           <Link
-            className={
-              "button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-            }
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
             href={`/b/${state.business.slug}`}
           >
             <IconEye size={17} />
@@ -758,37 +659,19 @@ export function BusinessProfilePage() {
           </Link>
         }
       />
-      <div
-        className={
-          "profile-editor-layout grid grid-cols-[260px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[210px_minmax(0,1fr)] max-[760px]:grid-cols-1"
-        }
-      >
-        <aside
-          className={
-            "profile-editor-aside sticky top-5 [&_>_.text-link]:mt-5 [&_>_.text-link]:pl-3 max-[760px]:static"
-          }
-        >
-          <div
-            className={
-              "studio-preview mb-4 rounded-[20px] p-5 [&_h3]:mt-5 [&_h3]:text-[19px] [&_h3]:font-semibold [&_h3]:-0.04em] [&_p]:mt-1 [&_p]:text-[11px] [&_p]:text-[#979797] [&_.soft-label]:mt-5 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
-            }
-          >
+      <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[210px_minmax(0,1fr)] max-[760px]:grid-cols-1">
+        <aside className="sticky top-5 max-[760px]:static">
+          <div className="mb-4 rounded-[20px] bg-[#f8f8fa] p-5 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
             <StudioMark large />
-            <h3>{draft.name}</h3>
-            <p>{draft.category}</p>
-            <span
-              className={
-                "soft-label inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]"
-              }
-            >
+            <h3 className="mt-5 text-[19px] font-semibold tracking-[-0.04em] text-[#1e1e20]">
+              {draft.name}
+            </h3>
+            <p className="mt-1 text-[11px] text-[#979797]">{draft.category}</p>
+            <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
               Your public studio page
             </span>
           </div>
-          <nav
-            className={
-              "editor-tabs overflow-hidden rounded-[16px] border border-[#ececec] bg-white p-2 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:justify-between [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-3 [&_button]:text-left [&_button]:text-[11px] [&_button]:text-[#8c8c8c] [&_button.active]:bg-[#f3f3f3] [&_button.active]:font-semibold [&_button.active]:text-[#5f5f5f] max-[760px]:grid max-[760px]:grid-cols-2"
-            }
-          >
+          <nav className="overflow-hidden rounded-[16px] border border-[#ececec] bg-white p-2 max-[760px]:grid max-[760px]:grid-cols-2">
             {[
               "The essentials",
               "Opening hours",
@@ -797,7 +680,11 @@ export function BusinessProfilePage() {
             ].map((t) => (
               <button
                 key={t}
-                className={ui(t === tab ? "active" : "")}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-[11px] transition ${
+                  t === tab
+                    ? "bg-[#f3f3f3] font-semibold text-[#5f5f5f]"
+                    : "text-[#8c8c8c] hover:bg-[#fafafa]"
+                }`}
                 onClick={() => setTab(t)}
               >
                 {t}
@@ -806,47 +693,34 @@ export function BusinessProfilePage() {
             ))}
           </nav>
           <Link
-            className={
-              "inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
-            }
+            className="mt-5 inline-flex items-center gap-2 pl-3 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
             href="/services"
           >
             Manage your services <IconArrowUpRight size={15} />
           </Link>
         </aside>
         <form
-          className={
-            "panel profile-form rounded-[21px] border-[#ededed] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a] p-8 [&_h2]:mb-6 [&_h2]:mt-2 [&_h2]:text-[27px] [&_h2]:font-semibold [&_h2]:-0.05em]"
-          }
+          className="rounded-[21px] bg-[#f8f8fa] p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
           onSubmit={save}
         >
-          <p
-            className={
-              "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-            }
-          >
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
             MAKE A GOOD FIRST IMPRESSION
           </p>
-          <h2>{tab}</h2>
+          <h2 className="mb-6 mt-2 text-[27px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+            {tab}
+          </h2>
           {tab === "The essentials" && (
             <>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 Business name
                 <Input
                   required
                   value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 A little about your studio
                 <Textarea
                   required
@@ -855,24 +729,18 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, description: e.target.value })
                   }
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <div
-                className={
-                  "form-grid grid grid-cols-2 gap-3 [&.three]:grid-cols-3 max-[560px]:grid-cols-1 max-[560px]:[&.three]:grid-cols-1"
-                }
-              >
-                <label
-                  className={
-                    "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                  }
-                >
+              <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                   Category
                   <select
                     value={draft.category}
                     onChange={(e) =>
                       setDraft({ ...draft, category: e.target.value })
                     }
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   >
                     {[
                       "Hair & beauty",
@@ -889,11 +757,7 @@ export function BusinessProfilePage() {
                     ))}
                   </select>
                 </label>
-                <label
-                  className={
-                    "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                  }
-                >
+                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                   Business phone
                   <Input
                     required
@@ -902,14 +766,11 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, phone: e.target.value })
                     }
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
               </div>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 Your location
                 <Input
                   required
@@ -917,13 +778,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, address: e.target.value })
                   }
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <div
-                className={
-                  "notice flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]"
-                }
-              >
+              <div className="flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]">
                 <IconFlower size={18} />
                 Your public page: /b/{state.business.slug}
               </div>
@@ -931,23 +789,19 @@ export function BusinessProfilePage() {
           )}
           {tab === "Opening hours" && (
             <>
-              <p className={"muted text-[#8e8e8e]"}>
+              <p className="text-[11px] text-[#8e8e8e]">
                 A time for work, and a time for yourself. All times are in WAT.
               </p>
-              <div
-                className={
-                  "hours-editor mt-5 [&_>_div]:grid [&_>_div]:grid-cols-[1fr_110px_24px_110px] [&_>_div]:items-center [&_>_div]:gap-2 [&_>_div]:border-b [&_>_div]:border-[#f0f0f0] [&_>_div]:py-3 [&_.check-field]:mb-0 [&_input[type='time']]:min-w-0 [&_input[type='time']]:rounded-lg [&_input[type='time']]:border [&_input[type='time']]:border-[#e8e8e8] [&_input[type='time']]:px-2 [&_input[type='time']]:py-2 [&_input[type='time']]:text-[11px] [&_>_div_>_span]:text-center [&_>_div_>_span]:text-[10px] [&_>_div_>_span]:text-[#a5a5a5] max-[560px]:[&_>_div]:grid-cols-[1fr_90px_15px_90px] max-[560px]:[&_input[type='time']]:px-1 max-[560px]:[&_input[type='time']]:text-[10px]"
-                }
-              >
+              <div className="mt-5 divide-y divide-[#f0f0f0]">
                 {draft.hours.map((h, i) => (
-                  <div key={h.day}>
-                    <label
-                      className={
-                        "check-field mb-4 flex items-center gap-2 text-[11px] text-[#727272] [&_input]:accent-[#646464]"
-                      }
-                    >
+                  <div
+                    key={h.day}
+                    className="grid grid-cols-[1fr_110px_24px_110px] items-center gap-2 py-3 max-[560px]:grid-cols-[1fr_90px_15px_90px]"
+                  >
+                    <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[#727272]">
                       <input
                         type="checkbox"
+                        className="accent-[#646464]"
                         checked={!h.closed}
                         onChange={(e) =>
                           setDraft({
@@ -961,7 +815,7 @@ export function BusinessProfilePage() {
                       {h.day}
                     </label>
                     {h.closed ? (
-                      <span className={"muted text-[#8e8e8e]"}>Closed</span>
+                      <span className="col-span-3 text-[11px] text-[#8e8e8e]">Closed</span>
                     ) : (
                       <>
                         <Input
@@ -969,6 +823,7 @@ export function BusinessProfilePage() {
                           type="time"
                           required
                           value={h.open}
+                          className="min-w-0 rounded-lg border border-[#e8e8e8] bg-white px-2 py-1 text-[11px] text-[#2f2f2f] shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[10px]"
                           onChange={(e) =>
                             setDraft({
                               ...draft,
@@ -978,12 +833,13 @@ export function BusinessProfilePage() {
                             })
                           }
                         />
-                        <span>to</span>
+                        <span className="text-center text-[10px] text-[#a5a5a5]">to</span>
                         <Input
                           aria-label={`${h.day} closing time`}
                           type="time"
                           required
                           value={h.close}
+                          className="min-w-0 rounded-lg border border-[#e8e8e8] bg-white px-2 py-1 text-[11px] text-[#2f2f2f] shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[10px]"
                           onChange={(e) =>
                             setDraft({
                               ...draft,
@@ -1002,11 +858,7 @@ export function BusinessProfilePage() {
           )}
           {tab === "Booking & policies" && (
             <>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 Booking policy
                 <Textarea
                   required
@@ -1015,13 +867,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, bookingPolicy: e.target.value })
                   }
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 Cancellation policy
                 <Textarea
                   required
@@ -1030,13 +879,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, cancellationPolicy: e.target.value })
                   }
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label
-                className={
-                  "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                }
-              >
+              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                 Deposit policy
                 <Textarea
                   rows={3}
@@ -1044,18 +890,11 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, depositPolicy: e.target.value })
                   }
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <div
-                className={
-                  "form-grid grid grid-cols-2 gap-3 [&.three]:grid-cols-3 max-[560px]:grid-cols-1 max-[560px]:[&.three]:grid-cols-1"
-                }
-              >
-                <label
-                  className={
-                    "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                  }
-                >
+              <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                   Minimum notice (minutes)
                   <Input
                     type="number"
@@ -1071,13 +910,10 @@ export function BusinessProfilePage() {
                         },
                       })
                     }
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
-                <label
-                  className={
-                    "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                  }
-                >
+                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                   Book ahead (days)
                   <Input
                     type="number"
@@ -1093,6 +929,7 @@ export function BusinessProfilePage() {
                         },
                       })
                     }
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
               </div>
@@ -1102,30 +939,18 @@ export function BusinessProfilePage() {
             <>
               {draft.faqs.map((faq, i) => (
                 <div
-                  className={
-                    "faq-editor mb-4 rounded-xl border border-[#ececec] p-4"
-                  }
+                  className="mb-4 rounded-xl border border-[#ececec] p-4"
                   key={i}
                 >
-                  <div
-                    className={
-                      "row-between flex items-center justify-between gap-4"
-                    }
-                  >
-                    <p
-                      className={
-                        "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-                      }
-                    >
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
                       QUESTION {i + 1}
                     </p>
                     <Button
                       variant="ghost"
                       size="icon"
                       type="button"
-                      className={
-                        "icon-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
-                      }
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
                       aria-label={`Remove question ${i + 1}`}
                       onClick={() =>
                         setDraft({
@@ -1137,11 +962,7 @@ export function BusinessProfilePage() {
                       <IconX size={16} />
                     </Button>
                   </div>
-                  <label
-                    className={
-                      "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                    }
-                  >
+                  <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                     Question
                     <Input
                       required
@@ -1154,13 +975,10 @@ export function BusinessProfilePage() {
                           ),
                         })
                       }
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
-                  <label
-                    className={
-                      "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-                    }
-                  >
+                  <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
                     Answer
                     <Textarea
                       required
@@ -1174,15 +992,14 @@ export function BusinessProfilePage() {
                           ),
                         })
                       }
+                      className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
                 </div>
               ))}
               <Button
                 variant="secondary"
-                className={
-                  "button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-                }
+                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
                 type="button"
                 onClick={() =>
                   setDraft({
@@ -1196,18 +1013,12 @@ export function BusinessProfilePage() {
               </Button>
             </>
           )}
-          <div
-            className={
-              "form-save mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5 text-[11px]"
-            }
-          >
-            <span className={"muted text-[#8e8e8e]"}>
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5 text-[11px]">
+            <span className="text-[#8e8e8e]">
               Changes update your public profile.
             </span>
             <Button
-              className={
-                "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
               type="submit"
             >
               Save changes <IconCheck size={16} />
@@ -1236,87 +1047,55 @@ export function AgentPage() {
         title="Meet your helping hand."
         description="More time with your customers. Less time on the phone."
       />
-      <div
-        className={
-          "agent-layout grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1"
-        }
-      >
-        <Card
-          className={
-            "agent-hero panel [&_.soft-label_i]:h-1.5 [&_.soft-label_i]:w-1.5 [&_.soft-label_i]:rounded-full [&_.soft-label_i]:bg-[#aeaeae] [&_h2]:mt-4 [&_h2]:text-[32px] [&_h2]:font-medium [&_h2]:-0.06em] [&_>_p]:mt-2 [&_>_p]:max-w-[400px] [&_>_p]:text-[13px] [&_>_p]:leading-6 [&_>_p]:text-[#949494] [&_>_.button]:mt-5 rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
-          }
-        >
-          <span
-            className={
-              "agent-avatar mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#ececec] text-[#727272]"
-            }
-          >
+      <div className="grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1">
+        <Card className="rounded-[21px] bg-[#f8f8fa] p-6 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#ececec] text-[#727272]">
             <IconHeadphones size={46} stroke={1.2} />
           </span>
-          <span
-            className={
-              "soft-label inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]"
-            }
-          >
-            <i />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
+            <i className="h-1.5 w-1.5 rounded-full bg-[#aeaeae]" />
             Not connected yet
           </span>
-          <h2>AI Receptionist</h2>
-          <p>
+          <h2 className="mt-4 text-[32px] font-medium tracking-[-0.06em] text-[#1e1e20]">
+            AI Receptionist
+          </h2>
+          <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-[#949494]">
             A thoughtful first hello. Here to answer calls, look after your
             reservations, and make every customer feel welcome.
           </p>
-          <div
-            className={
-              "agent-properties my-7 border-y border-[#efefef] [&_>_div]:flex [&_>_div]:items-center [&_>_div]:gap-3 [&_>_div]:border-b [&_>_div]:border-[#efefef] [&_>_div]:py-4 [&_>_div]:text-[11px] [&_>_div:last-child]:border-0 [&_svg]:text-[#929292] [&_span]:flex-1 [&_span]:text-[#959595] [&_strong]:text-[10px] [&_strong]:font-semibold"
-            }
-          >
-            <div>
-              <IconPhone size={18} />
-              <span>Agent phone number</span>
-              <strong>Not assigned</strong>
+          <div className="my-7 divide-y divide-[#efefef] border-y border-[#efefef]">
+            <div className="flex items-center gap-3 py-4 text-[11px]">
+              <IconPhone size={18} className="text-[#929292]" />
+              <span className="flex-1 text-[#959595]">Agent phone number</span>
+              <strong className="text-[10px] font-semibold text-[#303033]">Not assigned</strong>
             </div>
-            <div>
-              <IconClock size={18} />
-              <span>Calling hours</span>
-              <strong>Studio opening hours</strong>
+            <div className="flex items-center gap-3 py-4 text-[11px]">
+              <IconClock size={18} className="text-[#929292]" />
+              <span className="flex-1 text-[#959595]">Calling hours</span>
+              <strong className="text-[10px] font-semibold text-[#303033]">Studio opening hours</strong>
             </div>
-            <div>
-              <IconShieldCheck size={18} />
-              <span>Connection status</span>
-              <strong>Coming soon</strong>
+            <div className="flex items-center gap-3 py-4 text-[11px]">
+              <IconShieldCheck size={18} className="text-[#929292]" />
+              <span className="flex-1 text-[#959595]">Connection status</span>
+              <strong className="text-[10px] font-semibold text-[#303033]">Coming soon</strong>
             </div>
           </div>
-          <div
-            className={
-              "notice flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]"
-            }
-          >
+          <div className="flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]">
             The receptionist is not connected yet. These are previews of how
             they’ll help your studio.
           </div>
           <Link
             href="/business-profile"
-            className={
-              "button full inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-            }
+            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
           >
             Prepare your studio details <IconArrowRight size={17} />
           </Link>
         </Card>
-        <section
-          className={
-            "agent-capabilities [&_h2]:mt-4 [&_h2]:text-[32px] [&_h2]:font-medium [&_h2]:-0.06em] px-4 py-5 [&_h2]:mb-6"
-          }
-        >
-          <p
-            className={
-              "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-            }
-          >
+        <section className="px-4 py-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
             A LITTLE LESS ON YOUR PLATE
           </p>
-          <h2>
+          <h2 className="mb-6 mt-4 text-[32px] font-medium tracking-[-0.06em] text-[#1e1e20]">
             Good with people.
             <br />
             Great with the details.
@@ -1344,59 +1123,43 @@ export function AgentPage() {
             },
           ].map(({ icon: Icon, title, text }) => (
             <div
-              className={
-                "capability flex gap-4 border-t border-[#ececec] py-5 [&_h3]:text-[13px] [&_h3]:font-semibold [&_p]:mt-1 [&_p]:text-[11px] [&_p]:leading-5 [&_p]:text-[#989898]"
-              }
+              className="flex gap-4 border-t border-[#ececec] py-5"
               key={title}
             >
-              <span
-                className={
-                  "service-symbol inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]"
-                }
-              >
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
                 <Icon size={21} />
               </span>
               <div>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3 className="text-[13px] font-semibold text-[#222222]">{title}</h3>
+                <p className="mt-1 text-[11px] leading-5 text-[#989898]">{text}</p>
               </div>
             </div>
           ))}
         </section>
       </div>
-      <Card
-        className={
-          "panel agent-activity rounded-[21px] border-[#ededed] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a] mt-6 p-8 [&_h2]:mt-2 [&_h2]:text-[23px] [&_h2]:font-semibold [&_h2]:-0.04em] [&_.filter-tabs]:mt-6"
-        }
-      >
-        <div className={"row-between flex items-center justify-between gap-4"}>
+      <Card className="mt-6 rounded-[21px] bg-[#f8f8fa] p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p
-              className={
-                "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-              }
-            >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
               A GLIMPSE OF WHAT’S TO COME
             </p>
-            <h2>A day at the front desk.</h2>
+            <h2 className="mt-2 text-[23px] font-semibold tracking-[-0.04em] text-[#1e1e20]">
+              A day at the front desk.
+            </h2>
           </div>
-          <span
-            className={
-              "inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]"
-            }
-          >
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
             Sample activity
           </span>
         </div>
-        <div
-          className={
-            "flex flex-wrap items-center gap-1 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-[11px] [&_button]:font-medium [&_button]:text-[#999999] [&_button]:hover:bg-[#f6f6f6] [&_button.active]:bg-[#f0f0f0] [&_button.active]:font-semibold [&_button.active]:text-[#686868] max-[560px]:overflow-x-auto max-[560px]:[&_button]:whitespace-nowrap"
-          }
-        >
+        <div className="mt-6 flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
           {["All activity", "Reservations", "Confirmations"].map((t) => (
             <button
               key={t}
-              className={ui(tab === t ? "active" : "")}
+              className={`rounded-lg px-3 py-2 text-[11px] transition max-[560px]:whitespace-nowrap ${
+                tab === t
+                  ? "bg-[#f0f0f0] font-semibold text-[#686868]"
+                  : "font-medium text-[#999999] hover:bg-[#f6f6f6]"
+              }`}
               onClick={() => setTab(t)}
             >
               {t}
@@ -1405,16 +1168,10 @@ export function AgentPage() {
         </div>
         {activities.map((a) => (
           <div
-            className={
-              "flex items-center gap-4 border-t border-[#efefef] py-5 [&_>_div]:flex-1 [&_strong]:text-[12px] [&_strong]:font-semibold [&_p]:mt-1 [&_p]:text-[11px] [&_p]:text-[#999999] [&_small]:text-[9px] [&_small]:text-[#a7a7a7]"
-            }
+            className="flex items-center gap-4 border-t border-[#efefef] py-5"
             key={a.id}
           >
-            <span
-              className={
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f2f2] text-[#808080]"
-              }
-            >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f2f2] text-[#808080]">
               {a.kind === "confirmed" ? (
                 <IconCheck size={19} />
               ) : a.kind === "created" ? (
@@ -1423,11 +1180,11 @@ export function AgentPage() {
                 <IconCalendarEvent size={19} />
               )}
             </span>
-            <div>
-              <strong>{a.title}</strong>
-              <p>{a.detail}</p>
+            <div className="flex-1">
+              <strong className="block text-[12px] font-semibold text-[#222222]">{a.title}</strong>
+              <p className="mt-1 text-[11px] text-[#999999]">{a.detail}</p>
             </div>
-            <small>{a.time}</small>
+            <small className="text-[9px] text-[#a7a7a7]">{a.time}</small>
           </div>
         ))}
       </Card>
@@ -1446,24 +1203,14 @@ export function SettingsPage() {
         title="The little preferences."
         description="Set things up for the way you work."
       />
-      <div
-        className={
-          "settings-layout grid grid-cols-2 items-start gap-5 [&_>_div]:space-y-5 [&_.panel]:p-7 [&_h2]:mb-5 [&_h2]:mt-2 [&_h2]:text-[23px] [&_h2]:font-semibold [&_h2]:-0.05em] [&_form_>_.button]:mt-6 max-[760px]:grid-cols-1"
-        }
-      >
-        <Card
-          className={
-            "panel rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
-          }
-        >
-          <p
-            className={
-              "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-            }
-          >
+      <div className="grid grid-cols-2 items-start gap-5 max-[760px]:grid-cols-1">
+        <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
             YOUR WORKSPACE
           </p>
-          <h2>A personal touch.</h2>
+          <h2 className="mb-5 mt-2 text-[23px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+            A personal touch.
+          </h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -1474,67 +1221,42 @@ export function SettingsPage() {
               toast.success("Preferences saved");
             }}
           >
-            <label
-              className={
-                "field mb-4 block text-[11px] font-semibold text-[#636363] [&_input]:mt-2 [&_input]:block [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border-[#e8e8e8] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-[11px] [&_input]:font-normal [&_input]:text-[#2f2f2f] [&_input]:outline-none [&_input]:transition [&_input]:placeholder:text-[#b5b5b5] [&_input]:focus:border-[#a0a0a0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#a2a2a228] [&_textarea]:mt-2 [&_textarea]:block [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:rounded-[10px] [&_textarea]:border-[#e8e8e8] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-[11px] [&_textarea]:font-normal [&_textarea]:text-[#2f2f2f] [&_textarea]:outline-none [&_textarea]:transition [&_textarea]:placeholder:text-[#b5b5b5] [&_textarea]:focus:border-[#a0a0a0] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#a2a2a228] [&_select]:mt-2 [&_select]:block [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border-[#e8e8e8] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-[11px] [&_select]:font-normal [&_select]:text-[#2f2f2f] [&_select]:outline-none [&_select]:transition [&_select]:placeholder:text-[#b5b5b5] [&_select]:focus:border-[#a0a0a0] [&_select]:focus:ring-2 [&_select]:focus:ring-[#a2a2a228] [&_textarea]:resize-y [&_input[readonly]]:bg-[#f8f8f8] [&_input[readonly]]:text-[#8b8b8b] [&_input]:border-0 [&_input]:bg-[#f1f1f4] [&_input]:shadow-none [&_textarea]:border-0 [&_textarea]:bg-[#f1f1f4] [&_textarea]:shadow-none [&_select]:border-0 [&_select]:bg-[#f1f1f4] [&_select]:shadow-none [&_input:focus]:border-0 [&_input:focus]:ring-2 [&_input:focus]:ring-[#d8d8da] [&_textarea:focus]:border-0 [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#d8d8da] [&_select:focus]:border-0 [&_select:focus]:ring-2 [&_select:focus]:ring-[#d8d8da]"
-              }
-            >
+            <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
               What should we call you?
               <Input
                 required
                 minLength={2}
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <div
-              className={
-                "settings-info flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px] [&_span]:text-[#a0a0a0] [&_strong]:text-right [&_strong]:font-semibold"
-              }
-            >
-              <span>Time zone</span>
-              <strong>Africa/Lagos · WAT (UTC+1)</strong>
+            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
+              <span className="text-[#a0a0a0]">Time zone</span>
+              <strong className="text-right font-semibold text-[#303033]">Africa/Lagos · WAT (UTC+1)</strong>
             </div>
-            <div
-              className={
-                "settings-info flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px] [&_span]:text-[#a0a0a0] [&_strong]:text-right [&_strong]:font-semibold"
-              }
-            >
-              <span>Currency</span>
-              <strong>Nigerian naira (₦)</strong>
+            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
+              <span className="text-[#a0a0a0]">Currency</span>
+              <strong className="text-right font-semibold text-[#303033]">Nigerian naira (₦)</strong>
             </div>
-            <div
-              className={
-                "settings-info flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px] [&_span]:text-[#a0a0a0] [&_strong]:text-right [&_strong]:font-semibold"
-              }
-            >
-              <span>Appearance</span>
-              <strong>Light & calm</strong>
+            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
+              <span className="text-[#a0a0a0]">Appearance</span>
+              <strong className="text-right font-semibold text-[#303033]">Light & calm</strong>
             </div>
-            <Button
-              className={
-                "button primary inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
-            >
+            <Button className="mt-6 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
               Save preferences <IconCheck size={16} />
             </Button>
           </form>
         </Card>
-        <div>
-          <Card
-            className={
-              "panel rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
-            }
-          >
-            <p
-              className={
-                "eyebrow text-[10px] font-semibold 0.17em] text-[#a0a0a0] uppercase"
-              }
-            >
+        <div className="space-y-5">
+          <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
               THOUGHTFUL FOLLOW-UPS
             </p>
-            <h2>Reminders & confirmations.</h2>
-            <p className={"muted text-[#8e8e8e]"}>
+            <h2 className="mb-2 mt-2 text-[23px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+              Reminders & confirmations.
+            </h2>
+            <p className="text-[11px] text-[#8e8e8e]">
               Save your preferences for when your receptionist is connected.
             </p>
             {[
@@ -1550,14 +1272,12 @@ export function SettingsPage() {
               },
             ].map((item) => (
               <div
-                className={
-                  "toggle-row flex items-center gap-3 border-b border-[#efefef] py-4 [&_>_span:first-child]:flex-1 [&_strong]:block [&_small]:block [&_strong]:text-[11px] [&_small]:mt-1 [&_small]:text-[10px] [&_small]:text-[#a3a3a3] [&_input]:sr-only"
-                }
+                className="flex items-center gap-3 border-b border-[#efefef] py-4"
                 key={item.key}
               >
-                <span>
-                  <strong>{item.title}</strong>
-                  <small>{item.text}</small>
+                <span className="flex-1">
+                  <strong className="block text-[11px] font-semibold text-[#303033]">{item.title}</strong>
+                  <small className="mt-1 block text-[10px] text-[#a3a3a3]">{item.text}</small>
                 </span>
                 <Switch
                   aria-label={item.title}
@@ -1573,26 +1293,18 @@ export function SettingsPage() {
               </div>
             ))}
           </Card>
-          <Card
-            className={
-              "panel demo-settings rounded-[21px] border-[#ededed] p-6 border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a] [&_p]:my-3 [&_p]:text-[11px] [&_p]:leading-5 [&_p]:text-[#9b9b9b]"
-            }
-          >
-            <div
-              className={"row-between flex items-center justify-between gap-4"}
-            >
-              <h3>A space to experiment.</h3>
-              <IconSparkles size={19} />
+          <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-[15px] font-semibold text-[#1e1e20]">A space to experiment.</h3>
+              <IconSparkles size={19} className="text-[#888888]" />
             </div>
-            <p>
+            <p className="my-3 text-[11px] leading-5 text-[#9b9b9b]">
               This is a mock workspace. Your changes are saved in this browser.
               The demo day is September 12, 2026, at 10:15 AM.
             </p>
             <Button
               variant="secondary"
-              className={
-                "button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
               onClick={() => setResetOpen(true)}
             >
               Reset demo workspace
@@ -1606,29 +1318,21 @@ export function SettingsPage() {
           description="Reset this browser’s demo workspace."
           onClose={() => setResetOpen(false)}
         >
-          <p className={"muted text-[#8e8e8e]"}>
+          <p className="text-[12px] leading-5 text-[#8e8e8e]">
             This removes the reservations, services, and edits you added in this
             demo and restores the original sample studio.
           </p>
-          <div
-            className={
-              "flow-footer mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5 [&_.button:last-child]:ml-auto"
-            }
-          >
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5">
             <Button
               variant="secondary"
-              className={
-                "button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
               onClick={() => setResetOpen(false)}
             >
               Keep my changes
             </Button>
             <Button
               variant="destructive"
-              className={
-                "button danger-button inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border px-4 text-[11px] font-semibold transition disabled:opacity-50 [&.ghost]:border-transparent [&.ghost]:bg-transparent [&.full]:w-full [&.danger-button]:border-[#a8514b] [&.danger-button]:bg-[#a8514b] [&.danger-button]:text-white [&.danger-button]:hover:bg-[#91453f] [&.primary]:border-[#1e1e20] [&.primary]:bg-[#1e1e20] [&.primary]:text-white [&.primary]:hover:border-[#424246] [&.primary]:hover:bg-[#424246] border-[#e5e5e7] bg-white text-[#303033] hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
-              }
+              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f]"
               onClick={() => {
                 reset();
                 setOwner("Jessica");
