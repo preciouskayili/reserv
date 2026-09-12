@@ -13,6 +13,7 @@ import {
   IconCheck,
   IconChecks,
   IconClock,
+  IconCreditCard,
   IconMapPin,
   IconUser,
 } from "@tabler/icons-react";
@@ -217,6 +218,7 @@ export function BookingFlow({
               studio. No payment has been taken.
             </p>
           )}
+          <Link href={`/pay/${result.code}`} onClick={onClose} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-[13px] font-medium text-primary transition hover:bg-muted"><IconCreditCard size={17} /> View payment options</Link>
           <Link
             className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
             href={publicFlow ? `/r/${result.code}` : `/bookings/${result.id}`}

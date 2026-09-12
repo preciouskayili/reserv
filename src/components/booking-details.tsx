@@ -13,6 +13,7 @@ import {
   IconCalendarEvent,
   IconCheck,
   IconClock,
+  IconCreditCard,
   IconPhone,
   IconTrash,
 } from "@tabler/icons-react";
@@ -119,6 +120,7 @@ export function BookingDetails({
               {service.name}
             </p>
           )}
+          {booking.status !== "Cancelled" && <Link href={`/pay/${booking.code}`} className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 text-[13px] font-medium text-white transition hover:bg-primary/90"><IconCreditCard size={17} /> {publicView ? "Payment options" : "Open payment page"}<IconArrowUpRight size={16} /></Link>}
           <div
             className={`my-8 grid gap-4 ${
               terminal ? "grid-cols-1" : "grid-cols-3 max-[560px]:gap-2"
