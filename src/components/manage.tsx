@@ -1,5 +1,4 @@
 "use client";
-import { AutomaticCallSettings } from "./automatic-call-settings";
 import {
   Select,
   SelectTrigger,
@@ -25,18 +24,24 @@ import {
   IconEye,
   IconFlower,
   IconHeadphones,
+  IconLoader2,
   IconMessageCircle,
   IconPhone,
   IconPlus,
   IconSearch,
   IconShieldCheck,
-  IconSparkles,
   IconTrash,
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import {
+  useBackendHealthQuery,
+  useCallsQuery,
+  useTriggerCallMutation,
+} from "@/hooks/use-api";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   type Booking,
   type Customer,
@@ -423,16 +428,19 @@ export function CustomersPage({
           <h2 className="text-[16px] font-semibold text-foreground">
             {state.customers.length} lovely people
           </h2>
-          <label className="flex h-10 min-w-[230px] items-center gap-2 rounded-xl bg-muted px-3 text-muted-foreground">
-            <IconSearch size={17} />
+          <div className="relative min-w-[240px]">
+            <IconSearch
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
               aria-label="Search customers"
               placeholder="Search by name or phone"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-full w-full border-0 bg-transparent p-0 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-0"
+              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
             />
-          </label>
+          </div>
         </div>
         {customers.map((c) => {
           const bookings = state.bookings.filter((b) => b.customerId === c.id);
@@ -670,7 +678,7 @@ export function BusinessProfilePage() {
         description="Everything your customers — and receptionist — should know."
         action={
           <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
             href={`/b/${state.business.slug}`}
           >
             <IconEye size={17} />
@@ -678,7 +686,7 @@ export function BusinessProfilePage() {
           </Link>
         }
       />
-      <div className="flex flex-col gap-6 [&>form]:w-full [&>aside]:w-full">
+      <div className="flex flex-col gap-6 [&>form]:w-full [&>aside]:w-full max-w-4xl">
         <aside className="static">
           <div className="mb-4 rounded-[20px] bg-card p-5 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
             <h3 className="mt-5 text-[19px] font-semibold text-foreground">
@@ -1066,6 +1074,19 @@ export function BusinessProfilePage() {
 export function AgentPage() {
   const { state } = useStore();
   const [tab, setTab] = useState("All activity");
+  const [testModalOpen, setTestModalOpen] = useState(false);
+  const [testPhone, setTestPhone] = useState("+234 800 123 4567");
+  const [testName, setTestName] = useState("Jane Doe");
+  const [testService, setTestService] = useState("Signature Cut & Style");
+  const [testCallType, setTestCallType] = useState<"reminder" | "confirmation">("reminder");
+
+  const healthQuery = useBackendHealthQuery();
+  const callsQuery = useCallsQuery(50);
+  const triggerCallMutation = useTriggerCallMutation();
+
+  const isAethexLive = healthQuery.data?.integrations?.aethex === "connected";
+  const isHealthy = healthQuery.isSuccess;
+
   const activities = state.agentActivity.filter(
     (a) =>
       tab === "All activity" ||
@@ -1073,37 +1094,78 @@ export function AgentPage() {
         ? a.kind !== "confirmed"
         : a.kind === "confirmed"),
   );
+
+  const handleTestCall = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!testPhone.trim()) {
+      toast.error("Please provide a phone number");
+      return;
+    }
+
+    try {
+      await triggerCallMutation.mutateAsync({
+        toNumber: testPhone.trim(),
+        customerName: testName.trim(),
+        serviceName: testService.trim(),
+        appointmentTime: "10:30 AM",
+        appointmentDate: "Tomorrow",
+        callType: testCallType,
+      });
+      setTestModalOpen(false);
+    } catch {
+      // Handled in mutation hook
+    }
+  };
+
   return (
     <>
       <PageHeader
         eyebrow="A NEW MEMBER OF YOUR TEAM"
         title="Meet your helping hand."
         description="More time with your customers. Less time on the phone."
+        action={
+          <Button
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-xs"
+            onClick={() => setTestModalOpen(true)}
+          >
+            <IconPhone size={17} />
+            Test Voice AI Call
+          </Button>
+        }
       />
       <div className="grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1">
         <Card className="rounded-[21px] bg-card p-6 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
           <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-muted text-muted-foreground">
             <IconHeadphones size={46} stroke={1.2} />
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
-            <i className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Not connected yet
-          </span>
+          {healthQuery.isLoading ? (
+            <Skeleton className="h-6 w-32 rounded-full" />
+          ) : isAethexLive ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[12px] font-medium text-emerald-800">
+              <i className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Aethex Voice AI Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-medium text-primary">
+              <i className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Voice AI Simulation Ready
+            </span>
+          )}
           <h2 className="mt-4 text-[32px] font-medium tracking-tight text-foreground">
             AI Receptionist
           </h2>
           <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-muted-foreground">
-            A thoughtful first hello. Here to answer calls, look after your
-            reservations, and make every customer feel welcome.
+            A thoughtful first hello. Powered by Aethex Voice AI to answer calls,
+            reach out with timely visit reminders, and look after your reservations.
           </p>
           <div className="my-7 divide-y divide-[#efefef] border-y border-border">
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconPhone size={18} className="text-muted-foreground" />
               <span className="flex-1 text-muted-foreground">
-                Agent phone number
+                Agent phone line
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                Not assigned
+                {isAethexLive ? "+1 (415) 555-0199" : "+1 (415) 555-0000 (Demo)"}
               </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
@@ -1121,20 +1183,27 @@ export function AgentPage() {
                 Connection status
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                Coming soon
+                {healthQuery.isLoading ? "Checking…" : isHealthy ? "Online & Ready" : "Local Mode"}
               </strong>
             </div>
           </div>
           <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
-            The receptionist is not connected yet. These are previews of how
-            they’ll help your studio.
+            Outbound Voice AI can place automated appointment reminders, confirmations, and check-ins directly via Aethex.
           </div>
-          <Link
-            href="/business-profile"
-            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-          >
-            Prepare your studio details <IconArrowRight size={17} />
-          </Link>
+          <div className="mt-5 flex gap-3">
+            <Button
+              onClick={() => setTestModalOpen(true)}
+              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+            >
+              <IconPhone size={16} /> Dispatch test call
+            </Button>
+            <Link
+              href="/business-profile"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+            >
+              Studio details <IconArrowRight size={16} />
+            </Link>
+          </div>
         </Card>
         <section className="px-4 py-5">
           <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
@@ -1187,18 +1256,18 @@ export function AgentPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-              A GLIMPSE OF WHAT’S TO COME
+              VOICE CALL ACTIVITY & LOGS
             </p>
             <h2 className="mt-2 text-[23px] font-semibold tracking-tight text-foreground">
-              A day at the front desk.
+              Live receptionist activity.
             </h2>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
-            Sample activity
+            {callsQuery.data?.length ? `${callsQuery.data.length} calls logged` : "Ready"}
           </span>
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
-          {["All activity", "Reservations", "Confirmations"].map((t) => (
+          {["All activity", "Call logs", "Reservations", "Confirmations"].map((t) => (
             <button
               key={t}
               className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
@@ -1212,156 +1281,174 @@ export function AgentPage() {
             </button>
           ))}
         </div>
-        {activities.map((a) => (
-          <div
-            className="flex items-center gap-4 border-t border-border py-5"
-            key={a.id}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              {a.kind === "confirmed" ? (
-                <IconCheck size={19} />
-              ) : a.kind === "created" ? (
-                <IconPlus size={19} />
-              ) : (
-                <IconCalendarEvent size={19} />
-              )}
-            </span>
-            <div className="flex-1">
-              <strong className="block text-[12px] font-semibold text-foreground">
-                {a.title}
-              </strong>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                {a.detail}
-              </p>
-            </div>
-            <small className="text-[12px] text-muted-foreground">
-              {a.time}
-            </small>
-          </div>
-        ))}
-      </Card>
-    </>
-  );
-}
 
-export function SettingsPage() {
-  const { state, update, reset } = useStore();
-  const [owner, setOwner] = useState(state.settings.owner);
-  const [resetOpen, setResetOpen] = useState(false);
-  return (
-    <>
-      <PageHeader
-        eyebrow="MAKE YOURSELF AT HOME"
-        title="The little preferences."
-        description="Set things up for the way you work."
-      />
-      <div className="grid grid-cols-2 items-start gap-5 max-[760px]:grid-cols-1">
-        <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            YOUR WORKSPACE
-          </p>
-          <h2 className="mb-5 mt-2 text-[23px] font-semibold tracking-tight text-foreground">
-            A personal touch.
-          </h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              update((s) => ({
-                ...s,
-                settings: { ...s.settings, owner: owner.trim() },
-              }));
-              toast.success("Preferences saved");
-            }}
-          >
-            <label className="mb-4 block text-[12px] font-semibold text-foreground">
-              What should we call you?
-              <Input
-                required
-                minLength={2}
-                value={owner}
-                onChange={(e) => setOwner(e.target.value)}
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-              />
-            </label>
-            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
-              <span className="text-muted-foreground">Time zone</span>
-              <strong className="text-right font-semibold text-foreground">
-                Africa/Lagos · WAT (UTC+1)
-              </strong>
-            </div>
-            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
-              <span className="text-muted-foreground">Currency</span>
-              <strong className="text-right font-semibold text-foreground">
-                Nigerian naira (₦)
-              </strong>
-            </div>
-            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
-              <span className="text-muted-foreground">Appearance</span>
-              <strong className="text-right font-semibold text-foreground">
-                Light & calm
-              </strong>
-            </div>
-            <Button className="mt-6 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
-              Save preferences <IconCheck size={16} />
-            </Button>
-          </form>
-        </Card>
-        <div className="space-y-5">
-          <AutomaticCallSettings />
-          <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                A space to experiment.
-              </h3>
-              <IconSparkles size={19} className="text-muted-foreground" />
-            </div>
-            <p className="my-3 text-[12px] leading-5 text-muted-foreground">
-              This is a mock workspace. Your changes are saved in this browser.
-              The demo day is September 12, 2026, at 10:15 AM.
-            </p>
-            <Button
-              variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-              onClick={() => setResetOpen(true)}
-            >
-              Reset demo workspace
-            </Button>
-          </Card>
-        </div>
-      </div>
-      {resetOpen && (
-        <Modal
-          title="Start fresh?"
-          description="Reset this browser’s demo workspace."
-          onClose={() => setResetOpen(false)}
-        >
-          <p className="text-[12px] leading-5 text-muted-foreground">
-            This removes the reservations, services, and edits you added in this
-            demo and restores the original sample studio.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
-            <Button
-              variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-              onClick={() => setResetOpen(false)}
-            >
-              Keep my changes
-            </Button>
-            <Button
-              variant="destructive"
-              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f]"
-              onClick={() => {
-                reset();
-                setOwner("Jessica");
-                setResetOpen(false);
-                toast.success("Your demo workspace is fresh again");
-              }}
-            >
-              Reset demo
-            </Button>
+        {tab === "Call logs" ? (
+          <div className="mt-4 divide-y divide-border">
+            {callsQuery.isLoading ? (
+              <div className="space-y-4 py-4">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            ) : !callsQuery.data?.length ? (
+              <div className="py-8 text-center text-[13px] text-muted-foreground">
+                No voice calls placed yet. Use the &quot;Test Voice AI Call&quot; button above to dispatch your first call.
+              </div>
+            ) : (
+              callsQuery.data.map((c) => (
+                <div key={c.id} className="flex items-center gap-4 py-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-primary">
+                    <IconPhone size={19} />
+                  </span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <strong className="text-[13px] font-medium text-foreground">
+                        Outbound call to {c.to_number}
+                      </strong>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {c.call_type}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      Status: <span className="font-medium text-foreground capitalize">{c.status}</span>
+                      {c.duration_seconds ? ` · ${c.duration_seconds}s duration` : ""}
+                    </p>
+                  </div>
+                  <small className="text-[12px] text-muted-foreground">
+                    {new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </small>
+                </div>
+              ))
+            )}
           </div>
+        ) : (
+          activities.map((a) => (
+            <div
+              className="flex items-center gap-4 border-t border-border py-5"
+              key={a.id}
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                {a.kind === "confirmed" ? (
+                  <IconCheck size={19} />
+                ) : a.kind === "created" ? (
+                  <IconPlus size={19} />
+                ) : (
+                  <IconCalendarEvent size={19} />
+                )}
+              </span>
+              <div className="flex-1">
+                <strong className="block text-[12px] font-semibold text-foreground">
+                  {a.title}
+                </strong>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {a.detail}
+                </p>
+              </div>
+              <small className="text-[12px] text-muted-foreground">
+                {a.time}
+              </small>
+            </div>
+          ))
+        )}
+      </Card>
+
+      {/* Test Call Modal */}
+      {testModalOpen && (
+        <Modal
+          title="Test Voice AI Call"
+          description="Place an outbound test call powered by Aethex Voice AI."
+          onClose={() => setTestModalOpen(false)}
+        >
+          <form onSubmit={handleTestCall} className="space-y-4">
+            <div>
+              <label className="block text-[12px] font-medium text-foreground">
+                Destination phone number (E.164 format)
+              </label>
+              <Input
+                type="tel"
+                required
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+                placeholder="+234 800 123 4567 or +14155552671"
+                className="mt-1.5 h-10 bg-muted"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[12px] font-medium text-foreground">
+                  Customer name
+                </label>
+                <Input
+                  value={testName}
+                  onChange={(e) => setTestName(e.target.value)}
+                  placeholder="e.g. Jane Doe"
+                  className="mt-1.5 h-10 bg-muted"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-foreground">
+                  Service name
+                </label>
+                <Input
+                  value={testService}
+                  onChange={(e) => setTestService(e.target.value)}
+                  placeholder="e.g. Signature Cut"
+                  className="mt-1.5 h-10 bg-muted"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-foreground">
+                Call type
+              </label>
+              <div className="mt-1.5 flex gap-2">
+                {(["reminder", "confirmation"] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setTestCallType(type)}
+                    className={`flex-1 rounded-xl py-2 text-[12px] font-medium capitalize transition ${
+                      testCallType === type
+                        ? "bg-primary text-white"
+                        : "bg-muted text-muted-foreground hover:bg-background"
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setTestModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={triggerCallMutation.isPending}
+                className="gap-2 bg-primary text-white"
+              >
+                {triggerCallMutation.isPending ? (
+                  <>
+                    <IconLoader2 size={16} className="animate-spin" />
+                    <span>Placing call…</span>
+                  </>
+                ) : (
+                  <>
+                    <IconPhone size={16} />
+                    <span>Place Voice AI Call</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
     </>
   );
 }
+
+export { SettingsPage } from "./settings-page";

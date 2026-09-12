@@ -9,14 +9,18 @@ import {
   IconArrowLeft,
   IconArrowUpRight,
   IconBell,
-  IconNotes,
   IconCalendarEvent,
   IconCheck,
+  IconClock,
   IconCreditCard,
+  IconFileInvoice,
+  IconLoader2,
+  IconNotes,
   IconPhone,
   IconTrash,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useTriggerCallMutation } from "@/hooks/use-api";
 import {
   type Booking,
   DEFAULT_CALL_PREFERENCES,
@@ -50,13 +54,24 @@ export function BookingDetails({
   const [reschedule, setReschedule] = useState(false);
   const [cancel, setCancel] = useState(false);
   const [notes, setNotes] = useState(booking.notes);
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const triggerCallMutation = useTriggerCallMutation();
+
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
   const service = state.services.find((s) => s.id === booking.serviceId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
   const calls = { ...DEFAULT_CALL_PREFERENCES, ...state.settings.calls };
   const payment = paymentSummary(state, booking);
   const terminal = ["Cancelled", "Completed"].includes(booking.status);
+
   function setStatus(status: Booking["status"]) {
+    if (status === "Completed") setIsCompleting(true);
+    if (status === "Cancelled") setIsCancelling(true);
+
     update((s) => ({
       ...s,
       bookings: s.bookings.map((b) =>
@@ -78,7 +93,44 @@ export function BookingDetails({
       ),
     }));
     toast.success(`Reservation ${status.toLowerCase()}`);
+    setTimeout(() => {
+      setIsCompleting(false);
+      setIsCancelling(false);
+      if (status === "Cancelled") setCancel(false);
+    }, 400);
   }
+
+  const handleDispatchCall = async () => {
+    // Optimistic update to booking activity
+    const callActivity = {
+      id: crypto.randomUUID(),
+      title: "Voice AI reminder call queued",
+      time: NOW,
+      actor: "agent" as const,
+    };
+    update((s) => ({
+      ...s,
+      bookings: s.bookings.map((b) =>
+        b.id === booking.id
+          ? { ...b, activity: [...b.activity, callActivity] }
+          : b,
+      ),
+    }));
+
+    try {
+      await triggerCallMutation.mutateAsync({
+        toNumber: customer.phone,
+        customerName: customer.name,
+        serviceName: service.name,
+        appointmentTime: time(booking.startTime),
+        appointmentDate: dateLabel(booking.startTime),
+        bookingId: booking.id,
+        callType: "reminder",
+      });
+    } catch {
+      // Toast already handled by mutation hook
+    }
+  };
   return (
     <>
       <Link
@@ -105,7 +157,24 @@ export function BookingDetails({
                 ? "Today"
                 : dateLabel(booking.startTime).split(",")[0]}
             </p>
-            {terminal || payment.confirmed ? <BookingStatus status={booking.status} /> : payment.pending ? <Link href={publicView ? `/pay/${booking.code}` : "/payments"} className="rounded-full bg-warning-surface px-4 py-2 text-[12px] font-medium text-warning">Receipt under review</Link> : <Link href={`/pay/${booking.code}`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-medium text-white hover:bg-primary/90"><IconCreditCard size={17} /> {publicView ? "Pay to confirm" : "Awaiting payment"}</Link>}
+            {terminal || payment.confirmed ? (
+              <BookingStatus status={booking.status} />
+            ) : payment.pending ? (
+              <Link
+                href={publicView ? `/pay/${booking.code}` : "/payments"}
+                className="rounded-full bg-warning-surface px-4 py-2 text-[12px] font-medium text-warning"
+              >
+                Receipt under review
+              </Link>
+            ) : (
+              <Link
+                href={`/pay/${booking.code}`}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-medium text-white hover:bg-primary/90"
+              >
+                <IconCreditCard size={17} />{" "}
+                {publicView ? "Pay to confirm" : "Awaiting payment"}
+              </Link>
+            )}
           </div>
           <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-tight max-[560px]:text-[30px]">
             {publicView ? "Your reservation" : "Reservation with"}
@@ -210,34 +279,60 @@ export function BookingDetails({
           )}
           {!terminal && (
             <div className="mt-6 flex flex-wrap gap-2">
-              {publicView &&
-                ["Pending", "Needs confirmation"].includes(booking.status) && (
-                  <Button
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
-                    onClick={() => setStatus("Confirmed")}
+              {publicView && !payment.confirmed && (
+                payment.pending ? (
+                  <Link
+                    href={`/pay/${booking.code}`}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-warning-surface px-4 text-[12px] font-semibold text-warning transition hover:opacity-90"
                   >
-                    <IconCheck size={17} />
-                    Confirm my attendance
-                  </Button>
-                )}
+                    <IconClock size={16} />
+                    Receipt under review
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/pay/${booking.code}`}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+                  >
+                    <IconCreditCard size={16} />
+                    Pay to confirm
+                  </Link>
+                )
+              )}
               {!publicView && (
                 <>
-                  <Button
-                    variant="secondary"
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-                    onClick={() => setStatus("Completed")}
-                  >
-                    <IconCheck size={16} />
-                    Mark completed
-                  </Button>
-                  {booking.status !== "Confirmed" && (
+                  {booking.status === "Confirmed" && (
                     <Button
                       variant="secondary"
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-                      onClick={() => setStatus("Confirmed")}
+                      disabled={isCompleting}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background disabled:opacity-60"
+                      onClick={() => setStatus("Completed")}
                     >
-                      Confirm booking
+                      {isCompleting ? (
+                        <IconLoader2 size={16} className="animate-spin text-primary" />
+                      ) : (
+                        <IconCheck size={16} />
+                      )}
+                      {isCompleting ? "Completing…" : "Mark completed"}
                     </Button>
+                  )}
+                  {!payment.confirmed && (
+                    payment.pending ? (
+                      <Link
+                        href="/payments"
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-warning-surface px-4 text-[12px] font-semibold text-warning transition hover:opacity-90"
+                      >
+                        <IconFileInvoice size={15} />
+                        Review payment receipt
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/pay/${booking.code}`}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:bg-muted"
+                      >
+                        <IconCreditCard size={15} />
+                        Record payment to confirm
+                      </Link>
+                    )
                   )}
                 </>
               )}
@@ -295,49 +390,114 @@ export function BookingDetails({
               )}
             </div>
           )}
-          {!publicView && <section className="mt-6 space-y-4">
-            {!terminal && <div className="flex items-start gap-3 rounded-2xl bg-muted/70 p-5">
-              <IconBell size={20} stroke={1.6} className="mt-0.5 shrink-0 text-muted-foreground" />
-              <div className="flex-1">
-                <h3 className="text-[14px] font-medium">Automatic reminder calls</h3>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{calls.enabled ? `Set to remind customers ${duration(calls.reminderMinutes)} before their visit. Calls will start when your agent is connected.` : "Turn on reminder calls for all bookings in Settings."}</p>
-                <Link href="/settings#automatic-calls" className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-primary">Manage call settings <IconArrowUpRight size={15} /></Link>
+          {!publicView && (
+            <section className="mt-6 space-y-4">
+              {!terminal && (
+                <div className="flex items-start gap-3 rounded-2xl bg-muted/70 p-5">
+                  <IconBell
+                    size={20}
+                    stroke={1.6}
+                    className="mt-0.5 shrink-0 text-muted-foreground"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-[14px] font-medium">
+                        Voice AI reminder calls
+                      </h3>
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                        Aethex AI
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                      {calls.enabled
+                        ? `Configured to remind customers ${duration(calls.reminderMinutes)} before their visit. You can also dispatch an immediate call now.`
+                        : "Outbound Voice AI reminder calls can be dispatched on demand or scheduled automatically."}
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={triggerCallMutation.isPending}
+                        onClick={handleDispatchCall}
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3.5 text-[12px] font-semibold text-foreground shadow-xs transition hover:border-primary hover:text-primary disabled:opacity-60"
+                      >
+                        {triggerCallMutation.isPending ? (
+                          <>
+                            <IconLoader2 size={15} className="animate-spin text-primary" />
+                            <span>Dispatching call…</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconPhone size={15} className="text-primary" />
+                            <span>Dispatch Voice AI call now</span>
+                          </>
+                        )}
+                      </Button>
+                      <Link
+                        href="/settings#automatic-calls"
+                        className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+                      >
+                        Call settings <IconArrowUpRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="rounded-2xl bg-muted/70 p-5">
+                <h3 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+                  <IconNotes size={19} stroke={1.6} />A note for the visit
+                </h3>
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  Keep notes on preferences or anything to keep in mind.
+                </p>
+                <Textarea
+                  aria-label="Booking notes"
+                  value={notes}
+                  rows={3}
+                  placeholder="Anything to keep in mind…"
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="mt-3 w-full resize-y rounded-xl border-0 bg-white p-3 text-[12px] outline-none focus:border-border"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={isSavingNote}
+                  className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border disabled:opacity-60"
+                  onClick={() => {
+                    setIsSavingNote(true);
+                    update((s) => ({
+                      ...s,
+                      bookings: s.bookings.map((b) =>
+                        b.id === booking.id ? { ...b, notes } : b,
+                      ),
+                    }));
+                    setNoteSaved(true);
+                    toast.success("Visit note saved");
+                    setTimeout(() => {
+                      setIsSavingNote(false);
+                      setTimeout(() => setNoteSaved(false), 1800);
+                    }, 350);
+                  }}
+                >
+                  {isSavingNote ? (
+                    <>
+                      <IconLoader2 size={14} className="animate-spin text-primary" />
+                      Saving…
+                    </>
+                  ) : noteSaved ? (
+                    <>
+                      <IconCheck size={14} className="text-emerald-600" />
+                      Saved!
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck size={16} /> Save note
+                    </>
+                  )}
+                </Button>
               </div>
-            </div>}
-            <div className="rounded-2xl bg-muted/70 p-5">
-              <h3 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
-                <IconNotes size={19} stroke={1.6} />
-                A note for the visit
-              </h3>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                Keep notes on preferences or anything to keep in mind.
-              </p>
-              <Textarea
-                aria-label="Booking notes"
-                value={notes}
-                rows={3}
-                placeholder="Anything to keep in mind…"
-                onChange={(e) => setNotes(e.target.value)}
-                className="mt-3 w-full resize-y rounded-xl border-0 bg-white p-3 text-[12px] outline-none focus:border-border"
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
-                onClick={() => {
-                  update((s) => ({
-                    ...s,
-                    bookings: s.bookings.map((b) =>
-                      b.id === booking.id ? { ...b, notes } : b,
-                    ),
-                  }));
-                  toast.success("Visit note saved");
-                }}
-              >
-                <IconCheck size={16} /> Save note
-              </Button>
-            </div>
-          </section>}
+            </section>
+          )}
         </Card>
       </div>
       {reschedule && (
@@ -374,13 +534,23 @@ export function BookingDetails({
             </Button>
             <Button
               variant="destructive"
-              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f]"
+              disabled={isCancelling}
+              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-60"
               onClick={() => {
                 setStatus("Cancelled");
-                setCancel(false);
               }}
             >
-              Cancel reservation
+              {isCancelling ? (
+                <>
+                  <IconLoader2 size={15} className="animate-spin" />
+                  <span>Cancelling…</span>
+                </>
+              ) : (
+                <>
+                  <IconTrash size={15} />
+                  <span>Cancel reservation</span>
+                </>
+              )}
             </Button>
           </div>
         </Modal>

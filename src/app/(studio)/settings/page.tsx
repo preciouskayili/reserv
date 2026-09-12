@@ -1,4 +1,4 @@
-import { SettingsPage } from "@/components/manage";
+import { SettingsPage } from "@/components/settings-page";
 
 export const metadata = {
   title: "Settings — Reserv",

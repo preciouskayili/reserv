@@ -14,11 +14,13 @@ import {
   IconChecks,
   IconClock,
   IconCreditCard,
+  IconLoader2,
   IconMapPin,
   IconUser,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import { useCreateBookingMutation } from "@/hooks/use-api";
 import {
   addDays,
   availableSlots,
@@ -73,10 +75,14 @@ export function BookingFlow({
   const [notes, setNotes] = useState(booking?.notes || "");
   const [result, setResult] = useState<Booking | null>(null);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createBookingMutation = useCreateBookingMutation();
+
   const slots = availableSlots(state, serviceId, staffId, date, booking?.id);
   const [dateOpen, setDateOpen] = useState(false);
   const selectedStaff = state.staff.find((s) => s.id === staffId);
-  function submit(event: FormEvent) {
+
+  async function submit(event: FormEvent) {
     event.preventDefault();
     if (!service || !slots.includes(slot)) {
       setError("That time is no longer available. Please choose another time.");
@@ -93,6 +99,10 @@ export function BookingFlow({
       );
       return;
     }
+
+    setIsSubmitting(true);
+    setError("");
+
     const existingCustomer =
       customer ||
       state.customers.find(
@@ -139,6 +149,8 @@ export function BookingFlow({
             },
           ],
         };
+
+    // 1. Optimistic update to local store
     update((s) => ({
       ...s,
       customers: existingCustomer
@@ -156,8 +168,33 @@ export function BookingFlow({
         ? s.bookings.map((b) => (b.id === booking.id ? next : b))
         : [...s.bookings, next],
     }));
-    setResult(next);
-    toast.success(booking ? "Reservation rescheduled" : "Booking created. Complete payment to confirm.");
+
+    // 2. Optimistic sync to backend API
+    createBookingMutation.mutate({
+      id: next.id,
+      code: next.code,
+      businessId: next.businessId,
+      customerId: next.customerId,
+      serviceId: next.serviceId,
+      staffId: next.staffId,
+      startTime: next.startTime,
+      endTime: next.endTime,
+      status: next.status,
+      notes: next.notes,
+      totalAmount: service.price,
+      requiredAmount: service.deposit,
+    });
+
+    toast.success(
+      booking
+        ? "Reservation rescheduled"
+        : "Booking created. Complete payment to confirm."
+    );
+
+    setTimeout(() => {
+      setResult(next);
+      setIsSubmitting(false);
+    }, 200);
   }
   return (
     <Modal
@@ -508,11 +545,21 @@ export function BookingFlow({
                   Back
                 </Button>
                 <Button
-                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+                  disabled={isSubmitting}
+                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
                   type="submit"
                 >
-                  {booking ? "Confirm new time" : "Confirm reservation"}
-                  <IconCheck size={16} />
+                  {isSubmitting ? (
+                    <>
+                      <IconLoader2 size={16} className="animate-spin" />
+                      <span>{booking ? "Rescheduling…" : "Confirming…"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{booking ? "Confirm new time" : "Confirm reservation"}</span>
+                      <IconCheck size={16} />
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

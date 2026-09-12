@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
+import { QueryProvider } from "@/components/query-provider";
+import { AuthProvider } from "@/lib/auth-context";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -19,9 +21,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${figtree.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>
-          <StoreProvider>{children}</StoreProvider>
-        </TooltipProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <StoreProvider>{children}</StoreProvider>
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryProvider>
         <Toaster theme="light" position="bottom-right" />
       </body>
     </html>

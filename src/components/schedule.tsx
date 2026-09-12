@@ -1,7 +1,6 @@
 "use client";
 import { DatePicker } from "./date-picker";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +30,8 @@ import {
   BookingCard,
   EmptyState,
   PageHeader,
+  ReservationIcon,
   SegmentedControl,
-  ServiceIcon,
 } from "./shared";
 import { type BookingPreset } from "./booking-flow";
 
@@ -55,21 +54,16 @@ function weekDays(date: string) {
 function WeekStrip({
   selected,
   setSelected,
-  dayOnly = false,
 }: {
   selected: string;
   setSelected: (date: string) => void;
   dayOnly?: boolean;
 }) {
   const { state } = useStore();
-  const days = dayOnly ? [selected] : weekDays(selected);
+  const days = weekDays(selected);
   return (
-    <div
-      className={`mx-auto mb-5 flex max-w-[1070px] items-center border-b border-border pb-5 ${
-        dayOnly ? "justify-center" : "justify-between"
-      }`}
-    >
-      {!dayOnly && <div className="w-10 max-[560px]:hidden" />}
+    <div className="mx-auto mb-5 flex w-full items-center justify-between border-b border-border pb-5">
+      <div className="w-10 max-[560px]:hidden" />
       {days.map((day) => {
         const isSelected = selected === day;
         const count = state.bookings.filter(
@@ -121,7 +115,7 @@ function WeekStrip({
           </button>
         );
       })}
-      {!dayOnly && <div className="w-10 max-[560px]:hidden" />}
+      <div className="w-10 max-[560px]:hidden" />
     </div>
   );
 }
@@ -145,7 +139,7 @@ function ScheduleTimeline({
   const nowOffset = day === TODAY ? offset(NOW) : -1;
   return (
     <div
-      className={"reference-timeline relative mx-auto w-full max-w-[950px]"}
+      className={"reference-timeline relative mx-auto w-full"}
       style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}
     >
       <div
@@ -234,7 +228,7 @@ function ScheduleTimeline({
                     : "border-border bg-white text-foreground"
               }`}
             >
-              <ServiceIcon serviceId={service.id} size={18} />
+              <ReservationIcon size={18} />
             </span>
             <span className="ml-12 flex min-w-0 flex-1 flex-col justify-center py-1 max-[560px]:ml-11">
               <small className="text-[12px] font-medium text-muted-foreground max-[560px]:text-[12px]">
@@ -315,7 +309,6 @@ function ScheduleScaffold({
   onNew,
   onBooking,
   calendar = false,
-  dayOnly = false,
   modeControl,
 }: {
   day: string;
@@ -346,16 +339,16 @@ function ScheduleScaffold({
         </div>
         <div className="flex flex-wrap items-center gap-1">
           <button
-            aria-label="Previous day or week"
-            onClick={() => setDay(addDays(day, calendar && !dayOnly ? -7 : -1))}
+            aria-label="Previous day"
+            onClick={() => setDay(addDays(day, -1))}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition hover:text-foreground "
           >
             <IconChevronLeft size={18} />
           </button>
           <DatePicker value={day} onChange={setDay} />
           <button
-            aria-label="Next day or week"
-            onClick={() => setDay(addDays(day, calendar && !dayOnly ? 7 : 1))}
+            aria-label="Next day"
+            onClick={() => setDay(addDays(day, 1))}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition hover:text-foreground "
           >
             <IconChevronRight size={18} />
@@ -372,7 +365,7 @@ function ScheduleScaffold({
           </Button>
         </div>
       </div>
-      <WeekStrip selected={day} setSelected={setDay} dayOnly={dayOnly} />
+      <WeekStrip selected={day} setSelected={setDay} />
       <div className="grid grid-cols-[230px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[180px_minmax(0,1fr)] max-[1023px]:gap-3 max-[760px]:grid-cols-1">
         <aside className="flex flex-col gap-4 pt-2 max-[760px]:grid max-[760px]:grid-cols-2 max-[560px]:grid-cols-1">
           <div className="rounded-[20px] border-0 bg-card p-5 max-[560px]:hidden">
@@ -433,13 +426,6 @@ function ScheduleScaffold({
               </button>
             </div>
           )}
-          <Link
-            href={calendar ? "/" : "/calendar"}
-            className="mt-1 inline-flex items-center gap-2 px-3 text-[12px] font-semibold text-foreground hover:text-foreground max-[760px]:hidden"
-          >
-            {calendar ? "Back to week" : "Open calendar"}
-            <IconArrowRight size={15} />
-          </Link>
         </aside>
         <section className="overflow-hidden rounded-[20px] border-0 bg-card max-[760px]:rounded-[26px]">
           <div className="flex items-center justify-between border-b border-border px-8 py-4 text-[12px] font-medium text-muted-foreground max-[560px]:px-4">
@@ -509,7 +495,6 @@ export function CalendarPage({ onNew, onBooking }: Props) {
         day={day}
         setDay={setDay}
         calendar
-        dayOnly
         modeControl={
           <span className="static z-10">
             <SegmentedControl
@@ -861,16 +846,19 @@ export function BookingsPage({ onNew, onBooking }: Props) {
               },
             )}
           </div>
-          <label className="flex h-10 min-w-[230px] items-center gap-2 rounded-xl border-0 bg-muted px-3 text-muted-foreground shadow-none">
-            <IconSearch size={17} />
+          <div className="relative min-w-[260px]">
+            <IconSearch
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
               aria-label="Search reservations"
               placeholder="Name, phone or booking code"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full border-0 bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-0"
+              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
             />
-          </label>
+          </div>
         </div>
         {dates.map((d, index) => (
           <div

@@ -11,13 +11,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  IconCalendarEvent,
   IconCheck,
   IconChevronRight,
   IconCopy,
   IconClock,
   IconFlower,
-  IconScissors,
-  IconSparkles,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -172,17 +171,16 @@ export function Avatar({
     </span>
   );
 }
+export function ReservationIcon({ size = 20 }: { size?: number }) {
+  return <IconCalendarEvent size={size} stroke={1.5} />;
+}
 export function ServiceIcon({
-  serviceId,
   size = 20,
 }: {
-  serviceId: string;
   size?: number;
+  serviceId?: string;
 }) {
-  const Icon = ["nails", "pedicure"].includes(serviceId)
-    ? IconSparkles
-    : IconScissors;
-  return <Icon size={size} stroke={1.5} />;
+  return <IconCalendarEvent size={size} stroke={1.5} />;
 }
 export function ActionCard({
   icon: Icon,
@@ -327,7 +325,7 @@ export function BookingCard({
         onClick={onClick}
       >
         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
-          <ServiceIcon serviceId={service.id} />
+          <ReservationIcon size={20} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">

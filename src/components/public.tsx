@@ -60,10 +60,13 @@ export function PublicProfile() {
               {state.business.name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+              <a
+                href="#location"
+                className="flex items-center gap-1.5 transition hover:text-foreground"
+              >
                 <IconMapPin size={16} />
                 Wuse 2, Abuja
-              </span>
+              </a>
               <span className="flex items-center gap-1.5">
                 <i className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                 {hours.closed
@@ -99,6 +102,20 @@ export function PublicProfile() {
             "public-columns flex flex-col gap-10 rounded-b-[48px] bg-white px-12 pb-12 pt-4 max-[760px]:rounded-b-[34px] max-[760px]:px-6"
           }
         >
+          <section id="location" className="w-full">
+            <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <IconMapPin size={18} className="text-foreground" />
+                <h2 className="text-[18px] font-semibold tracking-tight text-foreground">
+                  Find your way to us
+                </h2>
+              </div>
+              <p className="text-[12px] text-muted-foreground">
+                {state.business.address}
+              </p>
+            </div>
+            <LocationCard />
+          </section>
           <section className="w-full">
             <div className="mb-12 max-w-160">
               <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
@@ -174,48 +191,34 @@ export function PublicProfile() {
             </section>
           </section>
           <aside className="w-full space-y-7">
-            <Card className="rounded-[21px] border-0 bg-card p-6 shadow-none">
+            <Card className="rounded-[21px] border-0 shadow-none">
               <h3 className="mb-5 flex items-center gap-2 text-[17px] font-semibold text-foreground">
                 <IconClock size={18} className="text-muted-foreground" /> Our
                 door is open.
               </h3>
               <BusinessHours />
             </Card>
-            <section>
-              <div className="flex items-center gap-4">
-                <IconMapPin size={16} />
-                <h3 className="text-[17px] font-semibold text-foreground">
-                  Find your way to us.
-                </h3>
-              </div>
-              <div className="mt-3">
-                <LocationCard />
-              </div>
-              <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
-                {state.business.address}
-              </p>
-            </section>
-            <Card className="rounded-[20px] border-0 bg-card p-6 shadow-none">
-              <h3 className="flex items-center gap-2 text-[17px] font-semibold text-foreground">
+            <Card className="rounded-[20px] border-0 shadow-none">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <IconShieldCheck size={18} className="text-muted-foreground" />{" "}
                 Before your visit
               </h3>
-              <h4 className="mt-4 text-[12px] font-semibold text-foreground">
+              <h4 className="mt-2 text-sm font-semibold text-foreground">
                 Booking policy
               </h4>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {state.business.bookingPolicy}
               </p>
-              <h4 className="mt-4 text-[12px] font-semibold text-foreground">
+              <h4 className="mt-2 text-sm font-semibold text-foreground">
                 Change of plans?
               </h4>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {state.business.cancellationPolicy}
               </p>
-              <h4 className="mt-4 text-[12px] font-semibold text-foreground">
+              <h4 className="mt-2 text-sm font-semibold text-foreground">
                 Deposits
               </h4>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {state.business.depositPolicy}
               </p>
             </Card>

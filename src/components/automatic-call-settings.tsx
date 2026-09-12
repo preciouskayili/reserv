@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { IconPhoneCall, IconClock, IconCreditCard, IconCheck } from "@tabler/icons-react";
+import { IconPhoneCall, IconClock, IconCreditCard, IconCheck, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,15 +35,20 @@ export function AutomaticCallSettings() {
 function CallSettingsForm({ initial }: { initial: CallPreferences }) {
   const { update } = useStore();
   const [draft, setDraft] = useState(initial);
+  const [isSaving, setIsSaving] = useState(false);
+
   function save(event: FormEvent) {
     event.preventDefault();
     if (![draft.reminderMinutes, draft.unpaidIntervalMinutes].every(value => Number.isInteger(value) && value >= 1 && value <= 10080)) {
       toast.error("Choose intervals from 1 minute to 168 hours.");
       return;
     }
+    setIsSaving(true);
     update(state => ({ ...state, settings: { ...state.settings, calls: draft, reminders: draft.enabled, confirmations: draft.enabled } }));
     toast.success("Call preferences saved");
+    setTimeout(() => setIsSaving(false), 300);
   }
+
   return <Card id="automatic-calls" className="scroll-mt-8 gap-0 rounded-[21px] border-0 bg-card p-7">
     <div className="flex items-start gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-primary"><IconPhoneCall size={21} stroke={1.6} /></span><div><h2 className="text-[20px] font-semibold tracking-tight">Automatic calls</h2><p className="mt-1 text-[12px] leading-5 text-muted-foreground">A timely reminder, without the follow-up work.</p></div></div>
     <form onSubmit={save} className="mt-6 space-y-4">
@@ -56,8 +61,11 @@ function CallSettingsForm({ initial }: { initial: CallPreferences }) {
         <Interval label="Call again every" minutes={draft.unpaidIntervalMinutes} onChange={unpaidIntervalMinutes => setDraft({ ...draft, unpaidIntervalMinutes })} disabled={!draft.enabled || !draft.unpaidEnabled} />
         <p className="mt-3 text-[11px] leading-5 text-muted-foreground">Stop when payment is confirmed, the booking is cancelled, or the appointment begins.</p>
       </div>
-      <p className="text-[12px] leading-5 text-muted-foreground">Agent not connected. These preferences are saved for your studio; no calls are placed in this demo.</p>
-      <Button type="submit" className="gap-2 rounded-xl"><IconCheck size={17} /> Save call settings</Button>
+      <p className="text-[12px] leading-5 text-muted-foreground">Powered by Aethex Voice AI. Reminders and check-ins dispatch automatically according to your schedule.</p>
+      <Button type="submit" disabled={isSaving} className="gap-2 rounded-xl">
+        {isSaving ? <IconLoader2 size={16} className="animate-spin" /> : <IconCheck size={17} />}
+        {isSaving ? "Saving settings…" : "Save call settings"}
+      </Button>
     </form>
   </Card>;
 }
