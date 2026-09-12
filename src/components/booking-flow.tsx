@@ -127,13 +127,13 @@ export function BookingFlow({
           staffId,
           startTime: slot,
           endTime: endTime(slot, service.duration),
-          status: "Confirmed",
+          status: service.price === 0 ? "Confirmed" : "Pending",
           notes,
           createdAt: NOW,
           activity: [
             {
               id: crypto.randomUUID(),
-              title: "Reservation created and confirmed",
+              title: "Reservation created",
               time: NOW,
               actor: publicFlow ? "customer" : "owner",
             },
@@ -157,7 +157,7 @@ export function BookingFlow({
         : [...s.bookings, next],
     }));
     setResult(next);
-    toast.success(booking ? "Reservation rescheduled" : "You’re all booked in");
+    toast.success(booking ? "Reservation rescheduled" : "Booking created. Complete payment to confirm.");
   }
   return (
     <Modal
@@ -166,7 +166,7 @@ export function BookingFlow({
         result
           ? booking
             ? "A new time, just for you."
-            : "You’re all booked in."
+            : "Your booking is saved."
           : booking
             ? "Let’s find a new time."
             : "Make a little time."
@@ -186,7 +186,7 @@ export function BookingFlow({
             <IconChecks size={30} />
           </span>
           <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            {booking ? "Reservation rescheduled" : "Reservation confirmed"}
+            {booking ? "Reservation rescheduled" : "Reservation created"}
           </p>
           <h2 className="my-2 text-[25px] font-medium tracking-tight text-foreground">{service?.name}</h2>
           <div className="my-6 space-y-3 rounded-xl bg-background p-5 text-left text-[12px] text-muted-foreground">

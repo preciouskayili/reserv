@@ -33,7 +33,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {children}
       <footer className="mx-auto flex max-w-[840px] items-center justify-between gap-4 border-t border-border px-10 py-8 text-[12px] text-muted-foreground max-[760px]:px-5 max-[560px]:flex-wrap">
         <span>A little time, well spent.</span>
-        <Link href="/" className="flex items-center gap-1.5 transition hover:text-[#555]">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 transition hover:text-[#555]"
+        >
           Made possible with <Brand small />
         </Link>
         <span className="max-[760px]:hidden">Abuja, Nigeria · WAT</span>
@@ -70,8 +73,11 @@ export function PublicProfile() {
             </div>
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 pb-1">
-            <Link href="/reservation" className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-xl bg-muted px-3 text-[12px] font-medium text-muted-foreground transition hover:bg-accent hover:text-primary">
-              <IconSearch size={16} /> Find my reservation
+            <Link
+              href="/reservation"
+              className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-lg bg-muted px-6 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-primary"
+            >
+              <IconSearch size={14} /> Find my reservation
             </Link>
             <a
               className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background max-[560px]:flex-1"
@@ -98,12 +104,12 @@ export function PublicProfile() {
               <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                 About
               </p>
-              <p className="mt-5 max-w-[550px] text-[14px] leading-7 text-muted-foreground">
+              <p className="mt-2 max-w-137.5 text-[14px] leading-6 text-muted-foreground">
                 {state.business.description}
               </p>
             </div>
             <h2 className="mb-5 font-medium text-foreground">Services</h2>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {state.services
                 .filter((s) => s.active)
                 .map((s) => (
@@ -142,7 +148,9 @@ export function PublicProfile() {
                     <strong className="mt-4 block text-[13px] font-semibold text-foreground">
                       {s.name}
                     </strong>
-                    <p className="mt-1 text-[12px] text-muted-foreground">{s.role}</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      {s.role}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -168,7 +176,8 @@ export function PublicProfile() {
           <aside className="w-full space-y-7">
             <Card className="rounded-[21px] border-0 bg-card p-6 shadow-none">
               <h3 className="mb-5 flex items-center gap-2 text-[17px] font-semibold text-foreground">
-                <IconClock size={18} className="text-muted-foreground" /> Our door is open.
+                <IconClock size={18} className="text-muted-foreground" /> Our
+                door is open.
               </h3>
               <BusinessHours />
             </Card>
@@ -188,7 +197,8 @@ export function PublicProfile() {
             </section>
             <Card className="rounded-[20px] border-0 bg-card p-6 shadow-none">
               <h3 className="flex items-center gap-2 text-[17px] font-semibold text-foreground">
-                <IconShieldCheck size={18} className="text-muted-foreground" /> Before your visit
+                <IconShieldCheck size={18} className="text-muted-foreground" />{" "}
+                Before your visit
               </h3>
               <h4 className="mt-4 text-[12px] font-semibold text-foreground">
                 Booking policy
@@ -270,7 +280,12 @@ export function ReservationLookup({ code }: { code?: string }) {
           />
         ) : (
           <div className="w-full max-w-[470px] rounded-[50px] border-0 bg-card px-12 py-14 text-center max-[560px]:rounded-[36px] max-[560px]:px-6 max-[560px]:py-10">
-            <Link href={`/b/${state.business.slug}`} className="text-[15px] font-medium text-foreground">{state.business.name}</Link>
+            <Link
+              href={`/b/${state.business.slug}`}
+              className="text-[15px] font-medium text-foreground"
+            >
+              {state.business.name}
+            </Link>
             <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               A LITTLE SOMETHING TO LOOK FORWARD TO
             </p>
@@ -320,9 +335,7 @@ export function ReservationLookup({ code }: { code?: string }) {
                   {error}
                 </p>
               )}
-              <Button
-                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
-              >
+              <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90">
                 <IconSearch size={17} />
                 Find my reservation
               </Button>

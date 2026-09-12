@@ -6,6 +6,7 @@ import {
   useReducer,
   type ReactNode,
 } from "react";
+import { normalizePayments } from "./payments";
 import { seed } from "./seed";
 import { type AppState } from "./model";
 const STORAGE_KEY = "reserv-demo-v1";
@@ -14,9 +15,9 @@ type Action =
   | { type: "update"; update: (state: AppState) => AppState }
   | { type: "reset" };
 function reducer(state: AppState, action: Action): AppState {
-  if (action.type === "load") return { ...action.state, loaded: true };
-  if (action.type === "reset") return { ...seed, loaded: true };
-  return action.update(state);
+  if (action.type === "load") return normalizePayments({ ...action.state, loaded: true });
+  if (action.type === "reset") return normalizePayments({ ...seed, loaded: true });
+  return normalizePayments(action.update(state));
 }
 const Store = createContext<{
   state: AppState;
@@ -24,7 +25,7 @@ const Store = createContext<{
   reset: () => void;
 } | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, seed);
+  const [state, dispatch] = useReducer(reducer, seed, normalizePayments);
   useEffect(() => {
     let initial = seed;
     try {

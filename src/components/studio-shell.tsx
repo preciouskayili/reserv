@@ -9,6 +9,7 @@ import {
   IconBuildingStore,
   IconCalendarEvent,
   IconCalendarWeek,
+  IconCreditCard,
   IconHeadphones,
   IconPlus,
   IconScissors,
@@ -35,6 +36,7 @@ export function useBookingModal() {
 const navigation = [
   { name: "Calendar", path: "/", icon: IconCalendarEvent },
   { name: "Bookings", path: "/bookings", icon: IconCalendarWeek },
+  { name: "Payments", path: "/payments", icon: IconCreditCard },
   { name: "Customers", path: "/customers", icon: IconUsers },
   { name: "Services", path: "/services", icon: IconScissors },
   {

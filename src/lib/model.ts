@@ -47,6 +47,8 @@ export interface Booking {
   notes: string;
   createdAt: string;
   reminder?: string;
+  totalAmount?: number;
+  requiredAmount?: number;
   activity: BookingActivity[];
 }
 export interface BusinessHours {
@@ -95,12 +97,25 @@ export const DEFAULT_CALL_PREFERENCES: CallPreferences = {
   unpaidEnabled: false,
   unpaidIntervalMinutes: 1440,
 };
+export interface Payment {
+  id: string;
+  bookingId: string;
+  amount: number;
+  method: "gateway" | "transfer";
+  status: "review" | "approved" | "rejected";
+  createdAt: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  receiptId?: string;
+  receiptName?: string;
+}
 export interface AppState {
   business: Business;
   services: Service[];
   staff: StaffMember[];
   customers: Customer[];
   bookings: Booking[];
+  payments?: Payment[];
   agentActivity: AgentActivity[];
   settings: { reminders: boolean; confirmations: boolean; owner: string; calls?: CallPreferences };
   loaded: boolean;

@@ -270,7 +270,9 @@ export function EmptyState({
   return (
     <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-muted-foreground">
       <IconFlower size={32} stroke={1.2} />
-      <h3 className="mt-4 text-[17px] font-semibold text-foreground">{title}</h3>
+      <h3 className="mt-4 text-[17px] font-semibold text-foreground">
+        {title}
+      </h3>
       <p className="mt-1 max-w-[270px] text-[12px] leading-5 text-muted-foreground">
         {description}
       </p>
@@ -374,24 +376,47 @@ export function ServiceCard({
 }) {
   const { state } = useStore();
   return (
-    <Card className={`flex h-full flex-col gap-0 rounded-2xl border-0 p-6 shadow-none ${publicView ? "bg-muted" : "bg-card"}`}>
+    <Card
+      className={`flex min-h-92 h-full flex-col gap-0 rounded-2xl border-0 p-6 shadow-none ${publicView ? "bg-muted" : "bg-card"}`}
+    >
       <div className="flex flex-1 items-start justify-between gap-4">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-foreground">{service.name}</h3>
-          <p className="mt-2 max-w-lg text-[13px] leading-6 text-muted-foreground">{service.description}</p>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {service.name}
+          </h3>
+          <p className="mt-2 max-w-lg text-[13px] leading-6 text-muted-foreground">
+            {service.description}
+          </p>
         </div>
         {action}
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-[16px] font-semibold text-foreground">{money(service.price)}</span>
-        <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground"><IconClock size={15} stroke={1.6} />{duration(service.duration)}</span>
-        {!service.active && <span className="rounded-full bg-muted px-2 py-1 text-[12px] text-muted-foreground">Hidden</span>}
+        <span className="text-[16px] font-semibold text-foreground">
+          {money(service.price)}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+          <IconClock size={15} stroke={1.6} />
+          {duration(service.duration)}
+        </span>
+        {!service.active && (
+          <span className="rounded-full bg-muted px-2 py-1 text-[12px] text-muted-foreground">
+            Hidden
+          </span>
+        )}
       </div>
       <div className="mt-4 flex flex-wrap justify-between gap-2 text-[12px] text-muted-foreground">
-        <span>{service.staffIds.map(id => state.staff.find(s => s.id === id)?.name).join(" & ")}</span>
-        <span>{service.deposit ? `${money(service.deposit)} deposit` : "No deposit"}</span>
+        <span>
+          {service.staffIds
+            .map((id) => state.staff.find((s) => s.id === id)?.name)
+            .join(" & ")}
+        </span>
+        <span>
+          {service.deposit ? `${money(service.deposit)} deposit` : "No deposit"}
+        </span>
       </div>
-      {footer && <div className="mt-5 rounded-xl bg-muted/70 px-3 py-2">{footer}</div>}
+      {footer && (
+        <div className="mt-5 rounded-xl bg-muted/70 px-3 py-2">{footer}</div>
+      )}
     </Card>
   );
 }

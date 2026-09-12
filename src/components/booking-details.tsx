@@ -26,6 +26,7 @@ import {
   time,
   TODAY,
 } from "@/lib/model";
+import { paymentSummary } from "@/lib/payments";
 import { useStore } from "@/lib/store";
 import {
   ActionCard,
@@ -53,6 +54,7 @@ export function BookingDetails({
   const service = state.services.find((s) => s.id === booking.serviceId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
   const calls = { ...DEFAULT_CALL_PREFERENCES, ...state.settings.calls };
+  const payment = paymentSummary(state, booking);
   const terminal = ["Cancelled", "Completed"].includes(booking.status);
   function setStatus(status: Booking["status"]) {
     update((s) => ({
@@ -103,7 +105,7 @@ export function BookingDetails({
                 ? "Today"
                 : dateLabel(booking.startTime).split(",")[0]}
             </p>
-            <BookingStatus status={booking.status} />
+            {terminal || payment.confirmed ? <BookingStatus status={booking.status} /> : payment.pending ? <Link href={publicView ? `/pay/${booking.code}` : "/payments"} className="rounded-full bg-warning-surface px-4 py-2 text-[12px] font-medium text-warning">Receipt under review</Link> : <Link href={`/pay/${booking.code}`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-medium text-white hover:bg-primary/90"><IconCreditCard size={17} /> {publicView ? "Pay to confirm" : "Awaiting payment"}</Link>}
           </div>
           <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-tight max-[560px]:text-[30px]">
             {publicView ? "Your reservation" : "Reservation with"}
@@ -117,7 +119,7 @@ export function BookingDetails({
               {service.name}
             </p>
           )}
-          {booking.status !== "Cancelled" && <Link href={`/pay/${booking.code}`} className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 text-[13px] font-medium text-white transition hover:bg-primary/90"><IconCreditCard size={17} /> {publicView ? "Payment options" : "Open payment page"}<IconArrowUpRight size={16} /></Link>}
+
           <div
             className={`my-8 grid gap-4 ${
               terminal ? "grid-cols-1" : "grid-cols-3 max-[560px]:gap-2"

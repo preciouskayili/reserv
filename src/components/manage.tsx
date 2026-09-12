@@ -1,6 +1,12 @@
 "use client";
 import { AutomaticCallSettings } from "./automatic-call-settings";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -124,7 +130,11 @@ export function ServicesPage() {
                             x.id === s.id ? { ...x, active } : x,
                           ),
                         }));
-                        toast.success(active ? "Service is available to book" : "Service hidden from the public page");
+                        toast.success(
+                          active
+                            ? "Service is available to book"
+                            : "Service hidden from the public page",
+                        );
                       }}
                     />
                     {s.active ? "Visible online" : "Hidden online"}
@@ -361,7 +371,10 @@ function ServiceEditor({
           ))}
         </div>
         {error && (
-          <p className="mt-3 text-[12px] font-medium text-[#af625b]" role="alert">
+          <p
+            className="mt-3 text-[12px] font-medium text-[#af625b]"
+            role="alert"
+          >
             {error}
           </p>
         )}
@@ -441,8 +454,12 @@ export function CustomersPage({
             >
               <Avatar name={c.name} />
               <span className="min-w-[170px] flex-1 max-[560px]:min-w-0">
-                <strong className="block text-[12px] font-semibold text-foreground">{c.name}</strong>
-                <small className="mt-1 block text-[12px] text-muted-foreground">{c.phone}</small>
+                <strong className="block text-[12px] font-semibold text-foreground">
+                  {c.name}
+                </strong>
+                <small className="mt-1 block text-[12px] text-muted-foreground">
+                  {c.phone}
+                </small>
               </span>
               <span className="w-[145px] text-[12px] text-muted-foreground max-[560px]:w-auto">
                 {bookings.length} reservations
@@ -667,7 +684,9 @@ export function BusinessProfilePage() {
             <h3 className="mt-5 text-[19px] font-semibold text-foreground">
               {draft.name}
             </h3>
-            <p className="mt-1 text-[12px] text-muted-foreground">{draft.category}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {draft.category}
+            </p>
             <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
               Your public studio page
             </span>
@@ -736,9 +755,35 @@ export function BusinessProfilePage() {
               <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Category
-                  <Select value={draft.category} onValueChange={(value) => value && setDraft({...draft, category: value})}>
-                    <SelectTrigger aria-label="Business category" className="mt-2 h-10 w-full border-0 bg-muted"><SelectValue /></SelectTrigger>
-                    <SelectContent alignItemWithTrigger={false}>{["Hair & beauty", "Barber", "Nail studio", "Spa & wellness", "Photography", "Tutoring", "Consulting", "Cleaning", "Repairs"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <Select
+                    value={draft.category}
+                    onValueChange={(value) =>
+                      value && setDraft({ ...draft, category: value })
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label="Business category"
+                      className="mt-2 h-10 w-full border-0 bg-muted"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent alignItemWithTrigger={false}>
+                      {[
+                        "Hair & beauty",
+                        "Barber",
+                        "Nail studio",
+                        "Spa & wellness",
+                        "Photography",
+                        "Tutoring",
+                        "Consulting",
+                        "Cleaning",
+                        "Repairs",
+                      ].map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -799,7 +844,9 @@ export function BusinessProfilePage() {
                       {h.day}
                     </label>
                     {h.closed ? (
-                      <span className="col-span-3 text-[12px] text-muted-foreground">Closed</span>
+                      <span className="col-span-3 text-[12px] text-muted-foreground">
+                        Closed
+                      </span>
                     ) : (
                       <>
                         <Input
@@ -817,7 +864,9 @@ export function BusinessProfilePage() {
                             })
                           }
                         />
-                        <span className="text-center text-[12px] text-muted-foreground">to</span>
+                        <span className="text-center text-[12px] text-muted-foreground">
+                          to
+                        </span>
                         <Input
                           aria-label={`${h.day} closing time`}
                           type="time"
@@ -1050,18 +1099,30 @@ export function AgentPage() {
           <div className="my-7 divide-y divide-[#efefef] border-y border-border">
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconPhone size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">Agent phone number</span>
-              <strong className="text-[12px] font-semibold text-foreground">Not assigned</strong>
+              <span className="flex-1 text-muted-foreground">
+                Agent phone number
+              </span>
+              <strong className="text-[12px] font-semibold text-foreground">
+                Not assigned
+              </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconClock size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">Calling hours</span>
-              <strong className="text-[12px] font-semibold text-foreground">Studio opening hours</strong>
+              <span className="flex-1 text-muted-foreground">
+                Calling hours
+              </span>
+              <strong className="text-[12px] font-semibold text-foreground">
+                Studio opening hours
+              </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconShieldCheck size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">Connection status</span>
-              <strong className="text-[12px] font-semibold text-foreground">Coming soon</strong>
+              <span className="flex-1 text-muted-foreground">
+                Connection status
+              </span>
+              <strong className="text-[12px] font-semibold text-foreground">
+                Coming soon
+              </strong>
             </div>
           </div>
           <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
@@ -1106,16 +1167,17 @@ export function AgentPage() {
               text: "Finds returning customers by phone number and reservations by booking code.",
             },
           ].map(({ icon: Icon, title, text }) => (
-            <div
-              className="flex gap-4 border-t border-border py-5"
-              key={title}
-            >
+            <div className="flex gap-4 border-t border-border py-5" key={title}>
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
                 <Icon size={21} />
               </span>
               <div>
-                <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{text}</p>
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  {title}
+                </h3>
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  {text}
+                </p>
               </div>
             </div>
           ))}
@@ -1165,10 +1227,16 @@ export function AgentPage() {
               )}
             </span>
             <div className="flex-1">
-              <strong className="block text-[12px] font-semibold text-foreground">{a.title}</strong>
-              <p className="mt-1 text-[12px] text-muted-foreground">{a.detail}</p>
+              <strong className="block text-[12px] font-semibold text-foreground">
+                {a.title}
+              </strong>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {a.detail}
+              </p>
             </div>
-            <small className="text-[12px] text-muted-foreground">{a.time}</small>
+            <small className="text-[12px] text-muted-foreground">
+              {a.time}
+            </small>
           </div>
         ))}
       </Card>
@@ -1217,15 +1285,21 @@ export function SettingsPage() {
             </label>
             <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
               <span className="text-muted-foreground">Time zone</span>
-              <strong className="text-right font-semibold text-foreground">Africa/Lagos · WAT (UTC+1)</strong>
+              <strong className="text-right font-semibold text-foreground">
+                Africa/Lagos · WAT (UTC+1)
+              </strong>
             </div>
             <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
               <span className="text-muted-foreground">Currency</span>
-              <strong className="text-right font-semibold text-foreground">Nigerian naira (₦)</strong>
+              <strong className="text-right font-semibold text-foreground">
+                Nigerian naira (₦)
+              </strong>
             </div>
             <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
               <span className="text-muted-foreground">Appearance</span>
-              <strong className="text-right font-semibold text-foreground">Light & calm</strong>
+              <strong className="text-right font-semibold text-foreground">
+                Light & calm
+              </strong>
             </div>
             <Button className="mt-6 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
               Save preferences <IconCheck size={16} />
@@ -1236,7 +1310,9 @@ export function SettingsPage() {
           <AutomaticCallSettings />
           <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
             <div className="flex items-center justify-between gap-4">
-              <h3 className="text-[15px] font-semibold text-foreground">A space to experiment.</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                A space to experiment.
+              </h3>
               <IconSparkles size={19} className="text-muted-foreground" />
             </div>
             <p className="my-3 text-[12px] leading-5 text-muted-foreground">
