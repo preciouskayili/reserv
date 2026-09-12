@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { ReservApp } from "@/components/app";
+import { PublicProfile } from "@/components/public";
 import { seed } from "@/lib/seed";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ slug?: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  if (slug[0] === "b" && slug[1] === seed.business.slug)
+  const { slug = "" } = (await params) || {};
+  if (slug === seed.business.slug) {
     return {
       title: `${seed.business.name} — Hair & beauty in Abuja`,
       description:
@@ -20,14 +20,12 @@ export async function generateMetadata({
         type: "website",
       },
     };
-  if (slug[0] === "r" || slug[0] === "reservation")
-    return {
-      title: `Your reservation — ${seed.business.name}`,
-      description: `Find and manage your reservation at ${seed.business.name}.`,
-      robots: { index: false, follow: false },
-    };
-  return { title: `${slug[0]?.replaceAll("-", " ") || "Studio"} — Reserv` };
+  }
+  return {
+    title: `${slug ? slug.replaceAll("-", " ") : "Studio"} — Reserv`,
+  };
 }
-export default function Page() {
-  return <ReservApp />;
+
+export default function PublicBusinessRoute() {
+  return <PublicProfile />;
 }

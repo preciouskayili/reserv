@@ -14,6 +14,7 @@ import {
   IconCheck,
   IconChevronRight,
   IconCopy,
+  IconClock,
   IconFlower,
   IconScissors,
   IconSparkles,
@@ -37,20 +38,20 @@ export function Brand({ small = false }: { small?: boolean }) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-baseline font-semibold leading-none text-[#1e1e1e] tracking-[-0.085em] ${
-        small ? "text-[19px]" : "text-[30px]"
+      className={`inline-flex items-baseline font-semibold leading-none text-foreground tracking-tight ${
+        small ? "text-[19px]" : "text-[27px]"
       }`}
       aria-label="Reserv home"
     >
       reserv
-      <span className="ml-[2px] h-[5px] w-[5px] rounded-full bg-[#999999]" />
+      <span className="ml-[2px] h-[5px] w-[5px] rounded-full bg-primary" />
     </Link>
   );
 }
 export function StudioMark({ large = false }: { large?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center justify-center bg-[#ececf0] text-[#4e4e52] ${
+      className={`inline-flex items-center justify-center bg-muted text-foreground ${
         large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"
       }`}
     >
@@ -73,15 +74,15 @@ export function PageHeader({
     <header className="page-header mb-9 flex flex-wrap items-end justify-between gap-4 max-[760px]:mb-6">
       <div>
         {eyebrow && (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             {eyebrow}
           </p>
         )}
-        <h1 className="mt-3 text-[clamp(36px,4vw,55px)] font-medium leading-[1.09] tracking-[-0.062em] text-[#1e1e20] max-[760px]:text-[39px] max-[560px]:text-[34px]">
+        <h1 className="mt-3 text-[30px] font-medium leading-[1.09] tracking-tight text-foreground max-[760px]:text-[30px] max-[560px]:text-[34px]">
           {title}
         </h1>
         {description && (
-          <p className="page-description mt-3 text-[14px] text-[#8a8a8a]">
+          <p className="page-description mt-3 text-[14px] text-muted-foreground">
             {description}
           </p>
         )}
@@ -95,20 +96,20 @@ export function PageHeader({
   );
 }
 const statusColors: Record<Status, string> = {
-  Confirmed: "bg-[#eef8f2] text-[#3b7a57]",
-  Pending: "bg-[#fff4ec] text-[#ab765b]",
-  "Needs confirmation": "bg-[#fff4ec] text-[#ab765b]",
-  Cancelled: "bg-[#fcf0ef] text-[#aa6661]",
-  Completed: "bg-[#f0f0f1] text-[#656569]",
-  Rescheduled: "bg-[#f0f0f1] text-[#656569]",
+  Confirmed: "bg-success-surface text-success",
+  Pending: "bg-warning-surface text-warning",
+  "Needs confirmation": "bg-warning-surface text-warning",
+  Cancelled: "bg-danger-surface text-destructive",
+  Completed: "bg-muted text-foreground",
+  Rescheduled: "bg-muted text-foreground",
 };
 
 export function BookingStatus({ status }: { status: Status }) {
   return (
     <Badge
       variant="secondary"
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-[9px] font-semibold ${
-        statusColors[status] || "bg-[#f1f1f1] text-[#787878]"
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-[12px] font-semibold ${
+        statusColors[status] || "bg-muted text-muted-foreground"
       }`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -118,19 +119,19 @@ export function BookingStatus({ status }: { status: Status }) {
 }
 export function BookingCode({ code }: { code: string }) {
   return (
-    <Card className="flex flex-row items-center justify-between gap-0 rounded-[18px] border-0 bg-[#f1f1f4] px-5 py-4 shadow-none">
+    <Card className="flex flex-row items-center justify-between gap-0 rounded-[18px] border-0 bg-muted px-5 py-4 shadow-none">
       <div>
-        <p className="text-[9px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
           Booking code
         </p>
-        <strong className="mt-1 block font-mono text-[20px] font-semibold tracking-[0.2em] text-[#323235]">
+        <strong className="mt-1 block font-mono text-[20px] font-semibold tracking-[0.08em] text-foreground">
           {code}
         </strong>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
         aria-label="Copy booking code"
         onClick={async () => {
           try {
@@ -159,13 +160,13 @@ export function Avatar({
     size === "large"
       ? "h-14 w-14 text-[18px]"
       : size === "tiny"
-        ? "h-6 w-6 text-[8px]"
+        ? "h-6 w-6 text-[12px]"
         : size
           ? size
-          : "h-9 w-9 text-[11px]";
+          : "h-9 w-9 text-[12px]";
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#ebebed] font-bold text-[#555558] ${sizeClasses} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-muted font-bold text-foreground ${sizeClasses} ${className}`}
     >
       {initials(name)}
     </span>
@@ -202,10 +203,10 @@ export function ActionCard({
       <span>{label}</span>
     </>
   );
-  const baseClasses = `flex min-h-[145px] flex-col items-center justify-center gap-2 rounded-[28px] border-0 px-2 text-[18px] font-medium tracking-[-0.04em] transition max-[760px]:min-h-[110px] max-[760px]:rounded-[20px] max-[760px]:text-[13px] max-[560px]:min-h-[95px] max-[560px]:rounded-[17px] max-[560px]:text-[10px] ${
+  const baseClasses = `flex min-h-[145px] flex-col items-center justify-center gap-2 rounded-[28px] border-0 px-2 text-[18px] font-medium tracking-tight transition max-[760px]:min-h-[110px] max-[760px]:rounded-[20px] max-[760px]:text-[13px] max-[560px]:min-h-[95px] max-[560px]:rounded-[17px] max-[560px]:text-[12px] ${
     danger
-      ? "bg-[#faeeee] text-[#b34d4a] hover:bg-[#f6e4e4]"
-      : "bg-[#f1f1f4] text-[#313134] hover:bg-[#efeff1]"
+      ? "bg-danger-surface text-destructive hover:bg-destructive/10"
+      : "bg-muted text-foreground hover:bg-muted"
   }`;
   return href ? (
     <a href={href} className={baseClasses}>
@@ -242,14 +243,14 @@ export function Modal({
       }}
     >
       <DialogContent
-        className={`rounded-[28px] border-0 bg-white p-7 shadow-[0_30px_70px_-20px_#00000033] max-[560px]:rounded-[22px] max-[560px]:p-5 ${
-          wide ? "max-w-[650px]" : "max-w-[520px]"
+        className={`rounded-[28px] border-0 bg-white p-9 shadow-[0_32px_100px_-24px_#172b4d40] max-[560px]:rounded-[22px] max-[560px]:p-5 ${
+          wide ? "sm:max-w-[820px]" : "sm:max-w-[660px]"
         }`}
       >
-        <DialogTitle className="pr-8 text-[26px] font-medium leading-tight tracking-[-0.055em] text-[#202022]">
+        <DialogTitle className="pr-10 text-[24px] font-semibold leading-tight tracking-[-0.02em] text-foreground">
           {title}
         </DialogTitle>
-        <DialogDescription className="text-[12px] text-[#8e8e8e]">
+        <DialogDescription className="-mt-1 mb-3 max-w-xl pr-8 text-[13px] leading-6 text-muted-foreground">
           {description || "Manage the details below."}
         </DialogDescription>
         {children}
@@ -267,10 +268,10 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-[#a0a0a0]">
+    <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-muted-foreground">
       <IconFlower size={32} stroke={1.2} />
-      <h3 className="mt-4 text-[17px] font-semibold text-[#343434]">{title}</h3>
-      <p className="mt-1 max-w-[270px] text-[12px] leading-5 text-[#949494]">
+      <h3 className="mt-4 text-[17px] font-semibold text-foreground">{title}</h3>
+      <p className="mt-1 max-w-[270px] text-[12px] leading-5 text-muted-foreground">
         {description}
       </p>
       {action && <div className="mt-5">{action}</div>}
@@ -288,12 +289,12 @@ export function SegmentedControl<T extends string>({
 }) {
   return (
     <Tabs value={value} onValueChange={(next) => onChange(next as T)}>
-      <TabsList className="flex gap-1 rounded-full border-0 bg-[#efeff1] p-1">
+      <TabsList className="flex h-10 gap-1 rounded-xl border-0 bg-muted p-1">
         {options.map((option) => (
           <TabsTrigger
             key={option}
             value={option}
-            className="rounded-full border-0 px-4 py-1.5 text-[11px] font-semibold text-[#808084] transition data-active:bg-white data-active:text-[#252527] data-active:shadow-[0_2px_8px_#0000000d]"
+            className="rounded-lg border-0 px-4 py-1.5 text-[12px] font-semibold text-muted-foreground transition data-active:bg-white data-active:text-foreground data-active:shadow-[0_2px_8px_#0000000d]"
           >
             {option}
           </TabsTrigger>
@@ -316,32 +317,32 @@ export function BookingCard({
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
   return (
-    <Card className="rounded-[24px] border-0 bg-white p-0 shadow-none">
+    <Card className="rounded-xl border-0 bg-white p-0 shadow-none">
       <button
-        className={`flex w-full items-start gap-4 rounded-[24px] p-5 text-left transition hover:bg-[#fafafc] ${
-          compact ? "p-3.5" : ""
+        className={`flex w-full items-start gap-3 rounded-xl px-4 py-3 text-left transition hover:bg-background ${
+          compact ? "p-3" : ""
         } ${booking.status === "Completed" ? "opacity-75" : ""}`}
         onClick={onClick}
       >
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
           <ServiceIcon serviceId={service.id} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-[14px] font-semibold tracking-[-0.025em] text-[#252528] max-[560px]:text-[12px]">
+            <h3 className="text-[14px] font-semibold text-foreground max-[560px]:text-[12px]">
               {service.name}
             </h3>
             <BookingStatus status={booking.status} />
           </div>
-          <p className="mt-1 text-[12px] text-[#8a8a8a]">
+          <p className="mt-1 text-[12px] text-muted-foreground">
             {customer.name}
-            <span className="px-2 text-[#bababa]">·</span>
+            <span className="px-2 text-muted-foreground">·</span>
             {duration(service.duration)}
           </p>
           {!compact && (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#f1f1f1] pt-3 text-[10px] text-[#909090] max-[560px]:mt-2">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground max-[560px]:mt-2">
               <span>
-                <span className="mr-1.5 inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#ebebed] text-[7px] font-bold text-[#555558]">
+                <span className="mr-1.5 inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">
                   {staff.initials}
                 </span>
                 with {staff.name}
@@ -354,7 +355,7 @@ export function BookingCard({
         </div>
         <IconChevronRight
           size={18}
-          className="mt-3 shrink-0 text-[#aeaeae]"
+          className="mt-3 shrink-0 text-muted-foreground"
         />
       </button>
     </Card>
@@ -363,50 +364,34 @@ export function BookingCard({
 export function ServiceCard({
   service,
   action,
+  footer,
+  publicView = false,
 }: {
   service: Service;
   action?: ReactNode;
+  footer?: ReactNode;
+  publicView?: boolean;
 }) {
   const { state } = useStore();
   return (
-    <Card
-      className={`flex min-h-[230px] flex-col rounded-[28px] border-0 bg-[#f8f8fa] p-5 shadow-none ${
-        !service.active ? "opacity-60" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between gap-4">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
-          <ServiceIcon serviceId={service.id} size={24} />
-        </span>
-        {!service.active && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
-            Hidden
-          </span>
-        )}
+    <Card className={`flex h-full flex-col gap-0 rounded-2xl border-0 p-6 shadow-none ${publicView ? "bg-muted" : "bg-card"}`}>
+      <div className="flex flex-1 items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-foreground">{service.name}</h3>
+          <p className="mt-2 max-w-lg text-[13px] leading-6 text-muted-foreground">{service.description}</p>
+        </div>
         {action}
       </div>
-      <h3 className="mt-5 text-[17px] font-semibold tracking-[-0.04em] text-[#252528]">
-        {service.name}
-      </h3>
-      <p className="mt-2 flex-1 text-[11px] leading-[1.7] text-[#949494]">
-        {service.description}
-      </p>
-      <div className="mt-5 flex items-center justify-between text-[17px] font-semibold tracking-[-0.04em] text-[#252528]">
-        {money(service.price)}
-        <span className="text-[10px] font-medium tracking-normal text-[#989898]">
-          {duration(service.duration)}
-        </span>
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-[16px] font-semibold text-foreground">{money(service.price)}</span>
+        <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground"><IconClock size={15} stroke={1.6} />{duration(service.duration)}</span>
+        {!service.active && <span className="rounded-full bg-muted px-2 py-1 text-[12px] text-muted-foreground">Hidden</span>}
       </div>
-      <div className="mt-4 flex justify-between gap-2 border-t border-[#ededf0] pt-3 text-[9px] text-[#a1a1a1]">
-        <span>
-          {service.staffIds
-            .map((id) => state.staff.find((s) => s.id === id)?.name)
-            .join(" & ")}
-        </span>
-        <span>
-          {service.deposit ? `${money(service.deposit)} deposit` : "No deposit"}
-        </span>
+      <div className="mt-4 flex flex-wrap justify-between gap-2 text-[12px] text-muted-foreground">
+        <span>{service.staffIds.map(id => state.staff.find(s => s.id === id)?.name).join(" & ")}</span>
+        <span>{service.deposit ? `${money(service.deposit)} deposit` : "No deposit"}</span>
       </div>
+      {footer && <div className="mt-5 rounded-xl bg-muted/70 px-3 py-2">{footer}</div>}
     </Card>
   );
 }
@@ -420,19 +405,19 @@ export function BusinessHours() {
       {state.business.hours.map((h) => (
         <div
           key={h.day}
-          className={`flex items-center justify-between border-b border-[#f0f0f0] py-2.5 text-[10px] last:border-0 ${
-            h.day === "Saturday" ? "font-semibold text-[#252527]" : ""
+          className={`flex items-center justify-between border-b border-border py-2.5 text-[12px] last:border-0 ${
+            h.day === "Saturday" ? "font-semibold text-foreground" : ""
           }`}
         >
-          <span className="flex items-center gap-1.5 text-[#8f8f8f]">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
             {h.day}
             {h.day === "Saturday" && (
-              <small className="rounded-full bg-[#eeeeee] px-1.5 py-0.5 text-[8px] font-medium text-[#767676]">
+              <small className="rounded-full bg-muted px-1.5 py-0.5 text-[12px] font-medium text-muted-foreground">
                 Today
               </small>
             )}
           </span>
-          <span className="font-semibold text-[#323235]">
+          <span className="font-semibold text-foreground">
             {h.closed
               ? "Closed"
               : `${time(`2026-09-12T${h.open}:00`)} – ${time(`2026-09-12T${h.close}:00`)}`}
@@ -448,21 +433,21 @@ export function BookingActivityList({ booking }: { booking: Booking }) {
       {booking.activity.map((item, idx) => (
         <div key={item.id} className="relative flex gap-3 pb-6 last:pb-0">
           {idx < booking.activity.length - 1 && (
-            <span className="absolute bottom-0 left-[13px] top-7 w-px bg-[#e7e7e7]" />
+            <span className="absolute bottom-0 left-[13px] top-7 w-px bg-muted" />
           )}
-          <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-[#7b7b7b]">
+          <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <IconCheck size={12} />
           </span>
           <div>
-            <strong className="block pt-0.5 text-[11px] font-semibold text-[#2d2d30]">
+            <strong className="block pt-0.5 text-[12px] font-semibold text-foreground">
               {item.title}
             </strong>
             {item.detail && (
-              <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                 {item.detail}
               </p>
             )}
-            <small className="mt-1 block text-[9px] text-[#afafaf]">
+            <small className="mt-1 block text-[12px] text-muted-foreground">
               {new Date(item.time).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",

@@ -1,4 +1,5 @@
 "use client";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,6 @@ import {
   Modal,
   PageHeader,
   ServiceCard,
-  StudioMark,
 } from "./shared";
 import type { BookingPreset } from "./booking-flow";
 
@@ -60,7 +60,7 @@ export function ServicesPage() {
         description="Thoughtful services. Ready to reserve."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
             onClick={() => setEditing("new")}
           >
             <IconPlus size={18} />
@@ -73,10 +73,10 @@ export function ServicesPage() {
           {["All services", "Available", "Hidden"].map((f) => (
             <button
               key={f}
-              className={`rounded-lg px-3 py-2 text-[11px] transition max-[560px]:whitespace-nowrap ${
+              className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
                 filter === f
-                  ? "bg-[#f0f0f0] font-semibold text-[#686868]"
-                  : "font-medium text-[#999999] hover:bg-[#f6f6f6]"
+                  ? "bg-muted font-semibold text-foreground"
+                  : "font-medium text-muted-foreground hover:bg-background"
               }`}
               onClick={() => setFilter(f)}
             >
@@ -84,11 +84,11 @@ export function ServicesPage() {
             </button>
           ))}
         </div>
-        <span className="text-[11px] text-[#8e8e8e]">
+        <span className="text-[12px] text-muted-foreground">
           {state.services.length} services · {state.staff.length} specialists
         </span>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-4 max-[1180px]:grid-cols-2 max-[760px]:grid-cols-2 max-[560px]:grid-cols-1">
+      <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,290px),1fr))] gap-4">
         {state.services
           .filter(
             (s) =>
@@ -96,49 +96,50 @@ export function ServicesPage() {
               (filter === "Available" ? s.active : !s.active),
           )
           .map((s) => (
-            <div key={s.id}>
-              <ServiceCard
-                service={s}
-                action={
+            <ServiceCard
+              key={s.id}
+              service={s}
+              action={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={`Edit ${s.name}`}
+                  onClick={() => setEditing(s)}
+                >
+                  <IconEdit size={17} />
+                </Button>
+              }
+              footer={
+                <div className="flex min-h-8 items-center justify-between gap-3">
+                  <label className="flex cursor-pointer items-center gap-2.5 text-[12px] font-medium text-muted-foreground">
+                    <Switch
+                      checked={s.active}
+                      aria-label={`Show ${s.name} on booking page`}
+                      onCheckedChange={(active) => {
+                        update((st) => ({
+                          ...st,
+                          services: st.services.map((x) =>
+                            x.id === s.id ? { ...x, active } : x,
+                          ),
+                        }));
+                        toast.success(active ? "Service is available to book" : "Service hidden from the public page");
+                      }}
+                    />
+                    {s.active ? "Visible online" : "Hidden online"}
+                  </label>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
-                    aria-label={`Edit ${s.name}`}
-                    onClick={() => setEditing(s)}
+                    size="icon-sm"
+                    className="shrink-0 rounded-lg text-muted-foreground hover:bg-danger-surface hover:text-destructive"
+                    aria-label={`Delete ${s.name}`}
+                    onClick={() => setDeleting(s)}
                   >
-                    <IconEdit size={18} />
+                    <IconTrash size={16} />
                   </Button>
-                }
-              />
-              <div className="flex items-center justify-between rounded-b-[20px] border border-t-0 border-[#ebebeb] bg-white px-5 py-3 text-[10px] font-semibold text-[#7f7f7f]">
-                <button
-                  className="transition hover:text-[#343434]"
-                  onClick={() => {
-                    update((st) => ({
-                      ...st,
-                      services: st.services.map((x) =>
-                        x.id === s.id ? { ...x, active: !x.active } : x,
-                      ),
-                    }));
-                    toast.success(
-                      s.active
-                        ? "Service hidden from the public page"
-                        : "Service is available to book",
-                    );
-                  }}
-                >
-                  {s.active ? "Hide from booking page" : "Make available"}
-                </button>
-                <button
-                  className="transition hover:text-[#343434]"
-                  aria-label={`Delete ${s.name}`}
-                  onClick={() => setDeleting(s)}
-                >
-                  <IconTrash size={15} />
-                </button>
-              </div>
-            </div>
+                </div>
+              }
+            />
           ))}
       </div>
       {editing && (
@@ -156,12 +157,12 @@ export function ServicesPage() {
         >
           {state.bookings.some((b) => b.serviceId === deleting.id) ? (
             <>
-              <p className="mb-4 text-[12px] leading-5 text-[#8e8e8e]">
+              <p className="mb-4 text-[12px] leading-5 text-muted-foreground">
                 This service has reservation history. Hide it from the booking
                 page to preserve those records.
               </p>
               <Button
-                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -180,12 +181,12 @@ export function ServicesPage() {
             </>
           ) : (
             <>
-              <p className="mb-4 text-[12px] leading-5 text-[#8e8e8e]">
+              <p className="mb-4 text-[12px] leading-5 text-muted-foreground">
                 This service will be removed from your studio and public page.
               </p>
               <Button
                 variant="destructive"
-                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-50"
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-50"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -195,7 +196,7 @@ export function ServicesPage() {
                   toast.success("Service deleted");
                 }}
               >
-                Delete service
+                <IconTrash size={16} /> Delete service
               </Button>
             </>
           )}
@@ -264,17 +265,17 @@ function ServiceEditor({
           onClose();
         }}
       >
-        <label className="block text-[11px] font-semibold text-[#636363]">
+        <label className="block text-[12px] font-semibold text-foreground">
           Service name
           <Input
             required
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="e.g. Silk press"
-            className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+            className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
           />
         </label>
-        <label className="block text-[11px] font-semibold text-[#636363]">
+        <label className="block text-[12px] font-semibold text-foreground">
           Description
           <Textarea
             required
@@ -284,11 +285,11 @@ function ServiceEditor({
               setDraft({ ...draft, description: e.target.value })
             }
             placeholder="Tell customers what makes this service special…"
-            className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+            className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
           />
         </label>
         <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
-          <label className="block text-[11px] font-semibold text-[#636363]">
+          <label className="block text-[12px] font-semibold text-foreground">
             Duration (minutes)
             <Input
               type="number"
@@ -300,10 +301,10 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, duration: Number(e.target.value) })
               }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
-          <label className="block text-[11px] font-semibold text-[#636363]">
+          <label className="block text-[12px] font-semibold text-foreground">
             Price (₦)
             <Input
               type="number"
@@ -313,10 +314,10 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, price: Number(e.target.value) })
               }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
-          <label className="block text-[11px] font-semibold text-[#636363]">
+          <label className="block text-[12px] font-semibold text-foreground">
             Deposit (₦)
             <Input
               type="number"
@@ -327,18 +328,18 @@ function ServiceEditor({
               onChange={(e) =>
                 setDraft({ ...draft, deposit: Number(e.target.value) })
               }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
         </div>
-        <p className="mb-2 block text-[11px] font-semibold text-[#636363]">
+        <p className="mb-2 block text-[12px] font-semibold text-foreground">
           Who offers this service?
         </p>
         <div className="mb-4 flex flex-wrap gap-2">
           {state.staff.map((s) => (
             <label
               key={s.id}
-              className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#ebebeb] bg-white px-3 py-2 text-[11px] text-[#444444] transition hover:border-[#dcdcdc]"
+              className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-[12px] text-foreground transition hover:border-border"
             >
               <input
                 type="checkbox"
@@ -359,12 +360,12 @@ function ServiceEditor({
           ))}
         </div>
         {error && (
-          <p className="mt-3 text-[11px] font-medium text-[#af625b]" role="alert">
+          <p className="mt-3 text-[12px] font-medium text-[#af625b]" role="alert">
             {error}
           </p>
         )}
-        <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
-          {service ? "Save changes" : "Create service"}
+        <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
+          <IconCheck size={16} /> {service ? "Save changes" : "Create service"}
           <IconCheck size={17} />
         </Button>
       </form>
@@ -395,7 +396,7 @@ export function CustomersPage({
         description="A little care goes a long way."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
             onClick={() => setAdding(true)}
           >
             <IconPlus size={18} />
@@ -403,19 +404,19 @@ export function CustomersPage({
           </Button>
         }
       />
-      <Card className="overflow-hidden rounded-[22px] border-0 bg-[#f8f8fa] shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f0f0f0] px-6 py-5 max-[560px]:px-4">
-          <h2 className="text-[16px] font-semibold text-[#1e1e20]">
+      <Card className="overflow-hidden rounded-[22px] border-0 bg-card !gap-0 !py-0 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 max-[560px]:px-4">
+          <h2 className="text-[16px] font-semibold text-foreground">
             {state.customers.length} lovely people
           </h2>
-          <label className="flex h-9 min-w-[230px] items-center gap-2 rounded-xl bg-[#f1f1f4] px-3 text-[#a7a7a7]">
+          <label className="flex h-10 min-w-[230px] items-center gap-2 rounded-xl bg-muted px-3 text-muted-foreground">
             <IconSearch size={17} />
             <Input
               aria-label="Search customers"
               placeholder="Search by name or phone"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-full w-full border-0 bg-transparent p-0 text-[11px] text-[#2e2e2e] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-0"
+              className="h-full w-full border-0 bg-transparent p-0 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-0"
             />
           </label>
         </div>
@@ -434,25 +435,25 @@ export function CustomersPage({
           return (
             <button
               key={c.id}
-              className="flex w-full items-center gap-4 border-b border-[#f1f1f1] px-6 py-4 text-left transition hover:bg-[#fcfcfc] last:border-b-0 max-[560px]:gap-2 max-[560px]:px-4"
+              className="flex w-full items-center gap-4 border-b border-border px-5 py-2.5 text-left transition hover:bg-white last:border-b-0 max-[560px]:gap-2 max-[560px]:px-4"
               onClick={() => setSelected(c.id)}
             >
               <Avatar name={c.name} />
               <span className="min-w-[170px] flex-1 max-[560px]:min-w-0">
-                <strong className="block text-[12px] font-semibold text-[#222222]">{c.name}</strong>
-                <small className="mt-1 block text-[10px] text-[#a6a6a6]">{c.phone}</small>
+                <strong className="block text-[12px] font-semibold text-foreground">{c.name}</strong>
+                <small className="mt-1 block text-[12px] text-muted-foreground">{c.phone}</small>
               </span>
-              <span className="w-[145px] text-[10px] text-[#919191] max-[560px]:w-auto">
+              <span className="w-[145px] text-[12px] text-muted-foreground max-[560px]:w-auto">
                 {bookings.length} reservations
               </span>
-              <span className="w-[210px] text-[10px] text-[#919191] max-[760px]:hidden">
+              <span className="w-[210px] text-[12px] text-muted-foreground max-[760px]:hidden">
                 {next
                   ? `Next visit: ${new Date(next.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                   : last
                     ? `Last visit: ${new Date(last.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                     : "Let’s plan a first visit"}
               </span>
-              <IconChevronRight size={18} className="text-[#aaaaaa]" />
+              <IconChevronRight size={18} className="text-muted-foreground" />
             </button>
           );
         })}
@@ -515,16 +516,16 @@ export function CustomersPage({
               toast.success("Customer added");
             }}
           >
-            <label className="block text-[11px] font-semibold text-[#636363]">
+            <label className="block text-[12px] font-semibold text-foreground">
               Full name
               <Input
                 name="name"
                 required
                 minLength={2}
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <label className="block text-[11px] font-semibold text-[#636363]">
+            <label className="block text-[12px] font-semibold text-foreground">
               Phone number
               <Input
                 name="phone"
@@ -532,10 +533,10 @@ export function CustomersPage({
                 required
                 pattern="[+0-9 ()-]{10,20}"
                 placeholder="+234 800 000 0000"
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
+            <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
               Add customer
             </Button>
           </form>
@@ -570,33 +571,33 @@ function CustomerDetails({
     >
       <div className="my-6 flex gap-2">
         <a
-          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
           href={`tel:${customer.phone.replaceAll(" ", "")}`}
         >
           <IconPhone size={16} />
           Call customer
         </a>
         <Button
-          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
           onClick={onNew}
         >
           <IconPlus size={16} />
           New booking
         </Button>
       </div>
-      <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+      <label className="mb-4 block text-[12px] font-semibold text-foreground">
         A little something to remember
         <Textarea
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+          className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
         />
       </label>
       <Button
         variant="secondary"
         size="sm"
-        className="inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
+        className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
         onClick={() => {
           update((s) => ({
             ...s,
@@ -607,14 +608,14 @@ function CustomerDetails({
           toast.success("Customer note saved");
         }}
       >
-        Save note
+        <IconCheck size={16} /> Save note
       </Button>
-      <h3 className="mt-7 border-t border-[#efefef] pt-6 text-[15px] font-semibold text-[#1e1e20]">
+      <h3 className="mt-7 border-t border-border pt-6 text-[15px] font-semibold text-foreground">
         Reservation history
       </h3>
       {bookings.map((b) => (
         <div className="mt-3" key={b.id}>
-          <small className="mb-2 block text-[9px] text-[#8e8e8e]">
+          <small className="mb-2 block text-[12px] text-muted-foreground">
             {dateLabel(b.startTime)}
           </small>
           <BookingCard compact booking={b} onClick={() => onBooking(b)} />
@@ -651,7 +652,7 @@ export function BusinessProfilePage() {
         description="Everything your customers — and receptionist — should know."
         action={
           <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
             href={`/b/${state.business.slug}`}
           >
             <IconEye size={17} />
@@ -659,19 +660,18 @@ export function BusinessProfilePage() {
           </Link>
         }
       />
-      <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-5 max-[1023px]:grid-cols-[210px_minmax(0,1fr)] max-[760px]:grid-cols-1">
-        <aside className="sticky top-5 max-[760px]:static">
-          <div className="mb-4 rounded-[20px] bg-[#f8f8fa] p-5 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-            <StudioMark large />
-            <h3 className="mt-5 text-[19px] font-semibold tracking-[-0.04em] text-[#1e1e20]">
+      <div className="flex flex-col gap-6 [&>form]:w-full [&>aside]:w-full">
+        <aside className="static">
+          <div className="mb-4 rounded-[20px] bg-card p-5 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+            <h3 className="mt-5 text-[19px] font-semibold text-foreground">
               {draft.name}
             </h3>
-            <p className="mt-1 text-[11px] text-[#979797]">{draft.category}</p>
-            <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
+            <p className="mt-1 text-[12px] text-muted-foreground">{draft.category}</p>
+            <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
               Your public studio page
             </span>
           </div>
-          <nav className="overflow-hidden rounded-[16px] border border-[#ececec] bg-white p-2 max-[760px]:grid max-[760px]:grid-cols-2">
+          <nav className="flex flex-wrap gap-1 rounded-xl bg-white p-2">
             {[
               "The essentials",
               "Opening hours",
@@ -680,10 +680,10 @@ export function BusinessProfilePage() {
             ].map((t) => (
               <button
                 key={t}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-[11px] transition ${
+                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-3 text-left text-[12px] transition ${
                   t === tab
-                    ? "bg-[#f3f3f3] font-semibold text-[#5f5f5f]"
-                    : "text-[#8c8c8c] hover:bg-[#fafafa]"
+                    ? "bg-muted font-semibold text-foreground"
+                    : "text-muted-foreground hover:bg-background"
                 }`}
                 onClick={() => setTab(t)}
               >
@@ -693,34 +693,34 @@ export function BusinessProfilePage() {
             ))}
           </nav>
           <Link
-            className="mt-5 inline-flex items-center gap-2 pl-3 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
+            className="mt-5 inline-flex items-center gap-2 pl-3 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
             href="/services"
           >
             Manage your services <IconArrowUpRight size={15} />
           </Link>
         </aside>
         <form
-          className="rounded-[21px] bg-[#f8f8fa] p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
+          className="rounded-[21px] bg-card p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
           onSubmit={save}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             MAKE A GOOD FIRST IMPRESSION
           </p>
-          <h2 className="mb-6 mt-2 text-[27px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+          <h2 className="mb-6 mt-2 text-[27px] font-semibold tracking-tight text-foreground">
             {tab}
           </h2>
           {tab === "The essentials" && (
             <>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Business name
                 <Input
                   required
                   value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 A little about your studio
                 <Textarea
                   required
@@ -729,35 +729,18 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, description: e.target.value })
                   }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
               <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
-                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Category
-                  <select
-                    value={draft.category}
-                    onChange={(e) =>
-                      setDraft({ ...draft, category: e.target.value })
-                    }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                  >
-                    {[
-                      "Hair & beauty",
-                      "Barber",
-                      "Nail studio",
-                      "Spa & wellness",
-                      "Photography",
-                      "Tutoring",
-                      "Consulting",
-                      "Cleaning",
-                      "Repairs",
-                    ].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
+                  <Select value={draft.category} onValueChange={(value) => value && setDraft({...draft, category: value})}>
+                    <SelectTrigger aria-label="Business category" className="mt-2 h-10 w-full border-0 bg-muted"><SelectValue /></SelectTrigger>
+                    <SelectContent alignItemWithTrigger={false}>{["Hair & beauty", "Barber", "Nail studio", "Spa & wellness", "Photography", "Tutoring", "Consulting", "Cleaning", "Repairs"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
                 </label>
-                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Business phone
                   <Input
                     required
@@ -766,11 +749,11 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, phone: e.target.value })
                     }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
               </div>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Your location
                 <Input
                   required
@@ -778,10 +761,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, address: e.target.value })
                   }
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <div className="flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]">
+              <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
                 <IconFlower size={18} />
                 Your public page: /b/{state.business.slug}
               </div>
@@ -789,7 +772,7 @@ export function BusinessProfilePage() {
           )}
           {tab === "Opening hours" && (
             <>
-              <p className="text-[11px] text-[#8e8e8e]">
+              <p className="text-[12px] text-muted-foreground">
                 A time for work, and a time for yourself. All times are in WAT.
               </p>
               <div className="mt-5 divide-y divide-[#f0f0f0]">
@@ -798,7 +781,7 @@ export function BusinessProfilePage() {
                     key={h.day}
                     className="grid grid-cols-[1fr_110px_24px_110px] items-center gap-2 py-3 max-[560px]:grid-cols-[1fr_90px_15px_90px]"
                   >
-                    <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[#727272]">
+                    <label className="flex cursor-pointer items-center gap-2 text-[12px] text-muted-foreground">
                       <input
                         type="checkbox"
                         className="accent-[#646464]"
@@ -815,7 +798,7 @@ export function BusinessProfilePage() {
                       {h.day}
                     </label>
                     {h.closed ? (
-                      <span className="col-span-3 text-[11px] text-[#8e8e8e]">Closed</span>
+                      <span className="col-span-3 text-[12px] text-muted-foreground">Closed</span>
                     ) : (
                       <>
                         <Input
@@ -823,7 +806,7 @@ export function BusinessProfilePage() {
                           type="time"
                           required
                           value={h.open}
-                          className="min-w-0 rounded-lg border border-[#e8e8e8] bg-white px-2 py-1 text-[11px] text-[#2f2f2f] shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[10px]"
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
                           onChange={(e) =>
                             setDraft({
                               ...draft,
@@ -833,13 +816,13 @@ export function BusinessProfilePage() {
                             })
                           }
                         />
-                        <span className="text-center text-[10px] text-[#a5a5a5]">to</span>
+                        <span className="text-center text-[12px] text-muted-foreground">to</span>
                         <Input
                           aria-label={`${h.day} closing time`}
                           type="time"
                           required
                           value={h.close}
-                          className="min-w-0 rounded-lg border border-[#e8e8e8] bg-white px-2 py-1 text-[11px] text-[#2f2f2f] shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[10px]"
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
                           onChange={(e) =>
                             setDraft({
                               ...draft,
@@ -858,7 +841,7 @@ export function BusinessProfilePage() {
           )}
           {tab === "Booking & policies" && (
             <>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Booking policy
                 <Textarea
                   required
@@ -867,10 +850,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, bookingPolicy: e.target.value })
                   }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Cancellation policy
                 <Textarea
                   required
@@ -879,10 +862,10 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, cancellationPolicy: e.target.value })
                   }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
-              <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+              <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Deposit policy
                 <Textarea
                   rows={3}
@@ -890,11 +873,11 @@ export function BusinessProfilePage() {
                   onChange={(e) =>
                     setDraft({ ...draft, depositPolicy: e.target.value })
                   }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                 />
               </label>
               <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
-                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Minimum notice (minutes)
                   <Input
                     type="number"
@@ -910,10 +893,10 @@ export function BusinessProfilePage() {
                         },
                       })
                     }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
-                <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Book ahead (days)
                   <Input
                     type="number"
@@ -929,7 +912,7 @@ export function BusinessProfilePage() {
                         },
                       })
                     }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
               </div>
@@ -939,18 +922,18 @@ export function BusinessProfilePage() {
             <>
               {draft.faqs.map((faq, i) => (
                 <div
-                  className="mb-4 rounded-xl border border-[#ececec] p-4"
+                  className="mb-4 rounded-xl border border-border p-4"
                   key={i}
                 >
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       QUESTION {i + 1}
                     </p>
                     <Button
                       variant="ghost"
                       size="icon"
                       type="button"
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[#7c7c7c] transition hover:border-[#eaeaea] hover:bg-white hover:text-[#303030]"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
                       aria-label={`Remove question ${i + 1}`}
                       onClick={() =>
                         setDraft({
@@ -962,7 +945,7 @@ export function BusinessProfilePage() {
                       <IconX size={16} />
                     </Button>
                   </div>
-                  <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                  <label className="mb-4 block text-[12px] font-semibold text-foreground">
                     Question
                     <Input
                       required
@@ -975,10 +958,10 @@ export function BusinessProfilePage() {
                           ),
                         })
                       }
-                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
-                  <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+                  <label className="mb-4 block text-[12px] font-semibold text-foreground">
                     Answer
                     <Textarea
                       required
@@ -992,14 +975,14 @@ export function BusinessProfilePage() {
                           ),
                         })
                       }
-                      className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] placeholder:text-[#b5b5b5] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
                 </div>
               ))}
               <Button
                 variant="secondary"
-                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
                 type="button"
                 onClick={() =>
                   setDraft({
@@ -1013,12 +996,12 @@ export function BusinessProfilePage() {
               </Button>
             </>
           )}
-          <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5 text-[11px]">
-            <span className="text-[#8e8e8e]">
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-[12px]">
+            <span className="text-muted-foreground">
               Changes update your public profile.
             </span>
             <Button
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
               type="submit"
             >
               Save changes <IconCheck size={16} />
@@ -1048,54 +1031,54 @@ export function AgentPage() {
         description="More time with your customers. Less time on the phone."
       />
       <div className="grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1">
-        <Card className="rounded-[21px] bg-[#f8f8fa] p-6 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-          <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#ececec] text-[#727272]">
+        <Card className="rounded-[21px] bg-card p-6 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-muted text-muted-foreground">
             <IconHeadphones size={46} stroke={1.2} />
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
-            <i className="h-1.5 w-1.5 rounded-full bg-[#aeaeae]" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
+            <i className="h-1.5 w-1.5 rounded-full bg-primary" />
             Not connected yet
           </span>
-          <h2 className="mt-4 text-[32px] font-medium tracking-[-0.06em] text-[#1e1e20]">
+          <h2 className="mt-4 text-[32px] font-medium tracking-tight text-foreground">
             AI Receptionist
           </h2>
-          <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-[#949494]">
+          <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-muted-foreground">
             A thoughtful first hello. Here to answer calls, look after your
             reservations, and make every customer feel welcome.
           </p>
-          <div className="my-7 divide-y divide-[#efefef] border-y border-[#efefef]">
-            <div className="flex items-center gap-3 py-4 text-[11px]">
-              <IconPhone size={18} className="text-[#929292]" />
-              <span className="flex-1 text-[#959595]">Agent phone number</span>
-              <strong className="text-[10px] font-semibold text-[#303033]">Not assigned</strong>
+          <div className="my-7 divide-y divide-[#efefef] border-y border-border">
+            <div className="flex items-center gap-3 py-4 text-[12px]">
+              <IconPhone size={18} className="text-muted-foreground" />
+              <span className="flex-1 text-muted-foreground">Agent phone number</span>
+              <strong className="text-[12px] font-semibold text-foreground">Not assigned</strong>
             </div>
-            <div className="flex items-center gap-3 py-4 text-[11px]">
-              <IconClock size={18} className="text-[#929292]" />
-              <span className="flex-1 text-[#959595]">Calling hours</span>
-              <strong className="text-[10px] font-semibold text-[#303033]">Studio opening hours</strong>
+            <div className="flex items-center gap-3 py-4 text-[12px]">
+              <IconClock size={18} className="text-muted-foreground" />
+              <span className="flex-1 text-muted-foreground">Calling hours</span>
+              <strong className="text-[12px] font-semibold text-foreground">Studio opening hours</strong>
             </div>
-            <div className="flex items-center gap-3 py-4 text-[11px]">
-              <IconShieldCheck size={18} className="text-[#929292]" />
-              <span className="flex-1 text-[#959595]">Connection status</span>
-              <strong className="text-[10px] font-semibold text-[#303033]">Coming soon</strong>
+            <div className="flex items-center gap-3 py-4 text-[12px]">
+              <IconShieldCheck size={18} className="text-muted-foreground" />
+              <span className="flex-1 text-muted-foreground">Connection status</span>
+              <strong className="text-[12px] font-semibold text-foreground">Coming soon</strong>
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-[11px] bg-[#f6f6f6] p-3 text-[11px] leading-5 text-[#828282]">
+          <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
             The receptionist is not connected yet. These are previews of how
             they’ll help your studio.
           </div>
           <Link
             href="/business-profile"
-            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
           >
             Prepare your studio details <IconArrowRight size={17} />
           </Link>
         </Card>
         <section className="px-4 py-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             A LITTLE LESS ON YOUR PLATE
           </p>
-          <h2 className="mb-6 mt-4 text-[32px] font-medium tracking-[-0.06em] text-[#1e1e20]">
+          <h2 className="mb-6 mt-4 text-[32px] font-medium tracking-tight text-foreground">
             Good with people.
             <br />
             Great with the details.
@@ -1123,31 +1106,31 @@ export function AgentPage() {
             },
           ].map(({ icon: Icon, title, text }) => (
             <div
-              className="flex gap-4 border-t border-[#ececec] py-5"
+              className="flex gap-4 border-t border-border py-5"
               key={title}
             >
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
                 <Icon size={21} />
               </span>
               <div>
-                <h3 className="text-[13px] font-semibold text-[#222222]">{title}</h3>
-                <p className="mt-1 text-[11px] leading-5 text-[#989898]">{text}</p>
+                <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{text}</p>
               </div>
             </div>
           ))}
         </section>
       </div>
-      <Card className="mt-6 rounded-[21px] bg-[#f8f8fa] p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+      <Card className="mt-6 rounded-[21px] bg-card p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               A GLIMPSE OF WHAT’S TO COME
             </p>
-            <h2 className="mt-2 text-[23px] font-semibold tracking-[-0.04em] text-[#1e1e20]">
+            <h2 className="mt-2 text-[23px] font-semibold tracking-tight text-foreground">
               A day at the front desk.
             </h2>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
             Sample activity
           </span>
         </div>
@@ -1155,10 +1138,10 @@ export function AgentPage() {
           {["All activity", "Reservations", "Confirmations"].map((t) => (
             <button
               key={t}
-              className={`rounded-lg px-3 py-2 text-[11px] transition max-[560px]:whitespace-nowrap ${
+              className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
                 tab === t
-                  ? "bg-[#f0f0f0] font-semibold text-[#686868]"
-                  : "font-medium text-[#999999] hover:bg-[#f6f6f6]"
+                  ? "bg-muted font-semibold text-foreground"
+                  : "font-medium text-muted-foreground hover:bg-background"
               }`}
               onClick={() => setTab(t)}
             >
@@ -1168,10 +1151,10 @@ export function AgentPage() {
         </div>
         {activities.map((a) => (
           <div
-            className="flex items-center gap-4 border-t border-[#efefef] py-5"
+            className="flex items-center gap-4 border-t border-border py-5"
             key={a.id}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f2f2] text-[#808080]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               {a.kind === "confirmed" ? (
                 <IconCheck size={19} />
               ) : a.kind === "created" ? (
@@ -1181,10 +1164,10 @@ export function AgentPage() {
               )}
             </span>
             <div className="flex-1">
-              <strong className="block text-[12px] font-semibold text-[#222222]">{a.title}</strong>
-              <p className="mt-1 text-[11px] text-[#999999]">{a.detail}</p>
+              <strong className="block text-[12px] font-semibold text-foreground">{a.title}</strong>
+              <p className="mt-1 text-[12px] text-muted-foreground">{a.detail}</p>
             </div>
-            <small className="text-[9px] text-[#a7a7a7]">{a.time}</small>
+            <small className="text-[12px] text-muted-foreground">{a.time}</small>
           </div>
         ))}
       </Card>
@@ -1204,11 +1187,11 @@ export function SettingsPage() {
         description="Set things up for the way you work."
       />
       <div className="grid grid-cols-2 items-start gap-5 max-[760px]:grid-cols-1">
-        <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+        <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             YOUR WORKSPACE
           </p>
-          <h2 className="mb-5 mt-2 text-[23px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+          <h2 className="mb-5 mt-2 text-[23px] font-semibold tracking-tight text-foreground">
             A personal touch.
           </h2>
           <form
@@ -1221,42 +1204,42 @@ export function SettingsPage() {
               toast.success("Preferences saved");
             }}
           >
-            <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+            <label className="mb-4 block text-[12px] font-semibold text-foreground">
               What should we call you?
               <Input
                 required
                 minLength={2}
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
-              <span className="text-[#a0a0a0]">Time zone</span>
-              <strong className="text-right font-semibold text-[#303033]">Africa/Lagos · WAT (UTC+1)</strong>
+            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
+              <span className="text-muted-foreground">Time zone</span>
+              <strong className="text-right font-semibold text-foreground">Africa/Lagos · WAT (UTC+1)</strong>
             </div>
-            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
-              <span className="text-[#a0a0a0]">Currency</span>
-              <strong className="text-right font-semibold text-[#303033]">Nigerian naira (₦)</strong>
+            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
+              <span className="text-muted-foreground">Currency</span>
+              <strong className="text-right font-semibold text-foreground">Nigerian naira (₦)</strong>
             </div>
-            <div className="flex justify-between gap-3 border-b border-[#efefef] py-4 text-[11px]">
-              <span className="text-[#a0a0a0]">Appearance</span>
-              <strong className="text-right font-semibold text-[#303033]">Light & calm</strong>
+            <div className="flex justify-between gap-3 border-b border-border py-4 text-[12px]">
+              <span className="text-muted-foreground">Appearance</span>
+              <strong className="text-right font-semibold text-foreground">Light & calm</strong>
             </div>
-            <Button className="mt-6 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:bg-[#424246] disabled:opacity-50">
+            <Button className="mt-6 inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
               Save preferences <IconCheck size={16} />
             </Button>
           </form>
         </Card>
         <div className="space-y-5">
-          <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a0a0a0]">
+          <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               THOUGHTFUL FOLLOW-UPS
             </p>
-            <h2 className="mb-2 mt-2 text-[23px] font-semibold tracking-[-0.05em] text-[#1e1e20]">
+            <h2 className="mb-2 mt-2 text-[23px] font-semibold tracking-tight text-foreground">
               Reminders & confirmations.
             </h2>
-            <p className="text-[11px] text-[#8e8e8e]">
+            <p className="text-[12px] text-muted-foreground">
               Save your preferences for when your receptionist is connected.
             </p>
             {[
@@ -1272,12 +1255,12 @@ export function SettingsPage() {
               },
             ].map((item) => (
               <div
-                className="flex items-center gap-3 border-b border-[#efefef] py-4"
+                className="flex items-center gap-3 border-b border-border py-4"
                 key={item.key}
               >
                 <span className="flex-1">
-                  <strong className="block text-[11px] font-semibold text-[#303033]">{item.title}</strong>
-                  <small className="mt-1 block text-[10px] text-[#a3a3a3]">{item.text}</small>
+                  <strong className="block text-[12px] font-semibold text-foreground">{item.title}</strong>
+                  <small className="mt-1 block text-[12px] text-muted-foreground">{item.text}</small>
                 </span>
                 <Switch
                   aria-label={item.title}
@@ -1293,18 +1276,18 @@ export function SettingsPage() {
               </div>
             ))}
           </Card>
-          <Card className="rounded-[21px] bg-[#f8f8fa] p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <Card className="rounded-[21px] bg-card p-7 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
             <div className="flex items-center justify-between gap-4">
-              <h3 className="text-[15px] font-semibold text-[#1e1e20]">A space to experiment.</h3>
-              <IconSparkles size={19} className="text-[#888888]" />
+              <h3 className="text-[15px] font-semibold text-foreground">A space to experiment.</h3>
+              <IconSparkles size={19} className="text-muted-foreground" />
             </div>
-            <p className="my-3 text-[11px] leading-5 text-[#9b9b9b]">
+            <p className="my-3 text-[12px] leading-5 text-muted-foreground">
               This is a mock workspace. Your changes are saved in this browser.
               The demo day is September 12, 2026, at 10:15 AM.
             </p>
             <Button
               variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
               onClick={() => setResetOpen(true)}
             >
               Reset demo workspace
@@ -1318,21 +1301,21 @@ export function SettingsPage() {
           description="Reset this browser’s demo workspace."
           onClose={() => setResetOpen(false)}
         >
-          <p className="text-[12px] leading-5 text-[#8e8e8e]">
+          <p className="text-[12px] leading-5 text-muted-foreground">
             This removes the reservations, services, and edits you added in this
             demo and restores the original sample studio.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
             <Button
               variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
               onClick={() => setResetOpen(false)}
             >
               Keep my changes
             </Button>
             <Button
               variant="destructive"
-              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f]"
+              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f]"
               onClick={() => {
                 reset();
                 setOwner("Jessica");

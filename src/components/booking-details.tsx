@@ -83,7 +83,7 @@ export function BookingDetails({
     <>
       <Link
         className={
-          "back-link inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929] mb-5"
+          "back-link inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground mb-5"
         }
         href={publicView ? `/b/${state.business.slug}` : "/bookings"}
       >
@@ -98,24 +98,24 @@ export function BookingDetails({
         }
       >
         <Card className="relative rounded-[78px] border-0 bg-white px-12 pb-12 pt-[94px] max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-[72px] max-[560px]:rounded-[35px] max-[560px]:px-5">
-          <div className="absolute left-1/2 top-6 h-[7px] w-[78px] -translate-x-1/2 rounded-full bg-[#dadadc]" />
+          <div className="absolute left-1/2 top-6 h-[7px] w-[78px] -translate-x-1/2 rounded-full bg-muted" />
           <div className="flex items-center justify-between gap-4">
-            <p className="text-[40px] font-medium leading-none tracking-tight text-[#a6a6a8] max-[760px]:text-[30px]">
+            <p className="text-[40px] font-medium leading-none tracking-tight text-muted-foreground max-[760px]:text-[30px]">
               {booking.startTime.startsWith(TODAY)
                 ? "Today"
                 : dateLabel(booking.startTime).split(",")[0]}
             </p>
             <BookingStatus status={booking.status} />
           </div>
-          <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-[-0.07em] max-[560px]:text-[39px]">
+          <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-tight max-[560px]:text-[30px]">
             {publicView ? "Your reservation" : "Reservation with"}
             <br />
-            <span className="text-[#2d2d30]">
+            <span className="text-foreground">
               {publicView ? service.name : customer.name}
             </span>
           </h1>
           {!publicView && (
-            <p className="mb-8 mt-[-20px] text-[14px] text-[#8f8f92]">
+            <p className="mb-8 mt-[-20px] text-[14px] text-muted-foreground">
               {service.name}
             </p>
           )}
@@ -146,54 +146,54 @@ export function BookingDetails({
             )}
           </div>
           <div className="mt-0 grid grid-cols-2 gap-2">
-            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
-              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-background px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-muted-foreground max-[760px]:text-[12px]">
                 Date & time
               </p>
-              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-foreground max-[760px]:text-[17px] max-[560px]:text-[13px]">
                 {time(booking.startTime)}
               </strong>
-              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+              <span className="mt-1 block text-[14px] text-muted-foreground max-[760px]:text-[12px] max-[560px]:text-[12px]">
                 {dateLabel(booking.startTime, true)}
               </span>
             </div>
-            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
-              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-background px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-muted-foreground max-[760px]:text-[12px]">
                 Service
               </p>
-              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-foreground max-[760px]:text-[17px] max-[560px]:text-[13px]">
                 {service.name}
               </strong>
-              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+              <span className="mt-1 block text-[14px] text-muted-foreground max-[760px]:text-[12px] max-[560px]:text-[12px]">
                 {duration(service.duration)} · until {time(booking.endTime)}
               </span>
             </div>
-            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
-              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-background px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-muted-foreground max-[760px]:text-[12px]">
                 {publicView ? "Reserved for" : "Customer"}
               </p>
-              <strong className="mt-3 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
+              <strong className="mt-3 text-[23px] font-medium tracking-tight text-foreground max-[760px]:text-[17px] max-[560px]:text-[13px]">
                 {customer.name}
               </strong>
-              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+              <span className="mt-1 block text-[14px] text-muted-foreground max-[760px]:text-[12px] max-[560px]:text-[12px]">
                 {customer.phone}
               </span>
             </div>
-            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-[#f7f7f8] px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
-              <p className="text-[16px] text-[#96969a] max-[760px]:text-[12px]">
+            <div className="flex min-h-[145px] flex-col items-center justify-center rounded-[22px] bg-background px-6 py-7 text-center max-[760px]:min-h-[120px] max-[560px]:min-h-[110px] max-[560px]:px-2 max-[560px]:py-5">
+              <p className="text-[16px] text-muted-foreground max-[760px]:text-[12px]">
                 Your specialist
               </p>
-              <strong className="mt-3 flex items-center justify-center gap-2 text-[23px] font-medium tracking-tight text-[#333336] max-[760px]:text-[17px] max-[560px]:text-[13px]">
-                <Avatar name={staff.name} className="h-6 w-6 text-[8px]" />
+              <strong className="mt-3 flex items-center justify-center gap-2 text-[23px] font-medium tracking-tight text-foreground max-[760px]:text-[17px] max-[560px]:text-[13px]">
+                <Avatar name={staff.name} className="h-6 w-6 text-[12px]" />
                 {staff.name}
               </strong>
-              <span className="mt-1 block text-[14px] text-[#9b9b9f] max-[760px]:text-[11px] max-[560px]:text-[10px]">
+              <span className="mt-1 block text-[14px] text-muted-foreground max-[760px]:text-[12px] max-[560px]:text-[12px]">
                 {staff.role}
               </span>
             </div>
           </div>
           <div className="my-7">
-            <h3 className="mb-5 text-[24px] font-medium tracking-[-0.05em] text-[#9b9b9e]">
+            <h3 className="mb-5 text-[24px] font-medium tracking-tight text-muted-foreground">
               Find your way here
             </h3>
             <LocationCard />
@@ -202,7 +202,7 @@ export function BookingDetails({
             <BookingCode code={booking.code} />
           </div>
           {publicView && (
-            <p className="mt-3 text-[11px] leading-6 text-[#9d9d9d]">
+            <p className="mt-3 text-[12px] leading-6 text-muted-foreground">
               Keep this code handy. You can use it to find your reservation or
               mention it when you call the studio.
             </p>
@@ -212,7 +212,7 @@ export function BookingDetails({
               {publicView &&
                 ["Pending", "Needs confirmation"].includes(booking.status) && (
                   <Button
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#1e1e20] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:border-[#424246] hover:bg-[#424246]"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
                     onClick={() => setStatus("Confirmed")}
                   >
                     <IconCheck size={17} />
@@ -223,7 +223,7 @@ export function BookingDetails({
                 <>
                   <Button
                     variant="secondary"
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
                     onClick={() => setStatus("Completed")}
                   >
                     <IconCheck size={16} />
@@ -232,7 +232,7 @@ export function BookingDetails({
                   {booking.status !== "Confirmed" && (
                     <Button
                       variant="secondary"
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
                       onClick={() => setStatus("Confirmed")}
                     >
                       Confirm booking
@@ -246,7 +246,7 @@ export function BookingDetails({
             <div className="mt-5">
               <Link
                 href={`/r/${booking.code}`}
-                className="inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
+                className="inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
               >
                 View customer reservation page <IconArrowUpRight size={15} />
               </Link>
@@ -254,11 +254,11 @@ export function BookingDetails({
           )}
 
           {/* Booking Activity in main card */}
-          <div className="mt-8 rounded-[24px] bg-[#f7f7f8] p-6">
-            <p className="text-[10px] font-semibold text-[#a0a0a0] uppercase">
+          <div className="mt-8 rounded-[24px] bg-background p-6">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               {publicView ? "YOUR RESERVATION" : "THE STORY SO FAR"}
             </p>
-            <h3 className="mt-1 text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+            <h3 className="mt-1 text-[17px] font-semibold text-foreground">
               Booking activity
             </h3>
             <BookingActivityList booking={booking} />
@@ -268,26 +268,26 @@ export function BookingDetails({
           {(publicView ||
             state.business.bookingPolicy ||
             state.business.cancellationPolicy) && (
-            <div className="mt-4 rounded-[24px] bg-[#f7f7f8] p-6">
-              <h3 className="text-[17px] font-semibold text-[#2d2d30]">
+            <div className="mt-4 rounded-[24px] bg-background p-6">
+              <h3 className="text-[17px] font-semibold text-foreground">
                 A little heads-up
               </h3>
               {state.business.bookingPolicy && (
                 <div className="mt-3">
-                  <h4 className="text-[11px] font-semibold text-[#525256]">
+                  <h4 className="text-[12px] font-semibold text-foreground">
                     Booking policy
                   </h4>
-                  <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     {state.business.bookingPolicy}
                   </p>
                 </div>
               )}
               {state.business.cancellationPolicy && (
                 <div className="mt-3">
-                  <h4 className="text-[11px] font-semibold text-[#525256]">
+                  <h4 className="text-[12px] font-semibold text-foreground">
                     Cancellation policy
                   </h4>
-                  <p className="mt-1 text-[11px] leading-5 text-[#88888b]">
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     {state.business.cancellationPolicy}
                   </p>
                 </div>
@@ -299,39 +299,39 @@ export function BookingDetails({
         {!publicView && (
           <aside className="mt-5 grid grid-cols-2 items-start gap-4 max-[760px]:grid-cols-1">
             {!terminal && (
-              <div className="rounded-[24px] bg-[#f8f8fa] p-6">
-                <span className="mb-6 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebebed] text-[#555558]">
+              <div className="rounded-[24px] bg-card p-6">
+                <span className="mb-6 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
                   <IconBell size={22} />
                 </span>
-                <h3 className="text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+                <h3 className="text-[17px] font-semibold text-foreground">
                   A thoughtful reminder.
                 </h3>
-                <p className="mt-1 text-[11px] leading-5 text-[#989898]">
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                   {booking.reminder
                     ? "AI call reminder planned"
                     : "No reminder planned yet"}
                 </p>
                 {booking.reminder && (
-                  <strong className="my-2 block text-[13px] font-semibold text-[#2d2d30]">
+                  <strong className="my-2 block text-[13px] font-semibold text-foreground">
                     {dateLabel(booking.reminder)}, {time(booking.reminder)}
                   </strong>
                 )}
-                <span className="my-2 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-2.5 py-1 text-[10px] font-medium text-[#7b7b7b]">
+                <span className="my-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
                   Receptionist not connected
                 </span>
-                <p className="mt-2 text-[11px] leading-6 text-[#9d9d9d]">
+                <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
                   Reminder times are saved in this demo. Calls will be available
                   when your receptionist is connected.
                 </p>
                 <Button
                   variant="secondary"
-                  className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+                  className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
                   onClick={() => setReminder(true)}
                 >
                   Change reminder <IconClock size={16} />
                 </Button>
                 <button
-                  className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-[#6f6f6f] transition hover:text-[#292929]"
+                  className="mt-3 inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
                   onClick={() =>
                     toast.info(
                       "Your receptionist isn’t connected yet. Use Contact to call the customer directly.",
@@ -342,11 +342,11 @@ export function BookingDetails({
                 </button>
               </div>
             )}
-            <div className="rounded-[24px] bg-[#f8f8fa] p-6">
-              <h3 className="text-[17px] font-semibold tracking-[-0.035em] text-[#2d2d30]">
+            <div className="rounded-[24px] bg-card p-6">
+              <h3 className="text-[17px] font-semibold text-foreground">
                 A note for the visit
               </h3>
-              <p className="mt-1 text-[11px] leading-5 text-[#989898]">
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                 Keep notes on preferences or anything to keep in mind.
               </p>
               <Textarea
@@ -355,12 +355,12 @@ export function BookingDetails({
                 rows={3}
                 placeholder="Anything to keep in mind…"
                 onChange={(e) => setNotes(e.target.value)}
-                className="mt-3 w-full resize-y rounded-xl border border-[#ececec] bg-[#fafbf9] p-3 text-[11px] outline-none focus:border-[#afafaf]"
+                className="mt-3 w-full resize-y rounded-xl border border-border bg-background p-3 text-[12px] outline-none focus:border-border"
               />
               <Button
                 variant="secondary"
                 size="sm"
-                className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-[#e7e7e7] bg-white px-3 text-[10px] font-semibold text-[#646464] transition hover:border-[#bebebe]"
+                className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
                 onClick={() => {
                   update((s) => ({
                     ...s,
@@ -390,28 +390,28 @@ export function BookingDetails({
           description="A little change of plans."
           onClose={() => setCancel(false)}
         >
-          <div className="my-5 rounded-xl bg-[#f9f9f9] p-4 text-[12px]">
-            <strong className="font-semibold text-[#2d2d30]">
+          <div className="my-5 rounded-xl bg-background p-4 text-[12px]">
+            <strong className="font-semibold text-foreground">
               {service.name}
             </strong>
-            <p className="mt-1 text-[11px] text-[#959595]">
+            <p className="mt-1 text-[12px] text-muted-foreground">
               {dateLabel(booking.startTime)} · {time(booking.startTime)}
             </p>
           </div>
-          <p className="text-[12px] leading-5 text-[#8e8e8e]">
+          <p className="text-[12px] leading-5 text-muted-foreground">
             {state.business.cancellationPolicy}
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-5">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
             <Button
               variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
               onClick={() => setCancel(false)}
             >
               Keep reservation
             </Button>
             <Button
               variant="destructive"
-              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[11px] font-semibold text-white transition hover:bg-[#91453f]"
+              className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f]"
               onClick={() => {
                 setStatus("Cancelled");
                 setCancel(false);
@@ -456,7 +456,7 @@ export function BookingDetails({
               toast.success("Reminder time saved; calling is not connected");
             }}
           >
-            <label className="mb-4 block text-[11px] font-semibold text-[#636363]">
+            <label className="mb-4 block text-[12px] font-semibold text-foreground">
               Reminder date & time
               <Input
                 required
@@ -465,11 +465,11 @@ export function BookingDetails({
                 max={booking.startTime.slice(0, 16)}
                 value={reminderTime.slice(0, 16)}
                 onChange={(e) => setReminderTime(`${e.target.value}:00`)}
-                className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-[#f1f1f4] px-3 py-2.5 text-[11px] text-[#2f2f2f] shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
+                className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
               />
             </label>
             <Button
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#1e1e20] bg-[#1e1e20] px-4 text-[11px] font-semibold text-white transition hover:border-[#424246] hover:bg-[#424246]"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
               type="submit"
             >
               Save reminder
