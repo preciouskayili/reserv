@@ -1,7 +1,8 @@
-import type { Booking } from "./model";
-export type BookingPayload = Pick<Booking, "businessId" | "customerId" | "serviceId" | "staffId" | "startTime" | "endTime"> & Partial<Booking>;
-export interface ApiBooking { id: string; code: string; business_id: string; customer_id: string; service_id: string; staff_id: string; start_time: string; end_time: string; status: Booking["status"]; notes: string; total_amount: number; required_amount: number; created_at: string; }
-export interface BookingsResponse { configured: boolean; bookings: ApiBooking[]; }
+import type { AppState, Booking } from "./model";
+export interface BookingPayload { serviceId: string; staffId: string; startTime: string; name: string; phone: string; notes: string; }
+export type ApiBooking = Booking;
+export interface Snapshot { state: AppState; revision: number; }
+export interface BookingsResponse { configured: boolean; bookings: Booking[]; }
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:4100";
 
@@ -32,6 +33,31 @@ export function clearStoredToken(): void {
   document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
+export const WORKSPACE_STORAGE_KEY = "reserv_workspace_id";
+
+export function getStoredWorkspaceId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(WORKSPACE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredWorkspaceId(id: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, id);
+  } catch {}
+}
+
+export function clearStoredWorkspaceId(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+  } catch {}
+}
+
 export class ApiError extends Error {
   readonly status: number;
   constructor(message: string, status: number) {
@@ -41,20 +67,25 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getStoredToken();
+  const workspaceId = getStoredWorkspaceId();
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers as Record<string, string>),
   };
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (workspaceId && !headers["x-workspace-id"]) {
+    headers["x-workspace-id"] = workspaceId;
   }
 
   let response: Response;
@@ -215,9 +246,89 @@ export const api = {
 
     create: (payload: BookingPayload) =>
       request<{
-        booking: ApiBooking;
+        booking: ApiBooking; snapshot: Snapshot;
       }>("/api/bookings", {
         method: "POST",
+        body: JSON.stringify(payload),
+      }),
+  },
+
+  // Workspaces (Multi-tenancy)
+  workspaces: {
+    list: () =>
+      request<{
+        workspaces: Array<{
+          id: string;
+          name: string;
+          slug: string;
+          role: string;
+        }>;
+      }>("/api/workspaces"),
+
+    create: (payload: {
+      name: string;
+      slug: string;
+      owner: string;
+      category: string;
+      phone: string;
+      address: string;
+      serviceName: string;
+      duration: number;
+      price: number;
+    }) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>("/api/workspaces", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+
+    getState: (id: string) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>(`/api/workspaces/${id}/state`),
+
+    saveState: (id: string, revision: number, state: AppState) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>(`/api/workspaces/${id}/state`, {
+        method: "PUT",
+        body: JSON.stringify({ revision, state }),
+      }),
+  },
+
+  // Public Endpoints
+  public: {
+    getBusiness: (slug: string) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>(`/api/public/businesses/${slug}`),
+
+    createBooking: (slug: string, payload: BookingPayload) =>
+      request<{
+        booking: Booking;
+        snapshot: { state: AppState; revision: number };
+      }>(`/api/public/businesses/${slug}/bookings`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+
+    getReservation: (code: string) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>(`/api/public/reservations/${code}`),
+
+    changeReservation: (code: string, payload: { action: "cancel" } | { action: "reschedule"; startTime: string; staffId: string }) =>
+      request<{
+        state: AppState;
+        revision: number;
+      }>(`/api/public/reservations/${code}`, {
+        method: "PATCH",
         body: JSON.stringify(payload),
       }),
   },

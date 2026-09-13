@@ -1,19 +1,20 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
 import { useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import {
   IconArrowRight,
   IconArrowUpRight,
+  IconClock,
   IconMapPin,
   IconPhone,
   IconSearch,
-  IconClock,
   IconShieldCheck,
 } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store";
 import { getReservationByCode, time, TODAY } from "@/lib/model";
 import {
@@ -26,6 +27,7 @@ import {
 } from "./shared";
 import { BookingFlow } from "./booking-flow";
 import { BookingDetails } from "./booking-details";
+import { PageLoading } from "./feedback";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,30 +35,33 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {children}
       <footer className="mx-auto flex max-w-[840px] items-center justify-between gap-4 border-t border-border px-10 py-8 text-[12px] text-muted-foreground max-[760px]:px-5 max-[560px]:flex-wrap">
         <span>A little time, well spent.</span>
-        <span
-          className="flex items-center gap-1.5 transition hover:text-[#555]"
-        >
+        <span className="flex items-center gap-1.5 transition hover:text-[#555]">
           Made possible with <Brand small />
         </span>
-        <span className="max-[760px]:hidden">Abuja, Nigeria · WAT</span>
+        <span className="max-[760px]:hidden">Times shown in WAT</span>
       </footer>
     </div>
   );
 }
+
 export function PublicProfile() {
-  const { state } = useStore();
+  const { state: activeState } = useStore();
   const [service, setService] = useState<string | null | undefined>(undefined);
-  const hours = state.business.hours[(new Date(`${TODAY}T12:00:00`).getDay() + 6) % 7];
+  const hours =
+    activeState.business.hours[
+      (new Date(`${TODAY}T12:00:00`).getDay() + 6) % 7
+    ] || { closed: false, close: "17:00", open: "09:00", day: "Today" };
+
   return (
     <PublicLayout>
       <main className="mx-auto max-w-[840px] px-10 pb-16 max-[760px]:px-5">
         <div className="flex flex-wrap items-end justify-between gap-6 rounded-t-[48px] border-0 bg-white px-12 pb-8 pt-11 max-[760px]:rounded-t-[34px] max-[760px]:px-6 max-[760px]:py-8">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-              {state.business.category} · ABUJA
+              {activeState.business.category}
             </p>
             <h1 className="mt-2 flex items-center gap-3 text-[34px] font-medium tracking-tight text-foreground">
-              {state.business.name}
+              {activeState.business.name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
               <a
@@ -64,7 +69,7 @@ export function PublicProfile() {
                 className="flex items-center gap-1.5 transition hover:text-foreground"
               >
                 <IconMapPin size={16} />
-                Wuse 2, Abuja
+                {activeState.business.address || "Abuja, Nigeria"}
               </a>
               <span className="flex items-center gap-1.5">
                 <i className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -77,30 +82,26 @@ export function PublicProfile() {
           <div className="flex w-full flex-wrap items-center gap-2 pb-1">
             <Link
               href="/reservation"
-              className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-lg bg-muted px-6 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-primary"
+              className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-muted px-5 text-sm font-medium text-muted-foreground transition hover:bg-black/5 hover:text-foreground shadow-none"
             >
               <IconSearch size={14} /> Find my reservation
             </Link>
             <a
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background max-[560px]:flex-1"
-              href={`tel:${state.business.phone.replaceAll(" ", "")}`}
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-muted px-4 text-[12px] font-semibold text-foreground transition hover:bg-black/5 max-[560px]:flex-1 shadow-none"
+              href={`tel:${activeState.business.phone.replaceAll(" ", "")}`}
             >
               <IconPhone size={17} />
               Call studio
             </a>
             <Button
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
               onClick={() => setService(null)}
             >
               Book an appointment <IconArrowUpRight size={17} />
             </Button>
           </div>
         </div>
-        <div
-          className={
-            "public-columns flex flex-col gap-10 rounded-b-[48px] bg-white px-12 pb-12 pt-4 max-[760px]:rounded-b-[34px] max-[760px]:px-6"
-          }
-        >
+        <div className="public-columns flex flex-col gap-10 rounded-b-[48px] bg-white px-12 pb-12 pt-4 max-[760px]:rounded-b-[34px] max-[760px]:px-6">
           <section id="location" className="w-full">
             <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -110,23 +111,25 @@ export function PublicProfile() {
                 </h2>
               </div>
               <p className="text-[12px] text-muted-foreground">
-                {state.business.address}
+                {activeState.business.address}
               </p>
             </div>
             <LocationCard />
           </section>
           <section className="w-full">
-            <div className="mb-12 max-w-160">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-                About
-              </p>
-              <p className="mt-2 max-w-137.5 text-[14px] leading-6 text-muted-foreground">
-                {state.business.description}
-              </p>
-            </div>
+            {activeState.business.description && (
+              <div className="mb-12 max-w-160">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  About
+                </p>
+                <p className="mt-2 max-w-137.5 text-[14px] leading-6 text-muted-foreground">
+                  {activeState.business.description}
+                </p>
+              </div>
+            )}
             <h2 className="mb-5 font-medium text-foreground">Services</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {state.services
+              {activeState.services
                 .filter((s) => s.active)
                 .map((s) => (
                   <ServiceCard
@@ -137,7 +140,7 @@ export function PublicProfile() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground transition hover:bg-background hover:text-foreground"
+                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-black/5 hover:text-foreground shadow-none"
                         aria-label={`Book ${s.name}`}
                         onClick={() => setService(s.id)}
                       >
@@ -155,7 +158,7 @@ export function PublicProfile() {
                 Meet your people.
               </h2>
               <div className="mt-6 flex flex-col gap-3">
-                {state.staff.map((s) => (
+                {activeState.staff.map((s) => (
                   <div
                     key={s.id}
                     className="rounded-[17px] bg-muted p-5 text-left"
@@ -171,23 +174,25 @@ export function PublicProfile() {
                 ))}
               </div>
             </section>
-            <section className="mt-14">
-              <h2 className="text-[27px] font-medium tracking-tight text-foreground">
-                A few things to know.
-              </h2>
-              <div className="mt-4">
-                {state.business.faqs.map((faq, i) => (
-                  <details key={i} className="border-b border-border py-5">
-                    <summary className="cursor-pointer text-[12px] font-semibold text-foreground outline-none">
-                      {faq.question}
-                    </summary>
-                    <p className="mt-3 text-[12px] leading-6 text-muted-foreground">
-                      {faq.answer}
-                    </p>
-                  </details>
-                ))}
-              </div>
-            </section>
+            {activeState.business.faqs?.length > 0 && (
+              <section className="mt-14">
+                <h2 className="text-[27px] font-medium tracking-tight text-foreground">
+                  A few things to know.
+                </h2>
+                <div className="mt-4">
+                  {activeState.business.faqs.map((faq, i) => (
+                    <details key={i} className="border-b border-border py-5">
+                      <summary className="cursor-pointer text-[12px] font-semibold text-foreground outline-none">
+                        {faq.question}
+                      </summary>
+                      <p className="mt-3 text-[12px] leading-6 text-muted-foreground">
+                        {faq.answer}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            )}
           </section>
           <aside className="w-full space-y-7">
             <Card className="rounded-[21px] border-0 shadow-none">
@@ -195,7 +200,7 @@ export function PublicProfile() {
                 <IconClock size={18} className="text-muted-foreground" /> Our
                 door is open.
               </h3>
-              <BusinessHours />
+              <BusinessHours hours={activeState.business.hours} />
             </Card>
             <Card className="rounded-[20px] border-0 shadow-none">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
@@ -206,19 +211,22 @@ export function PublicProfile() {
                 Booking policy
               </h4>
               <p className="text-sm text-muted-foreground">
-                {state.business.bookingPolicy}
+                {activeState.business.bookingPolicy ||
+                  "Please arrive a few minutes before your appointment."}
               </p>
               <h4 className="mt-2 text-sm font-semibold text-foreground">
                 Change of plans?
               </h4>
               <p className="mt-1 text-sm text-muted-foreground">
-                {state.business.cancellationPolicy}
+                {activeState.business.cancellationPolicy ||
+                  "Contact us if your plans change."}
               </p>
               <h4 className="mt-2 text-sm font-semibold text-foreground">
                 Deposits
               </h4>
               <p className="mt-1 text-sm text-muted-foreground">
-                {state.business.depositPolicy}
+                {activeState.business.depositPolicy ||
+                  "Payment instructions will be provided by the business."}
               </p>
             </Card>
             <div className="rounded-[20px] bg-muted p-6 max-[760px]:col-span-2 max-[560px]:col-span-1">
@@ -232,7 +240,7 @@ export function PublicProfile() {
               </p>
               <a
                 className="mt-5 inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
-                href={`tel:${state.business.phone.replaceAll(" ", "")}`}
+                href={`tel:${activeState.business.phone.replaceAll(" ", "")}`}
               >
                 Give us a call <IconArrowUpRight size={16} />
               </a>
@@ -250,12 +258,16 @@ export function PublicProfile() {
     </PublicLayout>
   );
 }
+
 export function ReservationLookup({ code }: { code?: string }) {
-  const { state } = useStore();
-  const router = useRouter();
-  const [input, setInput] = useState("");
-  const [error, setError] = useState("");
-  const booking = code ? getReservationByCode(state.bookings, code) : undefined;
+  const { state: localStoreState } = useStore();
+  const router=useRouter();
+  const [input,setInput]=useState("");
+  const [error,setError]=useState("");
+  const normalizedCode=(code || "").trim().toUpperCase();
+  const booking=getReservationByCode(localStoreState.bookings,normalizedCode);
+  const reservationLoading=false;
+
   return (
     <PublicLayout>
       <main
@@ -265,15 +277,17 @@ export function ReservationLookup({ code }: { code?: string }) {
             : "flex min-h-[calc(100vh-170px)] items-center justify-center px-5 py-10"
         }
       >
-        {booking ? (
+        {reservationLoading && !booking ? (
+          <PageLoading label="Looking up reservation…" />
+        ) : booking ? (
           <BookingDetails key={booking.id} booking={booking} publicView />
-        ) : code && state.loaded ? (
+        ) : normalizedCode ? (
           <EmptyState
             title="We couldn’t find that reservation."
-            description="Check your six-character booking code and try again."
+            description="Check your 12-character booking code and try again."
             action={
               <Link
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
                 href="/reservation"
               >
                 Find my reservation
@@ -283,10 +297,10 @@ export function ReservationLookup({ code }: { code?: string }) {
         ) : (
           <div className="w-full max-w-[470px] rounded-[50px] border-0 bg-card px-12 py-14 text-center max-[560px]:rounded-[36px] max-[560px]:px-6 max-[560px]:py-10">
             <Link
-              href={`/b/${state.business.slug}`}
+              href={`/b/${localStoreState.business.slug}`}
               className="text-[15px] font-medium text-foreground"
             >
-              {state.business.name}
+              {localStoreState.business.name}
             </Link>
             <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               A LITTLE SOMETHING TO LOOK FORWARD TO
@@ -304,12 +318,12 @@ export function ReservationLookup({ code }: { code?: string }) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                const found = getReservationByCode(state.bookings, input);
-                if (found) router.push(`/r/${found.code}`);
-                else
-                  setError(
-                    "We couldn’t find that code. Check all six characters and try again.",
-                  );
+                const targetCode = input.trim().toUpperCase();
+                if (/^[A-Z0-9]{12}$/.test(targetCode)) {
+                  router.push(`/r/${targetCode}`);
+                } else {
+                  setError("Please enter your 12-character booking code.");
+                }
               }}
               className="mt-8 text-left"
             >
@@ -317,9 +331,9 @@ export function ReservationLookup({ code }: { code?: string }) {
                 Booking code
                 <Input
                   className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-center font-mono text-[18px] font-semibold tracking-[0.08em] uppercase text-foreground shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
-                  placeholder="A82LPR"
-                  maxLength={6}
-                  minLength={6}
+                  placeholder="A82LPR7K9M2X"
+                  maxLength={12}
+                  minLength={12}
                   required
                   autoCapitalize="characters"
                   value={input}
@@ -337,7 +351,10 @@ export function ReservationLookup({ code }: { code?: string }) {
                   {error}
                 </p>
               )}
-              <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90">
+              <Button
+                type="submit"
+                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border-0 bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
+              >
                 <IconSearch size={17} />
                 Find my reservation
               </Button>
@@ -345,7 +362,7 @@ export function ReservationLookup({ code }: { code?: string }) {
             <p className="mt-6 text-[12px] leading-6 text-muted-foreground">
               Can’t find your code?{" "}
               <a
-                href={`tel:${state.business.phone.replaceAll(" ", "")}`}
+                href={`tel:${localStoreState.business.phone.replaceAll(" ", "")}`}
                 className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:underline"
               >
                 Call the studio <IconArrowRight size={12} />

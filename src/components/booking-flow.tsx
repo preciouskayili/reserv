@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { useCreateBookingMutation } from "@/hooks/use-api";
+import { api } from "@/lib/api";
 import {
   addDays,
   availableSlots,
@@ -28,9 +28,7 @@ import {
   dateLabel,
   duration,
   endTime,
-  generateCode,
   money,
-  NOW,
   time,
   TODAY,
 } from "@/lib/model";
@@ -54,7 +52,7 @@ export function BookingFlow({
   booking?: Booking;
   publicFlow?: boolean;
 }) {
-  const { state, update } = useStore();
+  const { state, update, acceptSnapshot } = useStore();
   const [step, setStep] = useState(booking || preset.serviceId ? 1 : 0);
   const [serviceId, setServiceId] = useState(
     booking?.serviceId || preset.serviceId || "",
@@ -77,7 +75,6 @@ export function BookingFlow({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionLock = useRef(false);
-  const createBookingMutation = useCreateBookingMutation();
 
   const slots = availableSlots(state, serviceId, staffId, date, booking?.id);
   const [dateOpen, setDateOpen] = useState(false);
@@ -106,108 +103,21 @@ export function BookingFlow({
     setIsSubmitting(true);
     setError("");
 
-    const existingCustomer =
-      customer ||
-      state.customers.find(
-        (c) => c.phone.replace(/\D/g, "") === phone.replace(/\D/g, ""),
-      );
-    const customerId = existingCustomer?.id || crypto.randomUUID();
-    const next: Booking = booking
-      ? {
-          ...booking,
-          startTime: slot,
-          endTime: endTime(slot, service.duration),
-          staffId,
-          status: "Rescheduled",
-          notes,
-          activity: [
-            ...booking.activity,
-            {
-              id: crypto.randomUUID(),
-              title: "Reservation rescheduled",
-              detail: `${dateLabel(booking.startTime)}, ${time(booking.startTime)} → ${dateLabel(slot)}, ${time(slot)}`,
-              time: NOW,
-              actor: publicFlow ? "customer" : "owner",
-            },
-          ],
-        }
-      : {
-          id: crypto.randomUUID(),
-          code: generateCode(state.bookings),
-          businessId: state.business.id,
-          customerId,
-          serviceId,
-          staffId,
-          startTime: slot,
-          endTime: endTime(slot, service.duration),
-          status: service.price === 0 ? "Confirmed" : "Pending",
-          notes,
-          createdAt: NOW,
-          activity: [
-            {
-              id: crypto.randomUUID(),
-              title: "Reservation created",
-              time: NOW,
-              actor: publicFlow ? "customer" : "owner",
-            },
-          ],
-        };
-
-    // Do not commit a new local reservation until the API accepts it.
-    if (!booking) {
-      try {
-        await createBookingMutation.mutateAsync({
-          id: next.id,
-          code: next.code,
-          businessId: next.businessId,
-          customerId: next.customerId,
-          serviceId: next.serviceId,
-          staffId: next.staffId,
-          startTime: next.startTime,
-          endTime: next.endTime,
-          status: next.status,
-          notes: next.notes,
-          totalAmount: service.price,
-          requiredAmount: service.deposit,
-        });
-      } catch {
-        setError("We couldn’t save your reservation. Please try again.");
-        submissionLock.current = false;
-        setIsSubmitting(false);
-        return;
+    try {
+      if (booking) {
+        const saved = await update(current => ({ ...current, bookings: current.bookings.map(b => b.id === booking.id ? { ...b, staffId, startTime: slot, endTime: endTime(slot, service.duration), status: "Rescheduled", activity: [...b.activity, { id: crypto.randomUUID(), title: "Reservation rescheduled", time: new Date().toISOString(), actor: publicFlow ? "customer" : "owner" }] } : b) }));
+        if (!saved) { setError("Your reservation wasn’t changed. Check availability and try again."); return; }
+        setResult({ ...booking, staffId, startTime: slot, endTime: endTime(slot, service.duration) });
+      } else {
+        const payload={serviceId,staffId,startTime:slot,name:name.trim(),phone:phone.trim(),notes};
+        const response=publicFlow ? await api.public.createBooking(state.business.slug,payload) : await api.bookings.create(payload);
+        acceptSnapshot(response.snapshot);
+        setResult(response.booking);
       }
-    }
+      toast.success(booking ? "Reservation rescheduled" : service.price===0 ? "Reservation confirmed" : "Reservation created");
+    } catch (error) { setError(error instanceof Error ? error.message : "We couldn’t save your reservation. Please try again."); }
+    finally { submissionLock.current=false;setIsSubmitting(false); }
 
-    // Update the current browser after successful creation.
-    update((s) => ({
-      ...s,
-      customers: existingCustomer
-        ? s.customers
-        : [
-            ...s.customers,
-            {
-              id: customerId,
-              name: name.trim(),
-              phone: phone.trim(),
-              notes: "",
-            },
-          ],
-      bookings: booking
-        ? s.bookings.map((b) => (b.id === booking.id ? next : b))
-        : [...s.bookings, next],
-    }));
-
-    toast.success(
-      booking
-        ? "Reservation rescheduled"
-        : service.price === 0 ? "Reservation confirmed." : "Booking created. Complete payment to confirm."
-    );
-
-    setTimeout(() => {
-      setResult(next);
-      submissionLock.current = false;
-      setIsSubmitting(false);
-    }, 200);
   }
   return (
     <Modal

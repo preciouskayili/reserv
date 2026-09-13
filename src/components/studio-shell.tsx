@@ -9,6 +9,8 @@ import {
   IconBuildingStore,
   IconCalendarEvent,
   IconCalendarWeek,
+  IconCheck,
+  IconChevronDown,
   IconCreditCard,
   IconHeadphones,
   IconLogin,
@@ -22,6 +24,8 @@ import { useAuth } from "@/lib/auth-context";
 import { InlineError, PageLoading } from "./feedback";
 import { Avatar, Brand } from "./shared";
 import { BookingFlow, type BookingPreset } from "./booking-flow";
+import { OnboardingModal } from "./onboarding-modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type BookingModalContextType = {
   openNewBooking: (preset?: BookingPreset) => void;
@@ -55,9 +59,18 @@ const navigation = [
 export function StudioShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state } = useStore();
+  const {
+    state,
+    workspaces,
+    activeWorkspaceId,
+    switchWorkspace,
+    createWorkspace,
+    needsOnboarding,
+  } = useStore();
   const { user, isAuthenticated, isLoading: authLoading, sessionError, retrySession, logout } = useAuth();
   const [newBooking, setNewBooking] = useState<BookingPreset | null>(null);
+  const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
+  const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !sessionError && !isAuthenticated) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
@@ -72,6 +85,8 @@ export function StudioShell({ children }: { children: ReactNode }) {
   if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Let’s reconnect your workspace." message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
   if (authLoading || !isAuthenticated) return <PageLoading label="Checking your session…" />;
 
+  if (needsOnboarding) return <main className="min-h-screen bg-background p-8"><Brand /><OnboardingModal open onSubmit={createWorkspace} initialOwner={user?.name || ""} /></main>;
+
   return (
     <BookingModalContext.Provider
       value={{
@@ -83,10 +98,74 @@ export function StudioShell({ children }: { children: ReactNode }) {
         <aside className="fixed left-6 top-8 z-40 hidden max-h-[calc(100dvh-4rem)] w-54 flex-col overflow-y-auto px-3 py-2 lg:flex">
           <div className="px-3">
             <Brand />
+
+            {/* Workspace Switcher */}
+            <Popover open={workspaceDropdownOpen} onOpenChange={setWorkspaceDropdownOpen}>
+              <PopoverTrigger
+                className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-left text-[12px] transition hover:bg-black/5"
+              >
+                <div className="min-w-0 flex-1">
+                  <strong className="block truncate font-semibold text-foreground">
+                    {state.business.name || "Select workspace"}
+                  </strong>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    /b/{state.business.slug || "studio"}
+                  </span>
+                </div>
+                <IconChevronDown size={14} className="shrink-0 text-muted-foreground" />
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                sideOffset={6}
+                className="w-56 rounded-2xl border-0 bg-white p-1.5 shadow-none ring-0"
+              >
+                <div className="px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground">
+                  Workspaces ({workspaces.length})
+                </div>
+                <div className="max-h-48 space-y-0.5 overflow-y-auto">
+                  {workspaces.map((ws) => (
+                    <button
+                      key={ws.id}
+                      type="button"
+                      onClick={() => {
+                        if (ws.id !== activeWorkspaceId) {
+                          void switchWorkspace(ws.id);
+                        }
+                        setWorkspaceDropdownOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12px] transition ${
+                        ws.id === activeWorkspaceId
+                          ? "bg-muted font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      }`}
+                    >
+                      <span className="truncate">{ws.name}</span>
+                      {ws.id === activeWorkspaceId && (
+                        <IconCheck size={14} className="shrink-0 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-1 border-t border-border/40 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkspaceDropdownOpen(false);
+                      setShowNewWorkspaceModal(true);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] font-medium text-primary transition hover:bg-accent"
+                  >
+                    <IconPlus size={15} />
+                    <span>New workspace</span>
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
+
           <button
             onClick={() => setNewBooking({})}
-            className="mt-9 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-white transition hover:bg-primary/90"
+            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-white transition hover:bg-primary/90"
           >
             <IconPlus size={17} /> New booking
           </button>
@@ -119,8 +198,53 @@ export function StudioShell({ children }: { children: ReactNode }) {
         <header
           className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-8 max-lg:h-16 max-lg:px-5"
         >
-          <div className="lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <Brand small />
+            {workspaces.length > 0 && (
+              <Popover>
+                <PopoverTrigger
+                  className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                >
+                  <span className="max-w-[110px] truncate">{state.business.name}</span>
+                  <IconChevronDown size={12} className="text-muted-foreground" />
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  sideOffset={6}
+                  className="w-52 rounded-2xl border-0 bg-white p-1.5 shadow-none ring-0"
+                >
+                  <div className="max-h-48 space-y-0.5 overflow-y-auto">
+                    {workspaces.map((ws) => (
+                      <button
+                        key={ws.id}
+                        type="button"
+                        onClick={() => void switchWorkspace(ws.id)}
+                        className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12px] transition ${
+                          ws.id === activeWorkspaceId
+                            ? "bg-muted font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        }`}
+                      >
+                        <span className="truncate">{ws.name}</span>
+                        {ws.id === activeWorkspaceId && (
+                          <IconCheck size={14} className="shrink-0 text-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-1 border-t border-border/40 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewWorkspaceModal(true)}
+                      className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] font-medium text-primary transition hover:bg-accent"
+                    >
+                      <IconPlus size={15} />
+                      <span>New workspace</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
           <span className="hidden text-[12px] text-muted-foreground lg:block">
             Workspace <span className="mx-2 text-muted-foreground/40">/</span>{" "}
@@ -135,7 +259,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <Link
                 href="/settings"
                 aria-label="Account settings"
-                className="flex items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground shadow-xs transition hover:text-foreground"
+                className="flex items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground transition hover:text-foreground"
               >
                 <div className="relative">
                   <Avatar name={user.name || state.settings.owner} size="h-7 w-7 text-[12px]" />
@@ -149,7 +273,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
                 onClick={logout}
                 title="Sign out"
                 aria-label="Sign out"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-foreground shadow-xs transition hover:bg-rose-50 hover:text-rose-600"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-foreground transition hover:bg-rose-50 hover:text-rose-600"
               >
                 <IconLogout size={15} />
               </button>
@@ -157,7 +281,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[12px] font-medium text-white shadow-xs transition hover:bg-primary/90"
+              className="flex items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[12px] font-medium text-white transition hover:bg-primary/90"
             >
               <IconLogin size={15} />
               <span>Sign in</span>
@@ -190,7 +314,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
         <main
           className="mx-auto max-w-[1400px] px-8 pb-16 pt-5 max-lg:px-5 max-lg:pt-3"
         >
-          {children}
+          <div key={activeWorkspaceId}>{children}</div>
         </main>
         {newBooking && (
           <BookingFlow
@@ -198,6 +322,17 @@ export function StudioShell({ children }: { children: ReactNode }) {
             onClose={() => setNewBooking(null)}
           />
         )}
+
+        {/* Onboarding / New Workspace Modal */}
+        <OnboardingModal
+          open={needsOnboarding || showNewWorkspaceModal}
+          onClose={needsOnboarding ? undefined : () => setShowNewWorkspaceModal(false)}
+          onSubmit={async (data) => {
+            await createWorkspace(data);
+            setShowNewWorkspaceModal(false);
+          }}
+          initialOwner={user?.name || ""}
+        />
       </div>
     </BookingModalContext.Provider>
   );

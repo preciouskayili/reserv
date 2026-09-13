@@ -13,8 +13,8 @@ import {
   IconArrowRight,
   IconCheck,
   IconKey,
+  IconLoader2,
   IconMail,
-  IconRotateClockwise,
   IconX,
 } from "@tabler/icons-react";
 
@@ -203,7 +203,7 @@ function LoginForm() {
               >
                 {isSubmitting ? (
                   <>
-                    <IconRotateClockwise size={16} className="animate-spin" />
+                    <IconLoader2 size={16} className="animate-spin" />
                     Sending code...
                   </>
                 ) : (
@@ -248,7 +248,7 @@ function LoginForm() {
               >
                 {isSubmitting ? (
                   <>
-                    <IconRotateClockwise size={16} className="animate-spin" />
+                    <IconLoader2 size={16} className="animate-spin" />
                     Verifying code...
                   </>
                 ) : (

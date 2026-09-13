@@ -241,7 +241,7 @@ export function Modal({
       }}
     >
       <DialogContent
-        className={`rounded-[28px] border-0 bg-white p-9 shadow-[0_32px_100px_-24px_#172b4d40] max-[560px]:rounded-[22px] max-[560px]:p-5 ${
+        className={`rounded-[28px] border-0 bg-white p-9 shadow-none max-[560px]:rounded-[22px] max-[560px]:p-5 ${
           wide ? "sm:max-w-[820px]" : "sm:max-w-[660px]"
         }`}
       >
@@ -294,7 +294,7 @@ export function SegmentedControl<T extends string>({
           <TabsTrigger
             key={option}
             value={option}
-            className="rounded-lg border-0 px-4 py-1.5 text-[12px] font-semibold text-muted-foreground transition data-active:bg-white data-active:text-foreground data-active:shadow-[0_2px_8px_#0000000d]"
+            className="rounded-lg border-0 px-4 py-1.5 text-[12px] font-semibold text-muted-foreground transition data-active:bg-white data-active:text-foreground data-active:shadow-none"
           >
             {option}
           </TabsTrigger>
@@ -421,11 +421,12 @@ export function ServiceCard({
 export function LocationCard() {
   return <GoogleLocationCard />;
 }
-export function BusinessHours() {
+export function BusinessHours({ hours }: { hours?: Array<{ day: string; open: string; close: string; closed: boolean }> } = {}) {
   const { state } = useStore();
+  const list = hours || state.business.hours;
   return (
     <div className="space-y-0">
-      {state.business.hours.map((h) => (
+      {list.map((h) => (
         <div
           key={h.day}
           className={`flex items-center justify-between border-b border-border py-2.5 text-[12px] last:border-0 ${

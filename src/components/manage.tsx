@@ -44,6 +44,7 @@ import {
 import { DataTable, TableSummary } from "./ui/data-table";
 import { InlineError } from "./feedback";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LocationPicker } from "./location-picker";
 import {
   type Booking,
   type Customer,
@@ -130,14 +131,14 @@ export function ServicesPage() {
                     <Switch
                       checked={s.active}
                       aria-label={`Show ${s.name} on booking page`}
-                      onCheckedChange={(active) => {
-                        update((st) => ({
+                      onCheckedChange={async (active) => {
+                        const saved = await update((st) => ({
                           ...st,
                           services: st.services.map((x) =>
                             x.id === s.id ? { ...x, active } : x,
                           ),
                         }));
-                        toast.success(
+                        if (saved) toast.success(
                           active
                             ? "Service is available to book"
                             : "Service hidden from the public page",
@@ -181,13 +182,14 @@ export function ServicesPage() {
               </p>
               <Button
                 className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
-                onClick={() => {
-                  update((s) => ({
+                onClick={async () => {
+                  const saved = await update((s) => ({
                     ...s,
                     services: s.services.map((x) =>
                       x.id === deleting.id ? { ...x, active: false } : x,
                     ),
                   }));
+                  if (!saved) return;
                   setDeleting(null);
                   toast.success(
                     "Service hidden; reservation history preserved",
@@ -205,11 +207,12 @@ export function ServicesPage() {
               <Button
                 variant="destructive"
                 className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-50"
-                onClick={() => {
-                  update((s) => ({
+                onClick={async () => {
+                  const saved = await update((s) => ({
                     ...s,
                     services: s.services.filter((x) => x.id !== deleting.id),
                   }));
+                  if (!saved) return;
                   setDeleting(null);
                   toast.success("Service deleted");
                 }}
@@ -258,7 +261,7 @@ function ServiceEditor({
     >
       <form
         className="mt-6 space-y-4"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           if (!draft.staffIds.length) {
             setError("Choose at least one specialist for this service.");
@@ -273,12 +276,13 @@ function ServiceEditor({
             name: draft.name.trim(),
             id: service?.id || crypto.randomUUID(),
           };
-          update((s) => ({
+          const saved = await update((s) => ({
             ...s,
             services: service
               ? s.services.map((x) => (x.id === service.id ? next : x))
               : [...s.services, next],
           }));
+          if (!saved) return;
           toast.success(service ? "Service updated" : "Service created");
           onClose();
         }}
@@ -385,8 +389,11 @@ function ServiceEditor({
             {error}
           </p>
         )}
-        <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
-          <IconCheck size={16} /> {service ? "Save changes" : "Create service"}
+        <Button
+          type="submit"
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+        >
+          {service ? "Save changes" : "Create service"}
           <IconCheck size={17} />
         </Button>
       </form>
@@ -445,37 +452,102 @@ export function CustomersPage({
           </div>
         </div>
         <DataTable label="Customers">
-          <thead><tr><th scope="col">Customer</th><th scope="col">Phone number</th><th scope="col" className="table-number">Reservations</th><th scope="col">Visit</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
-          <tbody>
-        {customers.map((c) => {
-          const bookings = state.bookings.filter((b) => b.customerId === c.id);
-          const next = bookings
-            .filter(
-              (b) =>
-                b.startTime >= NOW &&
-                !["Cancelled", "Completed"].includes(b.status),
-            )
-            .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
-          const last = bookings
-            .filter((b) => b.status === "Completed")
-            .sort((a, b) => b.startTime.localeCompare(a.startTime))[0];
-          return (
-            <tr key={c.id}>
-              <td><span className="flex items-center gap-3"><Avatar name={c.name} /><span className="table-primary">{c.name}</span></span></td>
-              <td><a href={`tel:${c.phone.replaceAll(" ", "")}`} className="whitespace-nowrap text-muted-foreground hover:text-primary">{c.phone}</a></td>
-              <td className="table-number font-medium">{bookings.length}</td>
-              <td>{next || last ? <><span className="table-primary">{new Date((next ?? last).startTime).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span><span className="table-secondary">{next ? "Next visit" : "Last completed visit"}</span></> : <span className="text-muted-foreground">No visits yet</span>}</td>
-              <td className="text-right"><button className="table-action" onClick={() => setSelected(c.id)} aria-label={`View ${c.name}`}>View <IconChevronRight size={15} /></button></td>
+          <thead>
+            <tr>
+              <th scope="col">Customer</th>
+              <th scope="col">Phone number</th>
+              <th scope="col" className="table-number">
+                Reservations
+              </th>
+              <th scope="col">Visit</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
-          );
-        })}
+          </thead>
+          <tbody>
+            {customers.map((c) => {
+              const bookings = state.bookings.filter(
+                (b) => b.customerId === c.id,
+              );
+              const next = bookings
+                .filter(
+                  (b) =>
+                    b.startTime >= NOW &&
+                    !["Cancelled", "Completed"].includes(b.status),
+                )
+                .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+              const last = bookings
+                .filter((b) => b.status === "Completed")
+                .sort((a, b) => b.startTime.localeCompare(a.startTime))[0];
+              return (
+                <tr key={c.id}>
+                  <td>
+                    <span className="flex items-center gap-3">
+                      <Avatar name={c.name} />
+                      <span className="table-primary">{c.name}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <a
+                      href={`tel:${c.phone.replaceAll(" ", "")}`}
+                      className="whitespace-nowrap text-muted-foreground hover:text-primary"
+                    >
+                      {c.phone}
+                    </a>
+                  </td>
+                  <td className="table-number font-medium">
+                    {bookings.length}
+                  </td>
+                  <td>
+                    {next || last ? (
+                      <>
+                        <span className="table-primary">
+                          {new Date(
+                            (next ?? last).startTime,
+                          ).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span className="table-secondary">
+                          {next ? "Next visit" : "Last completed visit"}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No visits yet
+                      </span>
+                    )}
+                  </td>
+                  <td className="text-right">
+                    <button
+                      className="table-action"
+                      onClick={() => setSelected(c.id)}
+                      aria-label={`View ${c.name}`}
+                    >
+                      View <IconChevronRight size={15} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </DataTable>
         {!customers.length && (
           <EmptyState
             title="No familiar faces here."
             description="Try another name or phone number."
-            action={query ? <Button variant="outline" onClick={() => setQuery("")}>Clear search</Button> : <Button onClick={() => setAdding(true)}>Add customer</Button>}
+            action={
+              query ? (
+                <Button variant="outline" onClick={() => setQuery("")}>
+                  Clear search
+                </Button>
+              ) : (
+                <Button onClick={() => setAdding(true)}>Add customer</Button>
+              )
+            }
           />
         )}
         <TableSummary count={customers.length} noun="customer" />
@@ -503,7 +575,7 @@ export function CustomersPage({
         >
           <form
             className="mt-6 space-y-4"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
               const phone = String(data.get("phone"));
@@ -516,7 +588,7 @@ export function CustomersPage({
                 toast.error("A customer with this phone number already exists");
                 return;
               }
-              update((s) => ({
+              const saved = await update((s) => ({
                 ...s,
                 customers: [
                   ...s.customers,
@@ -528,6 +600,7 @@ export function CustomersPage({
                   },
                 ],
               }));
+              if (!saved) return;
               setAdding(false);
               toast.success("Customer added");
             }}
@@ -552,7 +625,10 @@ export function CustomersPage({
                 className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
+            <Button
+              type="submit"
+              className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+            >
               Add customer
             </Button>
           </form>
@@ -614,14 +690,14 @@ function CustomerDetails({
         variant="secondary"
         size="sm"
         className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
-        onClick={() => {
-          update((s) => ({
+        onClick={async () => {
+          const saved = await update((s) => ({
             ...s,
             customers: s.customers.map((c) =>
               c.id === customer.id ? { ...c, notes } : c,
             ),
           }));
-          toast.success("Customer note saved");
+          if (saved) toast.success("Customer note saved");
         }}
       >
         <IconCheck size={16} /> Save note
@@ -651,14 +727,14 @@ export function BusinessProfilePage() {
   const { state, update } = useStore();
   const [draft, setDraft] = useState(state.business);
   const [tab, setTab] = useState("The essentials");
-  function save(e: FormEvent) {
+  async function save(e: FormEvent) {
     e.preventDefault();
     if (draft.hours.some((h) => !h.closed && h.open >= h.close)) {
       toast.error("Closing time must be after opening time");
       return;
     }
-    update((s) => ({ ...s, business: draft }));
-    toast.success("Your studio page is updated");
+    const saved = await update((s) => ({ ...s, business: draft }));
+    if (saved) toast.success("Your studio page is updated");
   }
   return (
     <>
@@ -678,7 +754,7 @@ export function BusinessProfilePage() {
       />
       <div className="flex flex-col gap-6 [&>form]:w-full [&>aside]:w-full max-w-4xl">
         <aside className="static">
-          <div className="mb-4 rounded-[20px] bg-card p-5 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+          <div className="mb-4 rounded-[20px] bg-card p-5 shadow-none">
             <h3 className="mt-5 text-[19px] font-semibold text-foreground">
               {draft.name}
             </h3>
@@ -718,7 +794,7 @@ export function BusinessProfilePage() {
           </Link>
         </aside>
         <form
-          className="rounded-[21px] bg-card p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]"
+          className="rounded-[21px] bg-card p-8 shadow-none"
           onSubmit={save}
         >
           <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
@@ -797,17 +873,18 @@ export function BusinessProfilePage() {
                   />
                 </label>
               </div>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                Your location
-                <Input
-                  required
+              <div className="mb-4">
+                <label className="mb-2 block text-[12px] font-semibold text-foreground">
+                  Your location & map pin
+                </label>
+                <LocationPicker
                   value={draft.address}
-                  onChange={(e) =>
-                    setDraft({ ...draft, address: e.target.value })
+                  onChange={(address) =>
+                    setDraft({ ...draft, address })
                   }
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  placeholder="Search address or click on the map"
                 />
-              </label>
+              </div>
               <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
                 <IconFlower size={18} />
                 Your public page: /b/{state.business.slug}
@@ -1068,7 +1145,9 @@ export function AgentPage() {
   const [testPhone, setTestPhone] = useState("+234 800 123 4567");
   const [testName, setTestName] = useState("Jane Doe");
   const [testService, setTestService] = useState("Signature Cut & Style");
-  const [testCallType, setTestCallType] = useState<"reminder" | "confirmation">("reminder");
+  const [testCallType, setTestCallType] = useState<"reminder" | "confirmation">(
+    "reminder",
+  );
 
   const healthQuery = useBackendHealthQuery();
   const callsQuery = useCallsQuery(50);
@@ -1124,14 +1203,18 @@ export function AgentPage() {
         }
       />
       <div className="grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1">
-        <Card className="rounded-[21px] bg-card p-6 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+        <Card className="rounded-[21px] bg-card p-6 shadow-none">
           <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-muted text-muted-foreground">
             <IconHeadphones size={46} stroke={1.2} />
           </span>
           {healthQuery.isLoading ? (
             <Skeleton className="h-6 w-32 rounded-full" />
           ) : healthQuery.isError ? (
-            <InlineError title="Backend unavailable" onRetry={() => void healthQuery.refetch()} busy={healthQuery.isFetching} />
+            <InlineError
+              title="Backend unavailable"
+              onRetry={() => void healthQuery.refetch()}
+              busy={healthQuery.isFetching}
+            />
           ) : isAethexLive ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[12px] font-medium text-emerald-800">
               <i className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -1147,8 +1230,9 @@ export function AgentPage() {
             AI Receptionist
           </h2>
           <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-muted-foreground">
-            A thoughtful first hello. Powered by Aethex Voice AI to answer calls,
-            reach out with timely visit reminders, and look after your reservations.
+            A thoughtful first hello. Powered by Aethex Voice AI to answer
+            calls, reach out with timely visit reminders, and look after your
+            reservations.
           </p>
           <div className="my-7 divide-y divide-[#efefef] border-y border-border">
             <div className="flex items-center gap-3 py-4 text-[12px]">
@@ -1157,7 +1241,9 @@ export function AgentPage() {
                 Agent phone line
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                {isAethexLive ? "+1 (415) 555-0199" : "+1 (415) 555-0000 (Demo)"}
+                {isAethexLive
+                  ? "+1 (415) 555-0199"
+                  : "+1 (415) 555-0000 (Demo)"}
               </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
@@ -1175,12 +1261,17 @@ export function AgentPage() {
                 Connection status
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                {healthQuery.isLoading ? "Checking…" : isHealthy ? "Online & Ready" : "Unavailable"}
+                {healthQuery.isLoading
+                  ? "Checking…"
+                  : isHealthy
+                    ? "Online & Ready"
+                    : "Unavailable"}
               </strong>
             </div>
           </div>
           <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
-            Outbound Voice AI can place automated appointment reminders, confirmations, and check-ins directly via Aethex.
+            Outbound Voice AI can place automated appointment reminders,
+            confirmations, and check-ins directly via Aethex.
           </div>
           <div className="mt-5 flex gap-3">
             <Button
@@ -1244,7 +1335,7 @@ export function AgentPage() {
           ))}
         </section>
       </div>
-      <Card className="mt-6 rounded-[21px] bg-card p-8 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
+      <Card className="mt-6 rounded-[21px] bg-card p-8 shadow-none">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
@@ -1255,38 +1346,62 @@ export function AgentPage() {
             </h2>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
-            {callsQuery.data?.length ? `${callsQuery.data.length} calls logged` : "Ready"}
+            {callsQuery.data?.length
+              ? `${callsQuery.data.length} calls logged`
+              : "Ready"}
           </span>
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
-          {["All activity", "Call logs", "Reservations", "Confirmations"].map((t) => (
-            <button
-              key={t}
-              className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
-                tab === t
-                  ? "bg-muted font-semibold text-foreground"
-                  : "font-medium text-muted-foreground hover:bg-background"
-              }`}
-              onClick={() => setTab(t)}
-            >
-              {t}
-            </button>
-          ))}
+          {["All activity", "Call logs", "Reservations", "Confirmations"].map(
+            (t) => (
+              <button
+                key={t}
+                className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
+                  tab === t
+                    ? "bg-muted font-semibold text-foreground"
+                    : "font-medium text-muted-foreground hover:bg-background"
+                }`}
+                onClick={() => setTab(t)}
+              >
+                {t}
+              </button>
+            ),
+          )}
         </div>
 
         {tab === "Call logs" ? (
           <div className="mt-4 divide-y divide-border">
             {callsQuery.isLoading ? (
-              <div className="space-y-4 py-4" role="status" aria-label="Loading call logs" aria-busy="true">
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-12 w-full rounded-xl" />
+              <div
+                className="divide-y divide-border/60"
+                role="status"
+                aria-label="Loading call logs"
+                aria-busy="true"
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-4 py-4">
+                    <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-44 rounded" />
+                        <Skeleton className="h-4 w-16 rounded-full" />
+                      </div>
+                      <Skeleton className="h-3.5 w-36 rounded" />
+                    </div>
+                    <Skeleton className="h-3 w-12 rounded" />
+                  </div>
+                ))}
               </div>
             ) : callsQuery.isError ? (
-              <InlineError title="Call logs couldn’t load." onRetry={() => void callsQuery.refetch()} busy={callsQuery.isFetching} />
+              <InlineError
+                title="Call logs couldn’t load."
+                onRetry={() => void callsQuery.refetch()}
+                busy={callsQuery.isFetching}
+              />
             ) : !callsQuery.data?.length ? (
               <div className="py-8 text-center text-[13px] text-muted-foreground">
-                No voice calls placed yet. Use the &quot;Test Voice AI Call&quot; button above to dispatch your first call.
+                No voice calls placed yet. Use the &quot;Test Voice AI
+                Call&quot; button above to dispatch your first call.
               </div>
             ) : (
               callsQuery.data.map((c) => (
@@ -1304,12 +1419,20 @@ export function AgentPage() {
                       </span>
                     </div>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      Status: <span className="font-medium text-foreground capitalize">{c.status}</span>
-                      {c.duration_seconds ? ` · ${c.duration_seconds}s duration` : ""}
+                      Status:{" "}
+                      <span className="font-medium text-foreground capitalize">
+                        {c.status}
+                      </span>
+                      {c.duration_seconds
+                        ? ` · ${c.duration_seconds}s duration`
+                        : ""}
                     </p>
                   </div>
                   <small className="text-[12px] text-muted-foreground">
-                    {new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(c.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </small>
                 </div>
               ))

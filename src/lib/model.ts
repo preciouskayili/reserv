@@ -98,6 +98,11 @@ export const DEFAULT_CALL_PREFERENCES: CallPreferences = {
   unpaidIntervalMinutes: 1440,
 };
 export interface Payment {
+  provider?: "paystack" | "stripe";
+  reference?: string;
+  needsReview?: boolean;
+  refundedAmount?: number;
+  disputed?: boolean;
   id: string;
   bookingId: string;
   amount: number;
@@ -110,6 +115,7 @@ export interface Payment {
   receiptName?: string;
 }
 export interface AppState {
+  availability?: Pick<Booking, "id" | "staffId" | "startTime" | "endTime" | "status">[];
   business: Business;
   services: Service[];
   staff: StaffMember[];
@@ -120,9 +126,9 @@ export interface AppState {
   settings: { reminders: boolean; confirmations: boolean; owner: string; calls?: CallPreferences };
   loaded: boolean;
 }
-// A fixed demo clock keeps the seeded schedule meaningful on every visit.
-export const TODAY = "2026-09-12";
-export const NOW = "2026-09-12T10:15:00";
+// Business-local wall time in WAT. Live availability is also validated by the server.
+export const NOW = new Date(Date.now() + 3600000).toISOString().slice(0,19);
+export const TODAY = NOW.slice(0,10);
 export const money = (value: number) => `₦${value.toLocaleString("en-NG")}`;
 export const duration = (mins: number) =>
   mins >= 60
@@ -173,7 +179,7 @@ export function generateCode(bookings: Booking[]) {
   let code: string;
   do {
     code = Array.from(
-      crypto.getRandomValues(new Uint8Array(6)),
+      crypto.getRandomValues(new Uint8Array(12)),
       (n) => alphabet[n % alphabet.length],
     ).join("");
   } while (bookings.some((b) => b.code === code));
@@ -210,11 +216,11 @@ export function availableSlots(
     const end = endTime(start, service.duration);
     if (
       new Date(start).getTime() <
-      new Date(NOW).getTime() + state.business.rules.minNoticeMinutes * 60000
+      new Date(new Date(Date.now() + 3600000).toISOString().slice(0,19)).getTime() + state.business.rules.minNoticeMinutes * 60000
     )
       continue;
     if (
-      !state.bookings.some(
+      ![...state.bookings, ...(state.availability ?? [])].some(
         (b) =>
           b.id !== excludeId &&
           b.staffId === staffId &&

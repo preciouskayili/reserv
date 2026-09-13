@@ -11,9 +11,11 @@ import {
   api,
   ApiError,
   clearStoredToken,
+  clearStoredWorkspaceId,
   getStoredToken,
   setStoredToken,
 } from "./api";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export interface AuthUser {
@@ -46,6 +48,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient=useQueryClient();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,6 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    clearStoredWorkspaceId();
+    queryClient.clear();
     clearStoredToken();
     setSessionError(null);
     setToken(null);

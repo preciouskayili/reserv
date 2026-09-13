@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  IconBuildingStore,
   IconCheck,
   IconChevronDown,
   IconCircleCheckFilled,
@@ -13,7 +14,7 @@ import {
   IconPalette,
   IconPencil,
   IconPhoneCall,
-  IconSparkles,
+  IconPlus,
   IconUserCircle,
   IconX,
 } from "@tabler/icons-react";
@@ -21,16 +22,16 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Modal } from "@/components/shared";
 import { useStore } from "@/lib/store";
+import { OnboardingModal } from "./onboarding-modal";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CALL_PREFERENCES, type CallPreferences } from "@/lib/model";
 
 export function SettingsPage() {
-  const { state, update, reset } = useStore();
+  const { state, update, workspaces, createWorkspace } = useStore();
   const { user } = useAuth();
-  const initialName = state.settings.owner || "Precious Kayili";
+  const initialName = state.settings.owner || user?.name || "Your name";
   const [displayName, setDisplayName] = useState(initialName);
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(initialName);
@@ -41,9 +42,9 @@ export function SettingsPage() {
     ...state.settings.calls,
   };
 
-  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [newWorkspaceModalOpen, setNewWorkspaceModalOpen] = useState(false);
 
-  function handleSaveName(e?: React.FormEvent) {
+  async function handleSaveName(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!tempName.trim()) {
       toast.error("Display name cannot be empty");
@@ -51,21 +52,21 @@ export function SettingsPage() {
     }
     setIsSavingName(true);
     const trimmed = tempName.trim();
-    setDisplayName(trimmed);
-    update((s) => ({
+    const saved = await update((s) => ({
       ...s,
       settings: { ...s.settings, owner: trimmed },
     }));
-    setTimeout(() => {
-      setIsSavingName(false);
+    setIsSavingName(false);
+    if (saved) {
+      setDisplayName(trimmed);
       setEditingName(false);
       toast.success("Display name updated");
-    }, 200);
+    }
   }
 
-  function handleUpdateCalls(patch: Partial<CallPreferences>) {
+  async function handleUpdateCalls(patch: Partial<CallPreferences>) {
     const updated: CallPreferences = { ...calls, ...patch };
-    update((s) => ({
+    const saved = await update((s) => ({
       ...s,
       settings: {
         ...s.settings,
@@ -74,7 +75,7 @@ export function SettingsPage() {
         confirmations: updated.enabled,
       },
     }));
-    toast.success("Call check-in settings saved");
+    if (saved) toast.success("Call check-in settings saved");
   }
 
   return (
@@ -373,30 +374,30 @@ export function SettingsPage() {
             </strong>
           </div>
 
-          {/* Demo workspace reset */}
+          {/* Active Studio Workspace */}
           <div className="flex items-center justify-between gap-4 px-4 py-3.5">
             <div className="flex items-start gap-3">
-              <IconSparkles
+              <IconBuildingStore
                 size={20}
                 stroke={1.5}
                 className="mt-0.5 shrink-0 text-muted-foreground"
               />
               <div>
                 <span className="block text-[13px] font-medium text-foreground">
-                  Demo workspace
+                  {state.business.name || "Studio Workspace"}
                 </span>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  This mock workspace stores edits in your browser. Reset sample
-                  data anytime.
+                  Public page: /b/{state.business.slug} · {workspaces.length} workspace{workspaces.length === 1 ? "" : "s"}
                 </p>
               </div>
             </div>
             <Button
               variant="secondary"
-              onClick={() => setResetModalOpen(true)}
-              className="shrink-0 rounded-lg border border-border bg-white px-3 py-1.5 text-[12px] font-semibold text-foreground hover:bg-background"
+              onClick={() => setNewWorkspaceModalOpen(true)}
+              className="shrink-0 rounded-full border-0 bg-muted px-3.5 py-1.5 text-[12px] font-medium text-foreground hover:bg-black/5 shadow-none"
             >
-              Reset workspace
+              <IconPlus size={14} className="mr-1" />
+              New workspace
             </Button>
           </div>
         </Card>
@@ -407,39 +408,17 @@ export function SettingsPage() {
         <span>Reserv Studio 1.0.0</span>
       </div>
 
-      {/* Reset Demo Modal */}
-      {resetModalOpen && (
-        <Modal
-          title="Start fresh?"
-          description="Reset this browser’s demo workspace."
-          onClose={() => setResetModalOpen(false)}
-        >
-          <p className="text-[12px] leading-5 text-muted-foreground">
-            This removes the reservations, services, and edits you added in this
-            demo and restores the original sample studio.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
-            <Button
-              variant="secondary"
-              onClick={() => setResetModalOpen(false)}
-            >
-              Keep my changes
-            </Button>
-            <Button
-              variant="destructive"
-              className="ml-auto bg-[#a8514b] text-white hover:bg-[#91453f]"
-              onClick={() => {
-                reset();
-                setDisplayName("Precious Kayili");
-                setTempName("Precious Kayili");
-                setResetModalOpen(false);
-                toast.success("Your demo workspace is fresh again");
-              }}
-            >
-              Reset demo
-            </Button>
-          </div>
-        </Modal>
+      {/* New Workspace Modal */}
+      {newWorkspaceModalOpen && (
+        <OnboardingModal
+          open={newWorkspaceModalOpen}
+          onClose={() => setNewWorkspaceModalOpen(false)}
+          onSubmit={async (data) => {
+            await createWorkspace(data);
+            setNewWorkspaceModalOpen(false);
+          }}
+          initialOwner={user?.name || ""}
+        />
       )}
     </div>
   );

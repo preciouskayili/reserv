@@ -68,11 +68,11 @@ export function BookingDetails({
   const payment = paymentSummary(state, booking);
   const terminal = ["Cancelled", "Completed"].includes(booking.status);
 
-  function setStatus(status: Booking["status"]) {
+  async function setStatus(status: Booking["status"]) {
     if (status === "Completed") setIsCompleting(true);
     if (status === "Cancelled") setIsCancelling(true);
 
-    update((s) => ({
+    const saved = await update((s) => ({
       ...s,
       bookings: s.bookings.map((b) =>
         b.id === booking.id
@@ -92,31 +92,15 @@ export function BookingDetails({
           : b,
       ),
     }));
-    toast.success(`Reservation ${status.toLowerCase()}`);
+    if (saved) toast.success(`Reservation ${status.toLowerCase()}`);
     setTimeout(() => {
       setIsCompleting(false);
       setIsCancelling(false);
-      if (status === "Cancelled") setCancel(false);
+      if (saved && status === "Cancelled") setCancel(false);
     }, 400);
   }
 
   const handleDispatchCall = async () => {
-    // Optimistic update to booking activity
-    const callActivity = {
-      id: crypto.randomUUID(),
-      title: "Voice AI reminder call queued",
-      time: NOW,
-      actor: "agent" as const,
-    };
-    update((s) => ({
-      ...s,
-      bookings: s.bookings.map((b) =>
-        b.id === booking.id
-          ? { ...b, activity: [...b.activity, callActivity] }
-          : b,
-      ),
-    }));
-
     try {
       await triggerCallMutation.mutateAsync({
         toNumber: customer.phone,
@@ -128,11 +112,6 @@ export function BookingDetails({
         callType: "reminder",
       });
     } catch {
-      update((s) => ({
-        ...s,
-        bookings: s.bookings.map((b) => b.id === booking.id
-          ? { ...b, activity: b.activity.filter((a) => a.id !== callActivity.id) } : b),
-      }));
       // Toast already handled by mutation hook
     }
   };
@@ -424,7 +403,7 @@ export function BookingDetails({
                         size="sm"
                         disabled={triggerCallMutation.isPending}
                         onClick={handleDispatchCall}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3.5 text-[12px] font-semibold text-foreground shadow-xs transition hover:border-primary hover:text-primary disabled:opacity-60"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border-0 bg-white px-3.5 text-[12px] font-semibold text-foreground shadow-none transition hover:bg-black/5 hover:text-primary disabled:opacity-60"
                       >
                         {triggerCallMutation.isPending ? (
                           <>
@@ -468,14 +447,16 @@ export function BookingDetails({
                   size="sm"
                   disabled={isSavingNote}
                   className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border disabled:opacity-60"
-                  onClick={() => {
+                  onClick={async () => {
                     setIsSavingNote(true);
-                    update((s) => ({
+                    const saved = await update((s) => ({
                       ...s,
                       bookings: s.bookings.map((b) =>
                         b.id === booking.id ? { ...b, notes } : b,
                       ),
                     }));
+                    setIsSavingNote(false);
+                    if (!saved) return;
                     setNoteSaved(true);
                     toast.success("Visit note saved");
                     setTimeout(() => {

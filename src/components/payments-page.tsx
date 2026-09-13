@@ -51,10 +51,11 @@ function PaymentReview({ payment, close }: { payment: Payment; close: () => void
   const current = state.payments?.find(p => p.id === payment.id);
   const canReview = current?.status === "review";
 
-  function decide(decision: "approved" | "rejected") {
+  async function decide(decision: "approved" | "rejected") {
     if (!canReview || isSubmitting || (decision === "rejected" && !reason.trim())) return;
     setIsSubmitting(true);
-    update(s => reviewPayment(s, payment.id, decision, reason));
+    const saved = await update(s => reviewPayment(s, payment.id, decision, reason));
+    if (!saved) { setIsSubmitting(false); return; }
     toast.success(
       decision === "approved"
         ? "Payment approved. Booking confirmed."
@@ -107,7 +108,7 @@ export function PaymentsPage() {
   }).sort((a,b) => (b.payment?.createdAt ?? b.booking.createdAt).localeCompare(a.payment?.createdAt ?? a.booking.createdAt));
   return <>
     <PageHeader eyebrow="PAYMENTS" title="Every payment, in one place." description="Review transfers and keep track of booking payments." />
-    <div className="mb-6 flex flex-wrap gap-3">{[{ label: "Approved payments", value: money(payments.filter(p => p.status === "approved").reduce((sum,p) => sum+p.amount,0)) }, {label: "Receipts to review", value: payments.filter(p => p.status === "review").length}, {label:"Awaiting payment", value: state.bookings.filter(b => !["Cancelled","Completed"].includes(b.status) && !paymentSummary(state,b).confirmed && !paymentSummary(state,b).pending).length}].map(item => <div key={item.label} className="min-w-40 flex-1 rounded-2xl bg-white p-5"><p className="text-[12px] text-muted-foreground">{item.label}</p><strong className="mt-2 block text-[23px] font-semibold tracking-tight">{item.value}</strong></div>)}</div>
+    <div className="mb-6 flex flex-wrap gap-3">{[{ label: "Net approved payments", value: money(payments.filter(p => p.status === "approved" && !p.disputed).reduce((sum,p) => sum+p.amount-(p.refundedAmount ?? 0),0)) }, {label: "Receipts to review", value: payments.filter(p => p.status === "review").length}, {label:"Awaiting payment", value: state.bookings.filter(b => !["Cancelled","Completed"].includes(b.status) && !paymentSummary(state,b).confirmed && !paymentSummary(state,b).pending).length}].map(item => <div key={item.label} className="min-w-40 flex-1 rounded-2xl bg-white p-5"><p className="text-[12px] text-muted-foreground">{item.label}</p><strong className="mt-2 block text-[23px] font-semibold tracking-tight">{item.value}</strong></div>)}</div>
     <section className="table-panel">
       <div className="table-toolbar"><div className="flex flex-wrap gap-1">{["All","Needs review","Approved","Unpaid","Rejected"].map(item => <button key={item} aria-pressed={filter===item} onClick={() => setFilter(item)} className="table-filter">{item}</button>)}</div><div className="table-search"><IconSearch size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search payments" placeholder="Customer or booking code" className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary" /></div></div>
       <DataTable label="Payments">
@@ -116,20 +117,20 @@ export function PaymentsPage() {
           const customer = state.customers.find(c => c.id === booking.customerId);
           const summary = paymentSummary(state, booking);
           const status = payment?.status;
-          const label = status === "approved" ? "Approved" : status === "review" ? "Needs review" : status === "rejected" ? "Rejected" : booking.status === "Cancelled" ? "Cancelled" : summary.confirmed ? "No payment due" : "Unpaid";
+          const label = payment?.disputed ? "Disputed" : (payment?.refundedAmount ?? 0) > 0 ? "Refunded" : payment?.needsReview ? "Needs attention" : status === "approved" ? "Approved" : status === "review" ? "Needs review" : status === "rejected" ? "Rejected" : booking.status === "Cancelled" ? "Cancelled" : summary.confirmed ? "No payment due" : "Unpaid";
           return <tr key={payment?.id ?? booking.id}>
             <td><Link className="table-primary hover:text-primary hover:underline" href={`/bookings/${booking.id}`}>{customer?.name}</Link><span className="table-secondary font-mono">{booking.code}</span></td>
             <td className="table-number whitespace-nowrap font-medium">{money(payment?.amount ?? Math.max(0, summary.required - summary.paid))}</td>
-            <td className="text-muted-foreground">{payment?.method === "gateway" ? "Demo gateway" : payment ? "Bank transfer" : "—"}</td>
-            <td><span className={`status-pill ${status === "approved" ? "bg-success-surface text-success" : status === "review" ? "bg-warning-surface text-warning" : status === "rejected" ? "bg-danger-surface text-destructive" : "bg-muted text-muted-foreground"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{label}</span></td>
+            <td className="text-muted-foreground">{payment?.method === "gateway" ? payment.provider === "paystack" ? "Paystack" : payment.provider === "stripe" ? "Stripe" : "Online checkout" : payment ? "Bank transfer" : "—"}</td>
+            <td><span className={`status-pill ${payment?.disputed || payment?.needsReview || (payment?.refundedAmount ?? 0) > 0 ? "bg-warning-surface text-warning" : status === "approved" ? "bg-success-surface text-success" : status === "review" ? "bg-warning-surface text-warning" : status === "rejected" ? "bg-danger-surface text-destructive" : "bg-muted text-muted-foreground"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{label}</span></td>
             <td className="text-right">{status === "review" ? <button className="table-action" onClick={() => setReviewId(payment!.id)} aria-label={`Review payment for ${booking.code}`}><IconFileInvoice size={15} /> Review</button> : !summary.confirmed && !["Cancelled", "Completed"].includes(booking.status) && status !== "approved" ? <Link className="table-action" href={`/pay/${booking.code}`}>Payment page <IconArrowUpRight size={15} /></Link> : <Link className="table-action" href={`/bookings/${booking.id}`} aria-label={`View reservation ${booking.code}`}>View <IconArrowUpRight size={15} /></Link>}</td>
           </tr>;
         })}</tbody>
       </DataTable>
-      {!rows.length && <EmptyState title="No payments here yet." description="Try another filter, or open a booking to make a demo payment." action={query || filter !== "All" ? <Button variant="outline" onClick={() => { setQuery(""); setFilter("All"); }}>Clear filters</Button> : undefined} />}
+      {!rows.length && <EmptyState title="No payments here yet." description="Try another filter, or open a booking to submit a payment receipt." action={query || filter !== "All" ? <Button variant="outline" onClick={() => { setQuery(""); setFilter("All"); }}>Clear filters</Button> : undefined} />}
       <TableSummary count={rows.length} noun="record" />
     </section>
-    <p className="mt-4 text-[12px] text-muted-foreground">Demo workspace. Gateway payments are simulated; receipts and reviews are saved in this browser.</p>
+    <p className="mt-4 text-[12px] text-muted-foreground">Receipts are private to this workspace. Approve a transfer only after checking it against your bank records.</p>
     {review && <PaymentReview key={review.id} payment={review} close={()=>setReviewId(null)} />}
   </>;
 }
