@@ -4,8 +4,11 @@ import {
   useContext,
   useEffect,
   useReducer,
+  useRef,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
+import { PageLoading } from "@/components/feedback";
 import { normalizePayments } from "./payments";
 import { seed } from "./seed";
 import { type AppState } from "./model";
@@ -25,6 +28,7 @@ const Store = createContext<{
   reset: () => void;
 } | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const storageWarning = useRef(false);
   const [state, dispatch] = useReducer(reducer, seed, normalizePayments);
   useEffect(() => {
     let initial = seed;
@@ -51,7 +55,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch {
-        /* The current session remains usable without storage. */
+        if (!storageWarning.current) {
+          storageWarning.current = true;
+          toast.warning("Changes are only available in this session. Browser storage is full or unavailable.");
+        }
       }
     }
   }, [state]);
@@ -63,7 +70,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         reset: () => dispatch({ type: "reset" }),
       }}
     >
-      {children}
+      {state.loaded ? children : <PageLoading />}
     </Store.Provider>
   );
 }

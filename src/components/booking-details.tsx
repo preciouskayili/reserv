@@ -128,6 +128,11 @@ export function BookingDetails({
         callType: "reminder",
       });
     } catch {
+      update((s) => ({
+        ...s,
+        bookings: s.bookings.map((b) => b.id === booking.id
+          ? { ...b, activity: b.activity.filter((a) => a.id !== callActivity.id) } : b),
+      }));
       // Toast already handled by mutation hook
     }
   };
@@ -145,14 +150,14 @@ export function BookingDetails({
       <div
         className={
           publicView
-            ? "mx-auto block max-w-[940px]"
-            : "mx-auto block max-w-[940px]"
+            ? "mx-auto block w-full min-w-0 max-w-[940px]"
+            : "mx-auto block w-full min-w-0 max-w-[940px]"
         }
       >
-        <Card className="relative rounded-[78px] border-0 bg-white px-12 pb-12 pt-[94px] max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-[72px] max-[560px]:rounded-[35px] max-[560px]:px-5">
+        <Card className="relative w-full min-w-0 gap-0 rounded-[40px] border-0 bg-white px-10 pb-10 pt-14 max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-12 max-[560px]:rounded-[35px] max-[560px]:px-5">
           <div className="absolute left-1/2 top-6 h-[7px] w-[78px] -translate-x-1/2 rounded-full bg-muted" />
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-[40px] font-medium leading-none tracking-tight text-muted-foreground max-[760px]:text-[30px]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[24px] font-medium leading-none tracking-tight text-muted-foreground max-[760px]:text-[20px]">
               {booking.startTime.startsWith(TODAY)
                 ? "Today"
                 : dateLabel(booking.startTime).split(",")[0]}
@@ -176,7 +181,7 @@ export function BookingDetails({
               </Link>
             )}
           </div>
-          <h1 className="mb-8 mt-3 text-[clamp(43px,4.8vw,63px)] font-medium leading-[1.02] tracking-tight max-[560px]:text-[30px]">
+          <h1 className="mb-8 mt-3 break-words text-[clamp(30px,4vw,44px)] font-medium leading-[1.02] tracking-tight max-[560px]:text-[30px]">
             {publicView ? "Your reservation" : "Reservation with"}
             <br />
             <span className="text-foreground">

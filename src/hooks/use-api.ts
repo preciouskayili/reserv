@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, type BookingPayload } from "@/lib/api";
 import { toast } from "sonner";
 
 export interface CallItem {
@@ -128,33 +128,10 @@ export function useCreateBookingMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: any) => api.bookings.create(payload),
+    mutationFn: (payload: BookingPayload) => api.bookings.create(payload),
 
-    onMutate: async (newBooking) => {
-      await queryClient.cancelQueries({ queryKey: ["bookings"] });
-      const previousBookings = queryClient.getQueryData<any>(["bookings"]);
-
-      // Optimistically prepend booking
-      queryClient.setQueryData<any>(["bookings"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          bookings: [newBooking, ...(old.bookings || [])],
-        };
-      });
-
-      return { previousBookings };
-    },
-
-    onError: (err, _variables, context) => {
-      if (context?.previousBookings) {
-        queryClient.setQueryData(["bookings"], context.previousBookings);
-      }
+    onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to save booking");
-    },
-
-    onSuccess: () => {
-      toast.success("Booking created successfully");
     },
 
     onSettled: () => {

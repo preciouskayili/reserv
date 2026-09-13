@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { PageLoading } from "./feedback";
+import { safeNextPath } from "@/lib/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Brand } from "./shared";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
 
 export function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#faf9f7]" />}>
+    <Suspense fallback={<PageLoading label="Loading sign-in…" />}>
       <LoginForm />
     </Suspense>
   );
@@ -27,25 +28,34 @@ export function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextTarget = searchParams.get("next") || "/";
+  const nextTarget = safeNextPath(searchParams.get("next"));
   const { requestOtp, verifyOtp, isAuthenticated } = useAuth();
 
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
 
   // If already signed in, redirect
-  if (isAuthenticated) {
-    router.replace(nextTarget);
-  }
+  useEffect(() => {
+    if (isAuthenticated) router.replace(nextTarget);
+  }, [isAuthenticated, nextTarget, router]);
+
+  useEffect(() => {
+    if (step !== "code" || countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [step, countdown]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
+    if (isSubmitting) return;
+    setFormError("");
     setIsSubmitting(true);
     try {
       const res = await requestOtp(email);
@@ -54,8 +64,8 @@ function LoginForm() {
       }
       setStep("code");
       setCountdown(60);
-    } catch {
-      // Error handled in auth-context with toast
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -65,12 +75,14 @@ function LoginForm() {
     e.preventDefault();
     if (code.trim().length !== 6) return;
 
+    if (isSubmitting) return;
+    setFormError("");
     setIsSubmitting(true);
     try {
       await verifyOtp(email, code);
       router.push(nextTarget);
-    } catch {
-      // Error handled in auth-context with toast
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,23 +90,27 @@ function LoginForm() {
 
   const handleResend = async () => {
     if (countdown > 0) return;
+    if (isSubmitting) return;
+    setFormError("");
     setIsSubmitting(true);
     try {
       const res = await requestOtp(email);
-      if (res.devCode) setDevCode(res.devCode);
+      setDevCode(res.devCode ?? null);
       setCountdown(60);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not resend your code. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#faf9f7] px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-[440px]">
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-block transition hover:opacity-80">
+          <span className="inline-block transition hover:opacity-80">
             <Brand />
-          </Link>
+          </span>
         </div>
 
         <div className="overflow-hidden rounded-[28px] border border-border/80 bg-white p-8 shadow-sm transition-all sm:p-10">
@@ -107,7 +123,7 @@ function LoginForm() {
             </h1>
             <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
               {step === "email"
-                ? "Enter your email address to receive an instant verification code. Powered by Resend."
+                ? "Enter your email address to receive an verification code."
                 : `We sent a temporary verification code to `}
               {step === "code" && (
                 <strong className="font-semibold text-foreground">{email}</strong>
@@ -115,6 +131,7 @@ function LoginForm() {
             </p>
           </div>
 
+          {formError && <p role="alert" className="mb-4 rounded-xl bg-danger-surface p-3 text-[13px] text-destructive">{formError}</p>}
           {devCode && step === "code" && (
             <div className="mb-6 flex items-center justify-between rounded-xl bg-accent/70 p-3.5 text-[12px]">
               <span className="flex items-center gap-2 text-primary font-medium">
@@ -223,7 +240,9 @@ function LoginForm() {
               <div className="flex items-center justify-between pt-1 text-[12px] text-muted-foreground">
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => {
+                    setFormError("");
                     setStep("email");
                     setCode("");
                   }}

@@ -33,12 +33,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {children}
       <footer className="mx-auto flex max-w-[840px] items-center justify-between gap-4 border-t border-border px-10 py-8 text-[12px] text-muted-foreground max-[760px]:px-5 max-[560px]:flex-wrap">
         <span>A little time, well spent.</span>
-        <Link
-          href="/"
+        <span
           className="flex items-center gap-1.5 transition hover:text-[#555]"
         >
           Made possible with <Brand small />
-        </Link>
+        </span>
         <span className="max-[760px]:hidden">Abuja, Nigeria · WAT</span>
       </footer>
     </div>
@@ -47,7 +46,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 export function PublicProfile() {
   const { state } = useStore();
   const [service, setService] = useState<string | null | undefined>(undefined);
-  const hours = state.business.hours[5];
+  const hours = state.business.hours[(new Date(`${TODAY}T12:00:00`).getDay() + 6) % 7];
   return (
     <PublicLayout>
       <main className="mx-auto max-w-[840px] px-10 pb-16 max-[760px]:px-5">
@@ -126,7 +125,7 @@ export function PublicProfile() {
               </p>
             </div>
             <h2 className="mb-5 font-medium text-foreground">Services</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {state.services
                 .filter((s) => s.active)
                 .map((s) => (
@@ -262,8 +261,8 @@ export function ReservationLookup({ code }: { code?: string }) {
       <main
         className={
           booking
-            ? "py-6"
-            : "flex min-h-[calc(100vh-170px)] items-center justify-center py-10"
+            ? "mx-auto w-full max-w-[840px] px-5 py-6 sm:px-10"
+            : "flex min-h-[calc(100vh-170px)] items-center justify-center px-5 py-10"
         }
       >
         {booking ? (
@@ -338,7 +337,7 @@ export function ReservationLookup({ code }: { code?: string }) {
                   {error}
                 </p>
               )}
-              <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90">
+              <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-primary px-4 text-[12px] font-semibold text-white transition hover:border-border hover:bg-primary/90">
                 <IconSearch size={17} />
                 Find my reservation
               </Button>

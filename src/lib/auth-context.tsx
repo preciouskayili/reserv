@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   api,
+  ApiError,
   clearStoredToken,
   getStoredToken,
   setStoredToken,
@@ -28,6 +29,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  sessionError: string | null;
+  retrySession: () => void;
   requestOtp: (email: string) => Promise<{
     success: boolean;
     message: string;
@@ -47,29 +50,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
   // Check stored session on mount
   useEffect(() => {
-    const savedToken = getStoredToken();
-    if (!savedToken) {
-      setIsLoading(false);
-      return;
+    let active = true;
+    async function restoreSession() {
+      try {
+        const savedToken = getStoredToken();
+        if (!savedToken) return;
+        const { user: fetchedUser } = await api.auth.getMe();
+        if (active) {
+          setToken(savedToken);
+          setUser(fetchedUser as AuthUser);
+        }
+      } catch (error) {
+        if (!active) return;
+        if (error instanceof ApiError && error.status === 401) {
+          clearStoredToken();
+          setToken(null);
+          setUser(null);
+        } else {
+          setSessionError("We couldn’t check your session. Your sign-in has been kept; try reconnecting.");
+        }
+      } finally {
+        if (active) setIsLoading(false);
+      }
     }
-
-    setToken(savedToken);
-    api.auth
-      .getMe()
-      .then(({ user: fetchedUser }) => {
-        setUser(fetchedUser as AuthUser);
-      })
-      .catch(() => {
-        clearStoredToken();
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
+    void restoreSession();
+    return () => { active = false; };
+  }, [attempt]);
 
   const requestOtp = async (email: string) => {
     try {
@@ -88,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStoredToken(response.token);
       setToken(response.token);
       setUser(response.user);
+      setSessionError(null);
       toast.success("Welcome back!");
       return response.user;
     } catch (error) {
@@ -99,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     clearStoredToken();
+    setSessionError(null);
     setToken(null);
     setUser(null);
     toast.success("Signed out");
@@ -110,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         token,
         isLoading,
+        sessionError,
+        retrySession: () => { setSessionError(null); setIsLoading(true); setAttempt((value) => value + 1); },
         isAuthenticated: Boolean(user && token),
         requestOtp,
         verifyOtp,

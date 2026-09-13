@@ -14,7 +14,7 @@ const PUBLIC_PREFIXES = [
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(prefix)
+    (prefix) => pathname === prefix || pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
   );
 }
 
@@ -22,12 +22,6 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const isAuthenticated = Boolean(token && token.trim().length > 0);
-
-  // 1. If user is logged in and visits /login, redirect to dashboard or next param
-  if (pathname === "/login" && isAuthenticated) {
-    const next = request.nextUrl.searchParams.get("next") || "/";
-    return NextResponse.redirect(new URL(next, request.url));
-  }
 
   // 2. Allow all public routes
   if (isPublicRoute(pathname)) {

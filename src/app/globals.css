@@ -19,7 +19,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--primary);
-  --color-destructive: #a14e48;
+  --color-destructive: var(--destructive);
   --color-success: #397052;
   --color-success-surface: #edf4ef;
   --color-warning: #916333;
@@ -84,6 +84,60 @@
   }
 }
 @layer components {
+  .table-panel {
+    @apply min-w-0 overflow-hidden rounded-[22px] bg-card;
+  }
+  .table-toolbar {
+    @apply flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 max-[560px]:px-4;
+  }
+  .table-search {
+    @apply relative w-full sm:w-64;
+  }
+  .table-filter {
+    @apply inline-flex min-h-9 items-center whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground;
+  }
+  .table-filter[aria-pressed="true"] {
+    @apply bg-accent font-semibold text-primary;
+  }
+  .data-table-scroll {
+    @apply w-full overflow-x-auto overscroll-x-contain focus-visible:-outline-offset-2;
+  }
+  .data-table {
+    @apply w-full min-w-[680px] border-collapse text-left text-[13px];
+  }
+  .data-table thead {
+    @apply border-b border-border bg-muted/60;
+  }
+  .data-table th {
+    @apply whitespace-nowrap px-5 py-3 text-xs font-medium text-muted-foreground;
+  }
+  .data-table td {
+    @apply px-5 py-4 align-middle;
+  }
+  .data-table tbody > tr {
+    @apply border-b border-border/60 transition-colors last:border-b-0 hover:bg-background focus-within:bg-background;
+  }
+  .data-table .table-group {
+    @apply border-y border-border bg-background;
+  }
+  .data-table .table-number {
+    @apply text-right tabular-nums;
+  }
+  .table-primary {
+    @apply font-medium text-foreground;
+  }
+  .table-secondary {
+    @apply mt-1 block text-xs text-muted-foreground;
+  }
+  .table-action {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-medium text-primary transition-colors hover:bg-accent max-[560px]:min-h-11;
+  }
+  .table-summary {
+    @apply flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-xs text-muted-foreground max-[560px]:px-4;
+  }
+  .status-pill {
+    @apply inline-flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-0 px-2.5 py-1 text-xs font-medium;
+  }
   .page-header h1 {
     letter-spacing: -0.025em;
     line-height: 1.2;

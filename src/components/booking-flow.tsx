@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
@@ -76,6 +76,7 @@ export function BookingFlow({
   const [result, setResult] = useState<Booking | null>(null);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionLock = useRef(false);
   const createBookingMutation = useCreateBookingMutation();
 
   const slots = availableSlots(state, serviceId, staffId, date, booking?.id);
@@ -84,6 +85,7 @@ export function BookingFlow({
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (submissionLock.current) return;
     if (!service || !slots.includes(slot)) {
       setError("That time is no longer available. Please choose another time.");
       setStep(1);
@@ -100,6 +102,7 @@ export function BookingFlow({
       return;
     }
 
+    submissionLock.current = true;
     setIsSubmitting(true);
     setError("");
 
@@ -150,7 +153,32 @@ export function BookingFlow({
           ],
         };
 
-    // 1. Optimistic update to local store
+    // Do not commit a new local reservation until the API accepts it.
+    if (!booking) {
+      try {
+        await createBookingMutation.mutateAsync({
+          id: next.id,
+          code: next.code,
+          businessId: next.businessId,
+          customerId: next.customerId,
+          serviceId: next.serviceId,
+          staffId: next.staffId,
+          startTime: next.startTime,
+          endTime: next.endTime,
+          status: next.status,
+          notes: next.notes,
+          totalAmount: service.price,
+          requiredAmount: service.deposit,
+        });
+      } catch {
+        setError("We couldn’t save your reservation. Please try again.");
+        submissionLock.current = false;
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // Update the current browser after successful creation.
     update((s) => ({
       ...s,
       customers: existingCustomer
@@ -169,30 +197,15 @@ export function BookingFlow({
         : [...s.bookings, next],
     }));
 
-    // 2. Optimistic sync to backend API
-    createBookingMutation.mutate({
-      id: next.id,
-      code: next.code,
-      businessId: next.businessId,
-      customerId: next.customerId,
-      serviceId: next.serviceId,
-      staffId: next.staffId,
-      startTime: next.startTime,
-      endTime: next.endTime,
-      status: next.status,
-      notes: next.notes,
-      totalAmount: service.price,
-      requiredAmount: service.deposit,
-    });
-
     toast.success(
       booking
         ? "Reservation rescheduled"
-        : "Booking created. Complete payment to confirm."
+        : service.price === 0 ? "Reservation confirmed." : "Booking created. Complete payment to confirm."
     );
 
     setTimeout(() => {
       setResult(next);
+      submissionLock.current = false;
       setIsSubmitting(false);
     }, 200);
   }
@@ -215,7 +228,7 @@ export function BookingFlow({
             ? "Choose a time that works better for you."
             : `Your next appointment at ${state.business.name}.`
       }
-      onClose={onClose}
+      onClose={() => { if (!submissionLock.current) onClose(); }}
     >
       {result ? (
         <div className="pt-5 text-center">

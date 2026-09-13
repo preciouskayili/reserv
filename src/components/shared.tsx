@@ -77,7 +77,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         )}
-        <h1 className="mt-3 text-[30px] font-medium leading-[1.09] tracking-tight text-foreground max-[760px]:text-[30px] max-[560px]:text-[34px]">
+        <h1 className="mt-3 text-[30px] font-medium leading-[1.15] tracking-tight text-foreground max-[560px]:text-[26px]">
           {title}
         </h1>
         {description && (
@@ -107,7 +107,7 @@ export function BookingStatus({ status }: { status: Status }) {
   return (
     <Badge
       variant="secondary"
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-[12px] font-semibold ${
+      className={`status-pill ${
         statusColors[status] || "bg-muted text-muted-foreground"
       }`}
     >

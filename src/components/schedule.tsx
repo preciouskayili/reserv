@@ -4,7 +4,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { DataTable, TableSummary } from "./ui/data-table";
+import { Fragment, useState } from "react";
 import {
   IconArrowRight,
   IconCheck,
@@ -27,7 +28,7 @@ import {
 } from "@/lib/model";
 import {
   Avatar,
-  BookingCard,
+  BookingStatus,
   EmptyState,
   PageHeader,
   ReservationIcon,
@@ -824,8 +825,8 @@ export function BookingsPage({ onNew, onBooking }: Props) {
           </Button>
         }
       />
-      <Card className="overflow-hidden rounded-[22px] border-0 bg-card !gap-0 !py-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 max-[560px]:px-4">
+      <section className="table-panel">
+        <div className="table-toolbar">
           <div className="flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
             {["Upcoming", "Needs attention", "Past", "Cancelled", "All"].map(
               (f) => {
@@ -833,11 +834,8 @@ export function BookingsPage({ onNew, onBooking }: Props) {
                 return (
                   <button
                     key={f}
-                    className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
-                      isActive
-                        ? "bg-muted font-semibold text-foreground"
-                        : "font-medium text-muted-foreground hover:bg-background"
-                    }`}
+                    className="table-filter"
+                    aria-pressed={isActive}
                     onClick={() => setFilter(f)}
                   >
                     {f}
@@ -846,7 +844,7 @@ export function BookingsPage({ onNew, onBooking }: Props) {
               },
             )}
           </div>
-          <div className="relative min-w-[260px]">
+          <div className="table-search">
             <IconSearch
               size={16}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -860,43 +858,38 @@ export function BookingsPage({ onNew, onBooking }: Props) {
             />
           </div>
         </div>
-        {dates.map((d, index) => (
-          <div
-            className={`px-5 py-3 max-[560px]:px-4 ${
-              index > 0 ? "border-t border-border" : ""
-            }`}
-            key={d}
-          >
-            <div className="mb-3 flex items-center justify-between gap-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-                {d === TODAY ? "TODAY · " : ""}
-                {dateLabel(d)}
-              </p>
-              <span className="text-[12px] text-muted-foreground">
-                {bookings.filter((b) => b.startTime.startsWith(d)).length}{" "}
-                reservations
-              </span>
-            </div>
-            <div className="space-y-2">
-              {bookings
-                .filter((b) => b.startTime.startsWith(d))
-                .map((b) => (
-                  <BookingCard
-                    key={b.id}
-                    booking={b}
-                    onClick={() => onBooking(b)}
-                  />
-                ))}
-            </div>
-          </div>
-        ))}
+        <DataTable label="Reservations">
+          <thead><tr><th scope="col">Customer / booking</th><th scope="col">Service</th><th scope="col">Time</th><th scope="col">Specialist</th><th scope="col">Status</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
+          <tbody>
+            {dates.map((d) => (
+              <Fragment key={d}>
+                <tr className="table-group"><th colSpan={6} scope="rowgroup"><span className="font-medium text-foreground">{d === TODAY ? "Today · " : ""}{dateLabel(d)}</span></th></tr>
+                {bookings.filter((b) => b.startTime.startsWith(d)).map((b) => {
+                  const customer = state.customers.find((c) => c.id === b.customerId);
+                  const service = state.services.find((s) => s.id === b.serviceId);
+                  const staff = state.staff.find((s) => s.id === b.staffId);
+                  return <tr key={b.id}>
+                    <td><span className="table-primary">{customer?.name}</span><span className="table-secondary font-mono">{b.code}</span></td>
+                    <td><span className="table-primary">{service?.name}</span><span className="table-secondary">{service ? duration(service.duration) : ""}</span></td>
+                    <td className="whitespace-nowrap tabular-nums">{time(b.startTime)}<span className="table-secondary">until {time(b.endTime)}</span></td>
+                    <td><span className="flex items-center gap-2"><Avatar name={staff?.name ?? "Unassigned"} /><span>{staff?.name ?? "Unassigned"}</span></span></td>
+                    <td><BookingStatus status={b.status} /></td>
+                    <td className="text-right"><button className="table-action" onClick={() => onBooking(b)} aria-label={`View reservation ${b.code}`}>View <IconChevronRight size={15} /></button></td>
+                  </tr>;
+                })}
+              </Fragment>
+            ))}
+          </tbody>
+        </DataTable>
         {!bookings.length && (
           <EmptyState
             title="Nothing here just yet."
             description="Try another filter or search, or make a new reservation."
+            action={query || filter !== "All" ? <Button variant="outline" onClick={() => { setQuery(""); setFilter("All"); }}>Clear filters</Button> : <Button onClick={() => onNew()}>New booking</Button>}
           />
         )}
-      </Card>
+        <TableSummary count={bookings.length} noun="reservation" />
+      </section>
     </>
   );
 }

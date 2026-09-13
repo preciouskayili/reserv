@@ -1,3 +1,7 @@
+import type { Booking } from "./model";
+export type BookingPayload = Pick<Booking, "businessId" | "customerId" | "serviceId" | "staffId" | "startTime" | "endTime"> & Partial<Booking>;
+export interface ApiBooking { id: string; code: string; business_id: string; customer_id: string; service_id: string; staff_id: string; start_time: string; end_time: string; status: Booking["status"]; notes: string; total_amount: number; required_amount: number; created_at: string; }
+export interface BookingsResponse { configured: boolean; bookings: ApiBooking[]; }
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:4100";
 
@@ -5,8 +9,10 @@ export const AUTH_TOKEN_KEY = "reserv_auth_token";
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  const local = localStorage.getItem(AUTH_TOKEN_KEY);
-  if (local) return local;
+  try {
+    const local = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (local) return local;
+  } catch { /* Fall back to the session cookie if storage is unavailable. */ }
 
   const match = document.cookie
     .split("; ")
@@ -16,14 +22,23 @@ export function getStoredToken(): string | null {
 
 export function setStoredToken(token: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
-  document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`;
+  try { localStorage.setItem(AUTH_TOKEN_KEY, token); } catch { /* Cookie fallback. */ }
+  document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
 export function clearStoredToken(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  try { localStorage.removeItem(AUTH_TOKEN_KEY); } catch { /* Still clear the cookie. */ }
+  document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+}
+
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = "ApiError";
+  }
 }
 
 async function request<T>(
@@ -42,13 +57,28 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      signal: options.signal ?? AbortSignal.timeout(15000),
+      headers,
+    });
+  } catch (error) {
+    if (options.signal?.aborted) throw error;
+    throw new ApiError(error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)
+      ? "The request took too long. Please try again."
+      : "We couldn’t reach the server. Check your connection and try again.", 0);
+  }
 
   const isJson = response.headers.get("content-type")?.includes("application/json");
-  const data = isJson ? await response.json() : await response.text();
+  let data;
+  try {
+    data = isJson ? await response.json() : await response.text();
+  } catch {
+    throw new ApiError("The server returned an unreadable response. Please try again.", response.status >= 400 ? response.status : 502);
+  }
+  if (response.ok && !isJson) throw new ApiError("The server returned an unexpected response. Please try again.", 502);
 
   if (!response.ok) {
     const errorMsg =
@@ -59,7 +89,7 @@ async function request<T>(
         ? (data as { error: string }).error
         : null) ||
       response.statusText;
-    throw new Error(errorMsg || `Request failed with status ${response.status}`);
+    throw new ApiError(errorMsg || `Request failed with status ${response.status}`, response.status);
   }
 
   return data as T;
@@ -175,17 +205,17 @@ export const api = {
     list: () =>
       request<{
         configured: boolean;
-        bookings: any[];
+        bookings: ApiBooking[];
       }>("/api/bookings"),
 
     get: (id: string) =>
       request<{
-        booking: any;
+        booking: ApiBooking;
       }>(`/api/bookings/${id}`),
 
-    create: (payload: any) =>
+    create: (payload: BookingPayload) =>
       request<{
-        booking: any;
+        booking: ApiBooking;
       }>("/api/bookings", {
         method: "POST",
         body: JSON.stringify(payload),

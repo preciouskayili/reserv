@@ -14,35 +14,37 @@ export function GoogleLocationCard() {
     : "";
 
   return (
-    <Card className="relative block h-[300px] overflow-hidden rounded-[30px] border-0 bg-muted p-0 max-[560px]:h-[210px] max-[560px]:rounded-[20px]">
-      {key ? (
-        <iframe
-          title={`Google Map of ${state.business.name}`}
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-          src={embedUrl}
-          className="absolute inset-0 h-full w-full border-0"
-        />
-      ) : (
-        <a
-          className="flex h-full w-full flex-col items-center justify-center gap-3 bg-muted px-8 pb-10 text-center text-[13px] font-medium text-foreground"
-          href={directionsUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <IconMapPin size={26} />
-          View this location in Google Maps
-        </a>
-      )}
+    <Card className="block overflow-hidden rounded-[30px] border-0 bg-muted p-0 max-[560px]:rounded-[20px]">
+      <div className="relative h-[300px] max-[560px]:h-[210px]">
+        {key ? (
+          <iframe
+            title={`Google Map of ${state.business.name}`}
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            src={embedUrl}
+            className="absolute inset-0 h-full w-full border-0"
+          />
+        ) : (
+          <a
+            className="flex h-full w-full flex-col items-center justify-center gap-3 bg-muted px-8 py-8 text-center text-[13px] font-medium text-foreground"
+            href={directionsUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <IconMapPin size={26} />
+            View this location in Google Maps
+          </a>
+        )}
+      </div>
       <a
-        className="absolute left-5 top-5 z-10 flex max-w-[calc(100%-40px)] items-center gap-2 rounded-[18px] bg-white px-5 py-4 text-[15px] font-medium text-foreground max-[760px]:text-[12px] max-[560px]:left-2 max-[560px]:right-2 max-[560px]:top-2 max-[560px]:max-w-none max-[560px]:px-3 max-[560px]:py-2.5 max-[560px]:text-[12px]"
+        className="flex min-w-0 items-center gap-3 px-5 py-4 text-[13px] font-medium text-foreground transition hover:bg-accent focus-visible:-outline-offset-4 max-[560px]:px-4 max-[560px]:text-[12px]"
         href={directionsUrl}
         target="_blank"
         rel="noreferrer"
       >
         <IconMapPin size={17} className="shrink-0 text-foreground" />
-        <span className="flex-1 truncate">{address}</span>
+        <span className="min-w-0 flex-1 break-words">{address}</span>
         <IconArrowUpRight size={18} className="shrink-0 text-foreground" />
       </a>
     </Card>

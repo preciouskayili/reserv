@@ -41,6 +41,8 @@ import {
   useCallsQuery,
   useTriggerCallMutation,
 } from "@/hooks/use-api";
+import { DataTable, TableSummary } from "./ui/data-table";
+import { InlineError } from "./feedback";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   type Booking,
@@ -383,7 +385,7 @@ function ServiceEditor({
             {error}
           </p>
         )}
-        <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
+        <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
           <IconCheck size={16} /> {service ? "Save changes" : "Create service"}
           <IconCheck size={17} />
         </Button>
@@ -423,12 +425,12 @@ export function CustomersPage({
           </Button>
         }
       />
-      <Card className="overflow-hidden rounded-[22px] border-0 bg-card !gap-0 !py-0 shadow-[0_20px_50px_-38px_#0000002e,0_4px_18px_-15px_#0000001a]">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 max-[560px]:px-4">
+      <section className="table-panel">
+        <div className="table-toolbar">
           <h2 className="text-[16px] font-semibold text-foreground">
             {state.customers.length} lovely people
           </h2>
-          <div className="relative min-w-[240px]">
+          <div className="table-search">
             <IconSearch
               size={16}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -442,6 +444,9 @@ export function CustomersPage({
             />
           </div>
         </div>
+        <DataTable label="Customers">
+          <thead><tr><th scope="col">Customer</th><th scope="col">Phone number</th><th scope="col" className="table-number">Reservations</th><th scope="col">Visit</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
+          <tbody>
         {customers.map((c) => {
           const bookings = state.bookings.filter((b) => b.customerId === c.id);
           const next = bookings
@@ -455,41 +460,26 @@ export function CustomersPage({
             .filter((b) => b.status === "Completed")
             .sort((a, b) => b.startTime.localeCompare(a.startTime))[0];
           return (
-            <button
-              key={c.id}
-              className="flex w-full items-center gap-4 border-b border-border px-5 py-2.5 text-left transition hover:bg-white last:border-b-0 max-[560px]:gap-2 max-[560px]:px-4"
-              onClick={() => setSelected(c.id)}
-            >
-              <Avatar name={c.name} />
-              <span className="min-w-[170px] flex-1 max-[560px]:min-w-0">
-                <strong className="block text-[12px] font-semibold text-foreground">
-                  {c.name}
-                </strong>
-                <small className="mt-1 block text-[12px] text-muted-foreground">
-                  {c.phone}
-                </small>
-              </span>
-              <span className="w-[145px] text-[12px] text-muted-foreground max-[560px]:w-auto">
-                {bookings.length} reservations
-              </span>
-              <span className="w-[210px] text-[12px] text-muted-foreground max-[760px]:hidden">
-                {next
-                  ? `Next visit: ${new Date(next.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-                  : last
-                    ? `Last visit: ${new Date(last.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-                    : "Let’s plan a first visit"}
-              </span>
-              <IconChevronRight size={18} className="text-muted-foreground" />
-            </button>
+            <tr key={c.id}>
+              <td><span className="flex items-center gap-3"><Avatar name={c.name} /><span className="table-primary">{c.name}</span></span></td>
+              <td><a href={`tel:${c.phone.replaceAll(" ", "")}`} className="whitespace-nowrap text-muted-foreground hover:text-primary">{c.phone}</a></td>
+              <td className="table-number font-medium">{bookings.length}</td>
+              <td>{next || last ? <><span className="table-primary">{new Date((next ?? last).startTime).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span><span className="table-secondary">{next ? "Next visit" : "Last completed visit"}</span></> : <span className="text-muted-foreground">No visits yet</span>}</td>
+              <td className="text-right"><button className="table-action" onClick={() => setSelected(c.id)} aria-label={`View ${c.name}`}>View <IconChevronRight size={15} /></button></td>
+            </tr>
           );
         })}
+          </tbody>
+        </DataTable>
         {!customers.length && (
           <EmptyState
             title="No familiar faces here."
             description="Try another name or phone number."
+            action={query ? <Button variant="outline" onClick={() => setQuery("")}>Clear search</Button> : <Button onClick={() => setAdding(true)}>Add customer</Button>}
           />
         )}
-      </Card>
+        <TableSummary count={customers.length} noun="customer" />
+      </section>
       {customer && (
         <CustomerDetails
           key={customer.id}
@@ -562,7 +552,7 @@ export function CustomersPage({
                 className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
             </label>
-            <Button className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
+            <Button type="submit" className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50">
               Add customer
             </Button>
           </form>
@@ -1084,7 +1074,7 @@ export function AgentPage() {
   const callsQuery = useCallsQuery(50);
   const triggerCallMutation = useTriggerCallMutation();
 
-  const isAethexLive = healthQuery.data?.integrations?.aethex === "connected";
+  const isAethexLive = healthQuery.data?.integrations?.aethex === "configured";
   const isHealthy = healthQuery.isSuccess;
 
   const activities = state.agentActivity.filter(
@@ -1140,6 +1130,8 @@ export function AgentPage() {
           </span>
           {healthQuery.isLoading ? (
             <Skeleton className="h-6 w-32 rounded-full" />
+          ) : healthQuery.isError ? (
+            <InlineError title="Backend unavailable" onRetry={() => void healthQuery.refetch()} busy={healthQuery.isFetching} />
           ) : isAethexLive ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[12px] font-medium text-emerald-800">
               <i className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -1183,7 +1175,7 @@ export function AgentPage() {
                 Connection status
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                {healthQuery.isLoading ? "Checking…" : isHealthy ? "Online & Ready" : "Local Mode"}
+                {healthQuery.isLoading ? "Checking…" : isHealthy ? "Online & Ready" : "Unavailable"}
               </strong>
             </div>
           </div>
@@ -1285,11 +1277,13 @@ export function AgentPage() {
         {tab === "Call logs" ? (
           <div className="mt-4 divide-y divide-border">
             {callsQuery.isLoading ? (
-              <div className="space-y-4 py-4">
+              <div className="space-y-4 py-4" role="status" aria-label="Loading call logs" aria-busy="true">
                 <Skeleton className="h-12 w-full rounded-xl" />
                 <Skeleton className="h-12 w-full rounded-xl" />
                 <Skeleton className="h-12 w-full rounded-xl" />
               </div>
+            ) : callsQuery.isError ? (
+              <InlineError title="Call logs couldn’t load." onRetry={() => void callsQuery.refetch()} busy={callsQuery.isFetching} />
             ) : !callsQuery.data?.length ? (
               <div className="py-8 text-center text-[13px] text-muted-foreground">
                 No voice calls placed yet. Use the &quot;Test Voice AI Call&quot; button above to dispatch your first call.

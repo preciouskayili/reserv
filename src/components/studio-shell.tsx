@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   IconAdjustmentsHorizontal,
   IconArrowUpRight,
@@ -19,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
+import { InlineError, PageLoading } from "./feedback";
 import { Avatar, Brand } from "./shared";
 import { BookingFlow, type BookingPreset } from "./booking-flow";
 
@@ -53,15 +54,23 @@ const navigation = [
 
 export function StudioShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { state } = useStore();
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, sessionError, retrySession, logout } = useAuth();
   const [newBooking, setNewBooking] = useState<BookingPreset | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !sessionError && !isAuthenticated) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+  }, [authLoading, sessionError, isAuthenticated, pathname, router]);
 
   const current = navigation.find(
     (n) =>
       n.path === pathname ||
       (n.path !== "/" && pathname.startsWith(`${n.path}/`)),
   );
+
+  if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Let’s reconnect your workspace." message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
+  if (authLoading || !isAuthenticated) return <PageLoading label="Checking your session…" />;
 
   return (
     <BookingModalContext.Provider
