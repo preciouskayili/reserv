@@ -15,6 +15,7 @@ import {
   IconKey,
   IconMail,
   IconRotateClockwise,
+  IconX,
 } from "@tabler/icons-react";
 
 export function LoginPage() {
@@ -65,7 +66,9 @@ function LoginForm() {
       setStep("code");
       setCountdown(60);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Please try again.");
+      setFormError(
+        error instanceof Error ? error.message : "Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +85,9 @@ function LoginForm() {
       await verifyOtp(email, code);
       router.push(nextTarget);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Please try again.");
+      setFormError(
+        error instanceof Error ? error.message : "Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +103,11 @@ function LoginForm() {
       setDevCode(res.devCode ?? null);
       setCountdown(60);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Could not resend your code. Please try again.");
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Could not resend your code. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -106,32 +115,45 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-[440px]">
-        <div className="mb-8 text-center">
-          <span className="inline-block transition hover:opacity-80">
-            <Brand />
-          </span>
-        </div>
-
-        <div className="overflow-hidden rounded-[28px] border border-border/80 bg-white p-8 shadow-sm transition-all sm:p-10">
+      <div className="w-full max-w-110">
+        {formError && (
+          <div
+            role="alert"
+            className="mb-4 flex items-start justify-between gap-2 rounded-xl bg-danger-surface p-3 text-[13px] text-destructive"
+          >
+            <span className="flex-1 leading-snug">{formError}</span>
+            <button
+              type="button"
+              onClick={() => setFormError("")}
+              className="-mr-1 -mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-destructive/70 transition hover:bg-destructive/10 hover:text-destructive focus:outline-none"
+              aria-label="Close error message"
+            >
+              <IconX size={14} />
+            </button>
+          </div>
+        )}
+        <div className="overflow-hidden rounded-[28px] bg-white p-8 transition-all sm:p-8">
           <div className="mb-6">
-            <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              {step === "email" ? "PASSWORDLESS SIGN IN" : "CHECK YOUR INBOX"}
-            </span>
-            <h1 className="mt-2 text-[26px] font-medium tracking-tight text-foreground">
+            <div className="mb-8">
+              <span className="inline-block transition hover:opacity-80">
+                <Brand />
+              </span>
+            </div>
+            <h1 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
               {step === "email" ? "Welcome back." : "Enter 6-digit code"}
             </h1>
-            <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
+            <p className="text-sm leading-6 text-muted-foreground max-w-xs">
               {step === "email"
                 ? "Enter your email address to receive an verification code."
                 : `We sent a temporary verification code to `}
               {step === "code" && (
-                <strong className="font-semibold text-foreground">{email}</strong>
+                <strong className="font-semibold text-foreground">
+                  {email}
+                </strong>
               )}
             </p>
           </div>
 
-          {formError && <p role="alert" className="mb-4 rounded-xl bg-danger-surface p-3 text-[13px] text-destructive">{formError}</p>}
           {devCode && step === "code" && (
             <div className="mb-6 flex items-center justify-between rounded-xl bg-accent/70 p-3.5 text-[12px]">
               <span className="flex items-center gap-2 text-primary font-medium">
@@ -169,7 +191,7 @@ function LoginForm() {
                     placeholder="you@yourstudio.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 rounded-xl border-border bg-background pl-10 pr-3 text-[14px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+                    className="h-11 rounded-lg border-border bg-background pl-10 pr-3 text-[14px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:ring-1 focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -256,16 +278,14 @@ function LoginForm() {
                   onClick={handleResend}
                   className="font-medium text-primary disabled:text-muted-foreground hover:underline"
                 >
-                  {countdown > 0 ? `Resend code in ${countdown}s` : "Resend code"}
+                  {countdown > 0
+                    ? `Resend code in ${countdown}s`
+                    : "Resend code"}
                 </button>
               </div>
             </form>
           )}
         </div>
-
-        <p className="mt-8 text-center text-[12px] text-muted-foreground">
-          Reserv Studio Edition · Secured by Resend & Supabase
-        </p>
       </div>
     </div>
   );
