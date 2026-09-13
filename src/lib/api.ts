@@ -284,6 +284,12 @@ export const api = {
         body: JSON.stringify(payload),
       }),
 
+    checkSlug: (slug: string) =>
+      request<{
+        available: boolean;
+        suggestedSlug?: string;
+      }>(`/api/workspaces/check-slug?slug=${encodeURIComponent(slug)}`),
+
     getState: (id: string) =>
       request<{
         state: AppState;

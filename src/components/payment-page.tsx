@@ -133,7 +133,7 @@ export function PaymentPage({ code }: { code: string }) {
         <section className="my-10 w-full max-w-lg self-center lg:my-auto lg:py-16">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-white/55">{state.business.name}</p>
           <h1 className="mt-4 text-[30px] font-medium leading-tight tracking-[-0.025em]">A little time,<br />all taken care of.</h1>
-          <div className="mt-9 flex items-center justify-between gap-4"><h2 className="text-[18px] font-medium">{service.name}</h2><span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-[11px] text-white/75">{cancelled ? "Cancelled" : "Payment summary"}</span></div>
+          <div className="mt-9 flex items-center justify-between gap-4"><h2 className="text-[18px] font-medium">{service.name}</h2><span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-[11px] text-white/75">{cancelled ? booking.status : "Payment summary"}</span></div>
           <p className="mt-2 text-[13px] text-white/60">For {customer.name}</p>
           <div className="mt-7 rounded-3xl bg-white/[0.07] p-6 backdrop-blur-sm">
             <dl className="space-y-4 text-[13px]">
@@ -152,7 +152,7 @@ export function PaymentPage({ code }: { code: string }) {
       <section className="flex items-center justify-center px-6 py-10 lg:px-12 lg:py-16 xl:px-20">
         <div className="w-full max-w-[600px]">
           <div className="flex items-center justify-between gap-4"><p className="font-mono text-[11px] font-medium tracking-[0.08em] text-muted-foreground">BOOKING {booking.code}</p><span className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">{cancelled ? booking.status : preview === "paid" ? "Confirmed" : preview === "adjusted" ? "Needs attention" : preview === "review" ? "Under review" : "Awaiting payment"}</span></div>
-          <h2 className="mt-4 text-[28px] font-semibold tracking-[-0.025em] text-foreground">{cancelled ? "This booking was cancelled." : "Complete your payment"}</h2>
+          <h2 className="mt-4 text-[28px] font-semibold tracking-[-0.025em] text-foreground">{cancelled ? booking.status === "Completed" ? "This booking is complete." : "This booking was cancelled." : "Complete your payment"}</h2>
           <p className="mt-2 text-[13px] leading-6 text-muted-foreground">{cancelled ? "No payment can be made for this reservation." : "Your booking details, payment options, and everything in between."}</p>
           <h3 className="mb-3 mt-8 text-[13px] font-semibold">Booking details</h3>
           <dl className="rounded-2xl bg-muted/70 px-5"><Detail label="Customer">{customer.name}</Detail><Detail label="Service">{service.name} · {duration(service.duration)}</Detail><Detail label="Service total">{money(summary.total)}</Detail></dl>

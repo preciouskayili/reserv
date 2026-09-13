@@ -37,7 +37,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
   });
   const current = attempt ?? config.data?.current ?? null;
   const active = current?.status === "initializing" || current?.status === "pending";
-  const selected = active ? current.provider : method;
+  const selected = active ? current.provider : method !== "transfer" && config.data && !config.data.providers.find(p => p.id === method)?.enabled ? config.data.providers.find(p => p.enabled)?.id ?? "transfer" : method;
   const enabled = config.data?.providers.find(p => p.id === selected)?.enabled ?? false;
   useEffect(() => { onLock(Boolean(active) || busy || config.isPending); }, [active, busy, config.isPending, onLock]);
   useEffect(() => {
@@ -48,7 +48,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
     async function confirm() {
       lock.current = true; setBusy(true); setError(""); setNotice("Checking your payment securely…");
       try {
-        const result = await request<Result>(`/api/payments/reservation/${code}/verify`, { method: "POST", body: JSON.stringify({ checkoutId }), signal: controller.signal });
+        const result = await request<Result>(`/api/payments/reservation/${code}/verify`, { method: "POST", body: JSON.stringify({ checkoutId }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) });
         if (!alive) return;
         setAttempt(result.attempt); snapshotCallback.current(result.snapshot);
         setNotice(result.attempt.status === "succeeded" ? (result.attempt.needsReview ? "Payment received. Contact the studio to review this reservation." : "Payment verified.") : result.attempt.status === "expired" ? "This checkout expired without a completed payment. You can start again." : "Your payment is not confirmed yet. Check its status before trying again.");
