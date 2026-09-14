@@ -6,12 +6,12 @@ import {
   IconArrowUpRight,
   IconCheck,
   IconFileInvoice,
-  IconLoader2,
   IconSearch,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import { useWorkspaceSave } from "@/hooks/use-workspace-save";
 import { money, type Payment } from "@/lib/model";
 import { paymentSummary, reviewPayment } from "@/lib/payments";
 import { readReceipt } from "@/lib/receipts";
@@ -43,48 +43,49 @@ function ReceiptPreview({ payment, onReady }: { payment: Payment; onReady: (read
 }
 
 function PaymentReview({ payment, close }: { payment: Payment; close: () => void }) {
-  const { state, update } = useStore();
+  const { state, update, isSaving: isSubmitting, canDismiss } = useWorkspaceSave();
   const [reason, setReason] = useState("");
+  const [decisionPending, setDecisionPending] = useState<"approved" | "rejected" | null>(null);
   const [ready, setReady] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const booking = state.bookings.find(b => b.id === payment.bookingId)!;
   const current = state.payments?.find(p => p.id === payment.id);
   const canReview = current?.status === "review";
 
   async function decide(decision: "approved" | "rejected") {
-    if (!canReview || isSubmitting || (decision === "rejected" && !reason.trim())) return;
-    setIsSubmitting(true);
+    if (!canReview || !canDismiss() || (decision === "rejected" && !reason.trim())) return;
+    setDecisionPending(decision);
     const saved = await update(s => reviewPayment(s, payment.id, decision, reason));
-    if (!saved) { setIsSubmitting(false); return; }
+    if (!saved) return;
     toast.success(
       decision === "approved"
         ? "Payment approved. Booking confirmed."
         : "Receipt rejected. Customer can submit another."
     );
-    setTimeout(() => {
-      setIsSubmitting(false);
-      close();
-    }, 250);
+    close();
   }
 
-  return <Modal title="Review transfer receipt" description={`Booking ${booking.code} · ${money(payment.amount)}`} onClose={close}>
+  return <Modal title="Review transfer receipt" description={`Booking ${booking.code} · ${money(payment.amount)}`} busy={isSubmitting} onClose={() => { if (canDismiss()) close(); }}>
     <ReceiptPreview payment={payment} onReady={setReady} />
-    <label className="mt-4 block text-[12px] font-medium">Reason if rejecting<Textarea className="mt-2 border-0 bg-muted" value={reason} onChange={e => setReason(e.target.value)} placeholder="Tell the customer what needs correcting" maxLength={500} /></label>
+    <label className="mt-4 block text-[12px] font-medium">Reason if rejecting<Textarea disabled={isSubmitting} className="mt-2 border-0 bg-muted" value={reason} onChange={e => setReason(e.target.value)} placeholder="Tell the customer what needs correcting" maxLength={500} /></label>
     {["Cancelled", "Completed"].includes(booking.status) && <p className="text-[12px] text-destructive">This booking is {booking.status.toLowerCase()}. Its receipt cannot be approved.</p>}
     <div className="mt-4 flex flex-wrap justify-end gap-2">
       <Button
         variant="destructive"
+        loading={isSubmitting && decisionPending === "rejected"}
+        loadingText="Rejecting…"
         disabled={!canReview || !reason.trim() || isSubmitting}
         onClick={() => decide("rejected")}
       >
-        {isSubmitting ? <IconLoader2 size={16} className="animate-spin" /> : <IconX size={16} />}
+        <IconX size={16} />
         Reject receipt
       </Button>
       <Button
+        loading={isSubmitting && decisionPending === "approved"}
+        loadingText="Approving…"
         disabled={!canReview || !ready || isSubmitting || ["Cancelled", "Completed"].includes(booking.status)}
         onClick={() => decide("approved")}
       >
-        {isSubmitting ? <IconLoader2 size={16} className="animate-spin" /> : <IconCheck size={16} />}
+        <IconCheck size={16} />
         Approve & confirm
       </Button>
     </div>

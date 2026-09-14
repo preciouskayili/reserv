@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import {
@@ -35,6 +35,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useWorkspaceSave } from "@/hooks/use-workspace-save";
 import { useStore } from "@/lib/store";
 import {
   useBackendHealthQuery,
@@ -63,10 +64,11 @@ import {
 import type { BookingPreset } from "./booking-flow";
 
 export function ServicesPage() {
-  const { state, update } = useStore();
+  const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [editing, setEditing] = useState<Service | "new" | null>(null);
   const [deleting, setDeleting] = useState<Service | null>(null);
   const [filter, setFilter] = useState("All services");
+  const [savingServiceId, setSavingServiceId] = useState<string | null>(null);
   return (
     <>
       <PageHeader
@@ -76,6 +78,7 @@ export function ServicesPage() {
         action={
           <Button
             className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+            disabled={isSaving}
             onClick={() => setEditing("new")}
           >
             <IconPlus size={18} />
@@ -120,6 +123,7 @@ export function ServicesPage() {
                   size="icon-sm"
                   className="shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label={`Edit ${s.name}`}
+                  disabled={isSaving}
                   onClick={() => setEditing(s)}
                 >
                   <IconEdit size={17} />
@@ -129,15 +133,19 @@ export function ServicesPage() {
                 <div className="flex min-h-8 items-center justify-between gap-3">
                   <label className="flex cursor-pointer items-center gap-2.5 text-[12px] font-medium text-muted-foreground">
                     <Switch
+                      disabled={isSaving}
                       checked={s.active}
                       aria-label={`Show ${s.name} on booking page`}
                       onCheckedChange={async (active) => {
+                        if (!canDismiss()) return;
+                        setSavingServiceId(s.id);
                         const saved = await update((st) => ({
                           ...st,
                           services: st.services.map((x) =>
                             x.id === s.id ? { ...x, active } : x,
                           ),
                         }));
+                        setSavingServiceId(null);
                         if (saved) toast.success(
                           active
                             ? "Service is available to book"
@@ -145,13 +153,14 @@ export function ServicesPage() {
                         );
                       }}
                     />
-                    {s.active ? "Visible online" : "Hidden online"}
+                    {isSaving && savingServiceId === s.id ? <span role="status" className="inline-flex items-center gap-2"><IconLoader2 size={13} aria-hidden="true" className="animate-spin" />Saving…</span> : s.active ? "Visible online" : "Hidden online"}
                   </label>
                   <Button
                     variant="ghost"
                     size="icon-sm"
                     className="shrink-0 rounded-lg text-muted-foreground hover:bg-danger-surface hover:text-destructive"
                     aria-label={`Delete ${s.name}`}
+                    disabled={isSaving}
                     onClick={() => setDeleting(s)}
                   >
                     <IconTrash size={16} />
@@ -172,7 +181,8 @@ export function ServicesPage() {
         <Modal
           title="Remove this service?"
           description={deleting.name}
-          onClose={() => setDeleting(null)}
+          busy={isSaving}
+          onClose={() => { if (canDismiss()) setDeleting(null); }}
         >
           {state.bookings.some((b) => b.serviceId === deleting.id) ? (
             <>
@@ -182,6 +192,8 @@ export function ServicesPage() {
               </p>
               <Button
                 className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                loading={isSaving}
+                loadingText="Saving…"
                 onClick={async () => {
                   const saved = await update((s) => ({
                     ...s,
@@ -207,6 +219,8 @@ export function ServicesPage() {
               <Button
                 variant="destructive"
                 className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-50"
+                loading={isSaving}
+                loadingText="Saving…"
                 onClick={async () => {
                   const saved = await update((s) => ({
                     ...s,
@@ -234,7 +248,7 @@ function ServiceEditor({
   service?: Service;
   onClose: () => void;
 }) {
-  const { state, update } = useStore();
+  const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [draft, setDraft] = useState<Service>(
     service || {
       id: "",
@@ -257,7 +271,8 @@ function ServiceEditor({
           ? "Edit your service details."
           : "Create a service your customers can reserve."
       }
-      onClose={onClose}
+      busy={isSaving}
+      onClose={() => { if (canDismiss()) onClose(); }}
     >
       <form
         className="mt-6 space-y-4"
@@ -287,115 +302,119 @@ function ServiceEditor({
           onClose();
         }}
       >
-        <label className="block text-[12px] font-semibold text-foreground">
-          Service name
-          <Input
-            required
-            value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            placeholder="e.g. Silk press"
-            className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-          />
-        </label>
-        <label className="block text-[12px] font-semibold text-foreground">
-          Description
-          <Textarea
-            required
-            rows={3}
-            value={draft.description}
-            onChange={(e) =>
-              setDraft({ ...draft, description: e.target.value })
-            }
-            placeholder="Tell customers what makes this service special…"
-            className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-          />
-        </label>
-        <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
+        <fieldset disabled={isSaving} className="contents space-y-4">
           <label className="block text-[12px] font-semibold text-foreground">
-            Duration (minutes)
+            Service name
             <Input
-              type="number"
-              min={15}
-              max={600}
-              step={15}
               required
-              value={draft.duration}
-              onChange={(e) =>
-                setDraft({ ...draft, duration: Number(e.target.value) })
-              }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder="e.g. Silk press"
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
           <label className="block text-[12px] font-semibold text-foreground">
-            Price (₦)
-            <Input
-              type="number"
-              min={0}
+            Description
+            <Textarea
               required
-              value={draft.price}
+              rows={3}
+              value={draft.description}
               onChange={(e) =>
-                setDraft({ ...draft, price: Number(e.target.value) })
+                setDraft({ ...draft, description: e.target.value })
               }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              placeholder="Tell customers what makes this service special…"
+              className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
             />
           </label>
-          <label className="block text-[12px] font-semibold text-foreground">
-            Deposit (₦)
-            <Input
-              type="number"
-              min={0}
-              max={draft.price}
-              required
-              value={draft.deposit}
-              onChange={(e) =>
-                setDraft({ ...draft, deposit: Number(e.target.value) })
-              }
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-            />
-          </label>
-        </div>
-        <p className="mb-2 block text-[12px] font-semibold text-foreground">
-          Who offers this service?
-        </p>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {state.staff.map((s) => (
-            <label
-              key={s.id}
-              className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-[12px] text-foreground transition hover:border-border"
-            >
-              <input
-                type="checkbox"
-                className="accent-[#666666]"
-                checked={draft.staffIds.includes(s.id)}
+          <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
+            <label className="block text-[12px] font-semibold text-foreground">
+              Duration (minutes)
+              <Input
+                type="number"
+                min={15}
+                max={600}
+                step={15}
+                required
+                value={draft.duration}
                 onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    staffIds: e.target.checked
-                      ? [...draft.staffIds, s.id]
-                      : draft.staffIds.filter((id) => id !== s.id),
-                  })
+                  setDraft({ ...draft, duration: Number(e.target.value) })
                 }
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
               />
-              <Avatar name={s.name} />
-              {s.name}
             </label>
-          ))}
-        </div>
-        {error && (
-          <p
-            className="mt-3 text-[12px] font-medium text-[#af625b]"
-            role="alert"
-          >
-            {error}
+            <label className="block text-[12px] font-semibold text-foreground">
+              Price (₦)
+              <Input
+                type="number"
+                min={0}
+                required
+                value={draft.price}
+                onChange={(e) =>
+                  setDraft({ ...draft, price: Number(e.target.value) })
+                }
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              />
+            </label>
+            <label className="block text-[12px] font-semibold text-foreground">
+              Deposit (₦)
+              <Input
+                type="number"
+                min={0}
+                max={draft.price}
+                required
+                value={draft.deposit}
+                onChange={(e) =>
+                  setDraft({ ...draft, deposit: Number(e.target.value) })
+                }
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              />
+            </label>
+          </div>
+          <p className="mb-2 block text-[12px] font-semibold text-foreground">
+            Who offers this service?
           </p>
-        )}
-        <Button
-          type="submit"
-          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
-        >
-          {service ? "Save changes" : "Create service"}
-          <IconCheck size={17} />
-        </Button>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {state.staff.map((s) => (
+              <label
+                key={s.id}
+                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-[12px] text-foreground transition hover:border-border"
+              >
+                <input
+                  type="checkbox"
+                  className="accent-[#666666]"
+                  checked={draft.staffIds.includes(s.id)}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      staffIds: e.target.checked
+                        ? [...draft.staffIds, s.id]
+                        : draft.staffIds.filter((id) => id !== s.id),
+                    })
+                  }
+                />
+                <Avatar name={s.name} />
+                {s.name}
+              </label>
+            ))}
+          </div>
+          {error && (
+            <p
+              className="mt-3 text-[12px] font-medium text-[#af625b]"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+          <Button
+            loading={isSaving}
+            loadingText="Saving…"
+            type="submit"
+            className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {service ? "Save changes" : "Create service"}
+            <IconCheck size={17} />
+          </Button>
+        </fieldset>
       </form>
     </Modal>
   );
@@ -408,7 +427,7 @@ export function CustomersPage({
   onBooking: (b: Booking) => void;
   onNew: (p?: BookingPreset) => void;
 }) {
-  const { state, update } = useStore();
+  const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -571,7 +590,8 @@ export function CustomersPage({
         <Modal
           title="A new face at the studio."
           description="Keep their details for a future visit."
-          onClose={() => setAdding(false)}
+          busy={isSaving}
+          onClose={() => { if (canDismiss()) setAdding(false); }}
         >
           <form
             className="mt-6 space-y-4"
@@ -605,32 +625,36 @@ export function CustomersPage({
               toast.success("Customer added");
             }}
           >
-            <label className="block text-[12px] font-semibold text-foreground">
-              Full name
-              <Input
-                name="name"
-                required
-                minLength={2}
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-              />
-            </label>
-            <label className="block text-[12px] font-semibold text-foreground">
-              Phone number
-              <Input
-                name="phone"
-                type="tel"
-                required
-                pattern="[+0-9 ()-]{10,20}"
-                placeholder="+234 800 000 0000"
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-              />
-            </label>
-            <Button
-              type="submit"
-              className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
-            >
-              Add customer
-            </Button>
+            <fieldset disabled={isSaving} className="contents space-y-4">
+              <label className="block text-[12px] font-semibold text-foreground">
+                Full name
+                <Input
+                  name="name"
+                  required
+                  minLength={2}
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                />
+              </label>
+              <label className="block text-[12px] font-semibold text-foreground">
+                Phone number
+                <Input
+                  name="phone"
+                  type="tel"
+                  required
+                  pattern="[+0-9 ()-]{10,20}"
+                  placeholder="+234 800 000 0000"
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                />
+              </label>
+              <Button
+                loading={isSaving}
+                loadingText="Saving…"
+                type="submit"
+                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+              >
+                Add customer
+              </Button>
+            </fieldset>
           </form>
         </Modal>
       )}
@@ -649,7 +673,7 @@ function CustomerDetails({
   onBooking: (b: Booking) => void;
   onNew: () => void;
 }) {
-  const { state, update } = useStore();
+  const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [notes, setNotes] = useState(customer.notes);
   const bookings = state.bookings
     .filter((b) => b.customerId === customer.id)
@@ -659,7 +683,8 @@ function CustomerDetails({
       wide
       title={customer.name}
       description={customer.phone}
-      onClose={onClose}
+      busy={isSaving}
+      onClose={() => { if (canDismiss()) onClose(); }}
     >
       <div className="my-6 flex gap-2">
         <a
@@ -671,6 +696,7 @@ function CustomerDetails({
         </a>
         <Button
           className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+          disabled={isSaving}
           onClick={onNew}
         >
           <IconPlus size={16} />
@@ -681,6 +707,7 @@ function CustomerDetails({
         A little something to remember
         <Textarea
           rows={3}
+          disabled={isSaving}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
@@ -690,6 +717,8 @@ function CustomerDetails({
         variant="secondary"
         size="sm"
         className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
+        loading={isSaving}
+        loadingText="Saving…"
         onClick={async () => {
           const saved = await update((s) => ({
             ...s,
@@ -724,7 +753,7 @@ function CustomerDetails({
 }
 
 export function BusinessProfilePage() {
-  const { state, update } = useStore();
+  const { state, update, isSaving } = useWorkspaceSave();
   const [draft, setDraft] = useState(state.business);
   const [tab, setTab] = useState("The essentials");
   async function save(e: FormEvent) {
@@ -797,341 +826,345 @@ export function BusinessProfilePage() {
           className="rounded-[21px] bg-card p-8 shadow-none"
           onSubmit={save}
         >
-          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            MAKE A GOOD FIRST IMPRESSION
-          </p>
-          <h2 className="mb-6 mt-2 text-[27px] font-semibold tracking-tight text-foreground">
-            {tab}
-          </h2>
-          {tab === "The essentials" && (
-            <>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                Business name
-                <Input
-                  required
-                  value={draft.name}
-                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                />
-              </label>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                A little about your studio
-                <Textarea
-                  required
-                  rows={5}
-                  value={draft.description}
-                  onChange={(e) =>
-                    setDraft({ ...draft, description: e.target.value })
-                  }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+          <fieldset disabled={isSaving} className="contents">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              MAKE A GOOD FIRST IMPRESSION
+            </p>
+            <h2 className="mb-6 mt-2 text-[27px] font-semibold tracking-tight text-foreground">
+              {tab}
+            </h2>
+            {tab === "The essentials" && (
+              <>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                  Category
-                  <Select
-                    value={draft.category}
-                    onValueChange={(value) =>
-                      value && setDraft({ ...draft, category: value })
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label="Business category"
-                      className="mt-2 h-10 w-full border-0 bg-muted"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent alignItemWithTrigger={false}>
-                      {[
-                        "Hair & beauty",
-                        "Barber",
-                        "Nail studio",
-                        "Spa & wellness",
-                        "Photography",
-                        "Tutoring",
-                        "Consulting",
-                        "Cleaning",
-                        "Repairs",
-                      ].map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-                <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                  Business phone
+                  Business name
                   <Input
                     required
-                    type="tel"
-                    value={draft.phone}
-                    onChange={(e) =>
-                      setDraft({ ...draft, phone: e.target.value })
-                    }
+                    value={draft.name}
+                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                     className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
-              </div>
-              <div className="mb-4">
-                <label className="mb-2 block text-[12px] font-semibold text-foreground">
-                  Your location & map pin
-                </label>
-                <LocationPicker
-                  value={draft.address}
-                  onChange={(address) =>
-                    setDraft({ ...draft, address })
-                  }
-                  placeholder="Search address or click on the map"
-                />
-              </div>
-              <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
-                <IconFlower size={18} />
-                Your public page: /b/{state.business.slug}
-              </div>
-            </>
-          )}
-          {tab === "Opening hours" && (
-            <>
-              <p className="text-[12px] text-muted-foreground">
-                A time for work, and a time for yourself. All times are in WAT.
-              </p>
-              <div className="mt-5 divide-y divide-[#f0f0f0]">
-                {draft.hours.map((h, i) => (
-                  <div
-                    key={h.day}
-                    className="grid grid-cols-[1fr_110px_24px_110px] items-center gap-2 py-3 max-[560px]:grid-cols-[1fr_90px_15px_90px]"
-                  >
-                    <label className="flex cursor-pointer items-center gap-2 text-[12px] text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        className="accent-[#646464]"
-                        checked={!h.closed}
-                        onChange={(e) =>
-                          setDraft({
-                            ...draft,
-                            hours: draft.hours.map((x, j) =>
-                              i === j ? { ...x, closed: !e.target.checked } : x,
-                            ),
-                          })
-                        }
-                      />
-                      {h.day}
-                    </label>
-                    {h.closed ? (
-                      <span className="col-span-3 text-[12px] text-muted-foreground">
-                        Closed
-                      </span>
-                    ) : (
-                      <>
-                        <Input
-                          aria-label={`${h.day} opening time`}
-                          type="time"
-                          required
-                          value={h.open}
-                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              hours: draft.hours.map((x, j) =>
-                                i === j ? { ...x, open: e.target.value } : x,
-                              ),
-                            })
-                          }
-                        />
-                        <span className="text-center text-[12px] text-muted-foreground">
-                          to
-                        </span>
-                        <Input
-                          aria-label={`${h.day} closing time`}
-                          type="time"
-                          required
-                          value={h.close}
-                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              hours: draft.hours.map((x, j) =>
-                                i === j ? { ...x, close: e.target.value } : x,
-                              ),
-                            })
-                          }
-                        />
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          {tab === "Booking & policies" && (
-            <>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                Booking policy
-                <Textarea
-                  required
-                  rows={3}
-                  value={draft.bookingPolicy}
-                  onChange={(e) =>
-                    setDraft({ ...draft, bookingPolicy: e.target.value })
-                  }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                />
-              </label>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                Cancellation policy
-                <Textarea
-                  required
-                  rows={3}
-                  value={draft.cancellationPolicy}
-                  onChange={(e) =>
-                    setDraft({ ...draft, cancellationPolicy: e.target.value })
-                  }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                />
-              </label>
-              <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                Deposit policy
-                <Textarea
-                  rows={3}
-                  value={draft.depositPolicy}
-                  onChange={(e) =>
-                    setDraft({ ...draft, depositPolicy: e.target.value })
-                  }
-                  className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                  Minimum notice (minutes)
-                  <Input
-                    type="number"
-                    min={0}
-                    max={10080}
-                    value={draft.rules.minNoticeMinutes}
+                  A little about your studio
+                  <Textarea
+                    required
+                    rows={5}
+                    value={draft.description}
                     onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        rules: {
-                          ...draft.rules,
-                          minNoticeMinutes: Number(e.target.value),
-                        },
-                      })
+                      setDraft({ ...draft, description: e.target.value })
                     }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                   />
                 </label>
-                <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                  Book ahead (days)
-                  <Input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={draft.rules.maxAdvanceDays}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        rules: {
-                          ...draft.rules,
-                          maxAdvanceDays: Number(e.target.value),
-                        },
-                      })
-                    }
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
-                  />
-                </label>
-              </div>
-            </>
-          )}
-          {tab === "Questions & answers" && (
-            <>
-              {draft.faqs.map((faq, i) => (
-                <div
-                  className="mb-4 rounded-xl border border-border p-4"
-                  key={i}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-                      QUESTION {i + 1}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      type="button"
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
-                      aria-label={`Remove question ${i + 1}`}
-                      onClick={() =>
-                        setDraft({
-                          ...draft,
-                          faqs: draft.faqs.filter((_, j) => i !== j),
-                        })
+                <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+                  <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                    Category
+                    <Select
+                      value={draft.category}
+                      onValueChange={(value) =>
+                        value && setDraft({ ...draft, category: value })
                       }
                     >
-                      <IconX size={16} />
-                    </Button>
-                  </div>
+                      <SelectTrigger
+                        aria-label="Business category"
+                        className="mt-2 h-10 w-full border-0 bg-muted"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent alignItemWithTrigger={false}>
+                        {[
+                          "Hair & beauty",
+                          "Barber",
+                          "Nail studio",
+                          "Spa & wellness",
+                          "Photography",
+                          "Tutoring",
+                          "Consulting",
+                          "Cleaning",
+                          "Repairs",
+                        ].map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
                   <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                    Question
+                    Business phone
                     <Input
                       required
-                      value={faq.question}
+                      type="tel"
+                      value={draft.phone}
                       onChange={(e) =>
-                        setDraft({
-                          ...draft,
-                          faqs: draft.faqs.map((f, j) =>
-                            i === j ? { ...f, question: e.target.value } : f,
-                          ),
-                        })
+                        setDraft({ ...draft, phone: e.target.value })
                       }
                       className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
+                </div>
+                <div className="mb-4">
+                  <label className="mb-2 block text-[12px] font-semibold text-foreground">
+                    Your location & map pin
+                  </label>
+                  <LocationPicker
+                    value={draft.address}
+                    onChange={(address) =>
+                      setDraft({ ...draft, address })
+                    }
+                    placeholder="Search address or click on the map"
+                  />
+                </div>
+                <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
+                  <IconFlower size={18} />
+                  Your public page: /b/{state.business.slug}
+                </div>
+              </>
+            )}
+            {tab === "Opening hours" && (
+              <>
+                <p className="text-[12px] text-muted-foreground">
+                  A time for work, and a time for yourself. All times are in WAT.
+                </p>
+                <div className="mt-5 divide-y divide-[#f0f0f0]">
+                  {draft.hours.map((h, i) => (
+                    <div
+                      key={h.day}
+                      className="grid grid-cols-[1fr_110px_24px_110px] items-center gap-2 py-3 max-[560px]:grid-cols-[1fr_90px_15px_90px]"
+                    >
+                      <label className="flex cursor-pointer items-center gap-2 text-[12px] text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          className="accent-[#646464]"
+                          checked={!h.closed}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              hours: draft.hours.map((x, j) =>
+                                i === j ? { ...x, closed: !e.target.checked } : x,
+                              ),
+                            })
+                          }
+                        />
+                        {h.day}
+                      </label>
+                      {h.closed ? (
+                        <span className="col-span-3 text-[12px] text-muted-foreground">
+                          Closed
+                        </span>
+                      ) : (
+                        <>
+                          <Input
+                            aria-label={`${h.day} opening time`}
+                            type="time"
+                            required
+                            value={h.open}
+                            className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                hours: draft.hours.map((x, j) =>
+                                  i === j ? { ...x, open: e.target.value } : x,
+                                ),
+                              })
+                            }
+                          />
+                          <span className="text-center text-[12px] text-muted-foreground">
+                            to
+                          </span>
+                          <Input
+                            aria-label={`${h.day} closing time`}
+                            type="time"
+                            required
+                            value={h.close}
+                            className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                hours: draft.hours.map((x, j) =>
+                                  i === j ? { ...x, close: e.target.value } : x,
+                                ),
+                              })
+                            }
+                          />
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            {tab === "Booking & policies" && (
+              <>
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                  Booking policy
+                  <Textarea
+                    required
+                    rows={3}
+                    value={draft.bookingPolicy}
+                    onChange={(e) =>
+                      setDraft({ ...draft, bookingPolicy: e.target.value })
+                    }
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  />
+                </label>
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                  Cancellation policy
+                  <Textarea
+                    required
+                    rows={3}
+                    value={draft.cancellationPolicy}
+                    onChange={(e) =>
+                      setDraft({ ...draft, cancellationPolicy: e.target.value })
+                    }
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  />
+                </label>
+                <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                  Deposit policy
+                  <Textarea
+                    rows={3}
+                    value={draft.depositPolicy}
+                    onChange={(e) =>
+                      setDraft({ ...draft, depositPolicy: e.target.value })
+                    }
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  />
+                </label>
+                <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
                   <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                    Answer
-                    <Textarea
-                      required
-                      rows={3}
-                      value={faq.answer}
+                    Minimum notice (minutes)
+                    <Input
+                      type="number"
+                      min={0}
+                      max={10080}
+                      value={draft.rules.minNoticeMinutes}
                       onChange={(e) =>
                         setDraft({
                           ...draft,
-                          faqs: draft.faqs.map((f, j) =>
-                            i === j ? { ...f, answer: e.target.value } : f,
-                          ),
+                          rules: {
+                            ...draft.rules,
+                            minNoticeMinutes: Number(e.target.value),
+                          },
                         })
                       }
-                      className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    />
+                  </label>
+                  <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                    Book ahead (days)
+                    <Input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={draft.rules.maxAdvanceDays}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          rules: {
+                            ...draft.rules,
+                            maxAdvanceDays: Number(e.target.value),
+                          },
+                        })
+                      }
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
                     />
                   </label>
                 </div>
-              ))}
+              </>
+            )}
+            {tab === "Questions & answers" && (
+              <>
+                {draft.faqs.map((faq, i) => (
+                  <div
+                    className="mb-4 rounded-xl border border-border p-4"
+                    key={i}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                        QUESTION {i + 1}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
+                        aria-label={`Remove question ${i + 1}`}
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            faqs: draft.faqs.filter((_, j) => i !== j),
+                          })
+                        }
+                      >
+                        <IconX size={16} />
+                      </Button>
+                    </div>
+                    <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                      Question
+                      <Input
+                        required
+                        value={faq.question}
+                        onChange={(e) =>
+                          setDraft({
+                            ...draft,
+                            faqs: draft.faqs.map((f, j) =>
+                              i === j ? { ...f, question: e.target.value } : f,
+                            ),
+                          })
+                        }
+                        className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      />
+                    </label>
+                    <label className="mb-4 block text-[12px] font-semibold text-foreground">
+                      Answer
+                      <Textarea
+                        required
+                        rows={3}
+                        value={faq.answer}
+                        onChange={(e) =>
+                          setDraft({
+                            ...draft,
+                            faqs: draft.faqs.map((f, j) =>
+                              i === j ? { ...f, answer: e.target.value } : f,
+                            ),
+                          })
+                        }
+                        className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      />
+                    </label>
+                  </div>
+                ))}
+                <Button
+                  variant="secondary"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+                  type="button"
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      faqs: [...draft.faqs, { question: "", answer: "" }],
+                    })
+                  }
+                >
+                  <IconPlus size={16} />
+                  Add a question
+                </Button>
+              </>
+            )}
+            <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-[12px]">
+              <span className="text-muted-foreground">
+                Changes update your public profile.
+              </span>
               <Button
-                variant="secondary"
-                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-                type="button"
-                onClick={() =>
-                  setDraft({
-                    ...draft,
-                    faqs: [...draft.faqs, { question: "", answer: "" }],
-                  })
-                }
+                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                loading={isSaving}
+                loadingText="Saving…"
+                type="submit"
               >
-                <IconPlus size={16} />
-                Add a question
+                Save changes <IconCheck size={16} />
               </Button>
-            </>
-          )}
-          <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-[12px]">
-            <span className="text-muted-foreground">
-              Changes update your public profile.
-            </span>
-            <Button
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
-              type="submit"
-            >
-              Save changes <IconCheck size={16} />
-            </Button>
-          </div>
+            </div>
+          </fieldset>
         </form>
       </div>
     </>
@@ -1151,6 +1184,7 @@ export function AgentPage() {
 
   const healthQuery = useBackendHealthQuery();
   const callsQuery = useCallsQuery(50);
+  const callLock = useRef(false);
   const triggerCallMutation = useTriggerCallMutation();
 
   const isAethexLive = healthQuery.data?.integrations?.aethex === "configured";
@@ -1171,6 +1205,8 @@ export function AgentPage() {
       return;
     }
 
+    if (callLock.current) return;
+    callLock.current = true;
     try {
       await triggerCallMutation.mutateAsync({
         toNumber: testPhone.trim(),
@@ -1183,6 +1219,8 @@ export function AgentPage() {
       setTestModalOpen(false);
     } catch {
       // Handled in mutation hook
+    } finally {
+      callLock.current = false;
     }
   };
 
@@ -1474,93 +1512,99 @@ export function AgentPage() {
         <Modal
           title="Test Voice AI Call"
           description="Place an outbound test call powered by Aethex Voice AI."
-          onClose={() => setTestModalOpen(false)}
+          busy={triggerCallMutation.isPending}
+          onClose={() => { if (!callLock.current) setTestModalOpen(false); }}
         >
           <form onSubmit={handleTestCall} className="space-y-4">
-            <div>
-              <label className="block text-[12px] font-medium text-foreground">
-                Destination phone number (E.164 format)
-              </label>
-              <Input
-                type="tel"
-                required
-                value={testPhone}
-                onChange={(e) => setTestPhone(e.target.value)}
-                placeholder="+234 800 123 4567 or +14155552671"
-                className="mt-1.5 h-10 bg-muted"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            <fieldset disabled={triggerCallMutation.isPending} className="contents space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-foreground">
-                  Customer name
+                  Destination phone number (E.164 format)
                 </label>
                 <Input
-                  value={testName}
-                  onChange={(e) => setTestName(e.target.value)}
-                  placeholder="e.g. Jane Doe"
+                  type="tel"
+                  required
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value)}
+                  placeholder="+234 800 123 4567 or +14155552671"
                   className="mt-1.5 h-10 bg-muted"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-medium text-foreground">
+                    Customer name
+                  </label>
+                  <Input
+                    value={testName}
+                    onChange={(e) => setTestName(e.target.value)}
+                    placeholder="e.g. Jane Doe"
+                    className="mt-1.5 h-10 bg-muted"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-foreground">
+                    Service name
+                  </label>
+                  <Input
+                    value={testService}
+                    onChange={(e) => setTestService(e.target.value)}
+                    placeholder="e.g. Signature Cut"
+                    className="mt-1.5 h-10 bg-muted"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="block text-[12px] font-medium text-foreground">
-                  Service name
+                  Call type
                 </label>
-                <Input
-                  value={testService}
-                  onChange={(e) => setTestService(e.target.value)}
-                  placeholder="e.g. Signature Cut"
-                  className="mt-1.5 h-10 bg-muted"
-                />
+                <div className="mt-1.5 flex gap-2">
+                  {(["reminder", "confirmation"] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setTestCallType(type)}
+                      className={`flex-1 rounded-xl py-2 text-[12px] font-medium capitalize transition ${
+                        testCallType === type
+                          ? "bg-primary text-white"
+                          : "bg-muted text-muted-foreground hover:bg-background"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="block text-[12px] font-medium text-foreground">
-                Call type
-              </label>
-              <div className="mt-1.5 flex gap-2">
-                {(["reminder", "confirmation"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setTestCallType(type)}
-                    className={`flex-1 rounded-xl py-2 text-[12px] font-medium capitalize transition ${
-                      testCallType === type
-                        ? "bg-primary text-white"
-                        : "bg-muted text-muted-foreground hover:bg-background"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
+              <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={triggerCallMutation.isPending}
+                  onClick={() => { if (!callLock.current) setTestModalOpen(false); }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  loading={triggerCallMutation.isPending}
+                  loadingText="Calling…"
+                  type="submit"
+                  disabled={triggerCallMutation.isPending}
+                  className="gap-2 bg-primary text-white"
+                >
+                  {triggerCallMutation.isPending ? (
+                    <>
+                      <IconLoader2 size={16} className="animate-spin" />
+                      <span>Placing call…</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconPhone size={16} />
+                      <span>Place Voice AI Call</span>
+                    </>
+                  )}
+                </Button>
               </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setTestModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={triggerCallMutation.isPending}
-                className="gap-2 bg-primary text-white"
-              >
-                {triggerCallMutation.isPending ? (
-                  <>
-                    <IconLoader2 size={16} className="animate-spin" />
-                    <span>Placing call…</span>
-                  </>
-                ) : (
-                  <>
-                    <IconPhone size={16} />
-                    <span>Place Voice AI Call</span>
-                  </>
-                )}
-              </Button>
-            </div>
+            </fieldset>
           </form>
         </Modal>
       )}

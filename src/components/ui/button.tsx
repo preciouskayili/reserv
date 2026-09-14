@@ -1,3 +1,4 @@
+import { IconLoader2 } from "@tabler/icons-react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
@@ -43,14 +44,23 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  loading = false,
+  loadingText,
+  disabled,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: { loading?: boolean; loadingText?: string } & ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className }), loading && "[&>svg:not([data-slot=button-spinner])]:hidden")}
       {...props}
-    />
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+    >
+      {loading && <IconLoader2 data-slot="button-spinner" aria-hidden="true" className="animate-spin" />}
+      {loading && loadingText ? loadingText : children}
+    </ButtonPrimitive>
   )
 }
 

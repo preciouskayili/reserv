@@ -12,8 +12,8 @@ import { Skeleton } from "./ui/skeleton";
 type Provider = "paystack" | "stripe";
 type Attempt = { id: string; provider: Provider; choice: "deposit" | "full"; amount: number; status: "initializing" | "pending" | "succeeded" | "expired"; url: string | null; needsReview: boolean };
 type Result = { attempt: Attempt; snapshot: Snapshot };
-export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, children }: {
-  code: string; choice: "deposit" | "full"; amount: number; onSnapshot: (snapshot: Snapshot) => void; onLock: (locked: boolean) => void; children: ReactNode;
+export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, children, externalBusy = false }: {
+  code: string; choice: "deposit" | "full"; amount: number; onSnapshot: (snapshot: Snapshot) => void; onLock: (locked: boolean) => void; children: ReactNode; externalBusy?: boolean;
 }) {
   const [method, setMethod] = useState<Provider | "transfer">("paystack");
   const [email, setEmail] = useState("");
@@ -59,7 +59,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
     return () => { alive = false; controller.abort(); lock.current = false; };
   }, [code]);
   async function verify() {
-    if (lock.current || !current) return;
+    if (externalBusy || lock.current || !current) return;
     lock.current = true; setBusy(true); setError("");
     try {
       const result = await request<Result>(`/api/payments/reservation/${code}/verify`, { method: "POST", body: JSON.stringify({ checkoutId: current.id }) });
@@ -71,7 +71,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
   }
   async function begin(event: React.FormEvent) {
     event.preventDefault();
-    if (lock.current || selected === "transfer" || !enabled) return;
+    if (externalBusy || lock.current || selected === "transfer" || !enabled) return;
     lock.current = true; setBusy(true); setError("");
     try {
       if (active && current.url) { navigate(current); return; }
@@ -93,11 +93,11 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
     window.location.assign(url.href);
   }
   if (config.isPending) return <div role="status" aria-label="Loading payment methods" className="mt-7 space-y-3"><Skeleton className="h-16 rounded-2xl" /><Skeleton className="h-16 rounded-2xl" /><Skeleton className="h-11 rounded-xl" /></div>;
-  if (config.error) return <div role="alert" className="mt-7 rounded-2xl bg-muted p-5 text-sm"><p>Payment options could not load. Please retry before making a payment.</p><Button variant="secondary" className="mt-3" onClick={() => void config.refetch()}>Try again</Button></div>;
+  if (config.error) return <div role="alert" className="mt-7 rounded-2xl bg-muted p-5 text-sm"><p>Payment options could not load. Please retry before making a payment.</p><Button variant="secondary" className="mt-3" loading={config.isFetching} loadingText="Retrying…" onClick={() => void config.refetch()}>Try again</Button></div>;
   return <>
     {notice && <p role="status" className="mt-5 rounded-2xl bg-accent p-4 text-[13px] leading-6 text-primary">{notice}</p>}
-    {active && <div className="mt-5 rounded-2xl bg-accent p-4 text-[13px] leading-6"><strong>An existing checkout is open</strong><p>Continue your {current.provider === "paystack" ? "Paystack" : "Stripe"} payment of {money(current.amount)}. Other payment methods are paused to avoid paying twice.</p><Button variant="secondary" disabled={busy} onClick={verify} className="mt-3 rounded-xl">{busy ? "Checking…" : "Check payment status"}</Button></div>}
-    <fieldset className="mt-7" disabled={busy}>
+    {active && <div className="mt-5 rounded-2xl bg-accent p-4 text-[13px] leading-6"><strong>An existing checkout is open</strong><p>Continue your {current.provider === "paystack" ? "Paystack" : "Stripe"} payment of {money(current.amount)}. Other payment methods are paused to avoid paying twice.</p><Button variant="secondary" disabled={busy || externalBusy} loading={busy} loadingText="Checking…" onClick={verify} className="mt-3 rounded-xl">{busy ? "Checking…" : "Check payment status"}</Button></div>}
+    <fieldset className="mt-7" disabled={busy || externalBusy}>
       <legend className="mb-3 text-[13px] font-semibold">Payment method</legend>
       <div className="space-y-2">{([
         { id: "paystack", title: "Pay with Paystack", detail: "Secure checkout with cards and supported local payment methods.", icon: IconCreditCard },
@@ -105,7 +105,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
         { id: "transfer", title: "I’ve already made a transfer", detail: "Share your receipt with the studio for review.", icon: IconReceipt },
       ] as const).map(item => {
         const unavailable = item.id !== "transfer" && !config.data?.providers.find(p => p.id === item.id)?.enabled;
-        const disabled = unavailable || Boolean(active && item.id !== current.provider);
+        const disabled = busy || externalBusy || unavailable || Boolean(active && item.id !== current.provider);
         return <label key={item.id} className={`flex items-center gap-3 rounded-2xl p-4 transition ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${selected === item.id && !unavailable ? "bg-primary text-white" : "bg-muted/70 text-foreground"}`}>
           <input type="radio" name="checkout-provider" className="sr-only peer" disabled={disabled} checked={selected === item.id} onChange={() => { setMethod(item.id); setError(""); }} />
           <span className={`flex size-10 shrink-0 items-center justify-center rounded-full peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${selected === item.id && !unavailable ? "bg-white/10" : "bg-white"}`}><item.icon size={19} /></span>
@@ -116,8 +116,8 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
     </fieldset>
     <div className="mt-4 rounded-2xl bg-muted/70 p-5">
       {selected === "transfer" ? children : <form onSubmit={begin}>
-        {!(active && current.url) && <label className="mb-4 block text-[12px] font-medium">Email for your payment receipt<Input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || !enabled} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 h-11 rounded-xl bg-white" /></label>}
-        <Button type="submit" disabled={busy || !enabled || amount <= 0 && !active} className="h-11 w-full gap-2 rounded-xl"><IconLock size={16} />{busy ? "Checking securely…" : active ? "Resume checkout" : `Pay ${money(amount)}`}</Button>
+        {!(active && current.url) && <label className="mb-4 block text-[12px] font-medium">Email for your payment receipt<Input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || externalBusy || !enabled} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 h-11 rounded-xl bg-white" /></label>}
+        <Button loading={busy} loadingText="Checking securely…" type="submit" disabled={busy || externalBusy || !enabled || amount <= 0 && !active} className="h-11 w-full gap-2 rounded-xl"><IconLock size={16} />{busy ? "Checking securely…" : active ? "Resume checkout" : `Pay ${money(amount)}`}</Button>
         <p className="mt-3 text-[12px] leading-5 text-muted-foreground">You’ll complete payment on {selected === "paystack" ? "Paystack" : "Stripe"}. Your reservation updates after we verify the payment.</p>
       </form>}
     </div>

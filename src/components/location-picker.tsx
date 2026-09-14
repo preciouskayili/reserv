@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useId } from "react";
 import {
   IconCrosshair,
   IconLoader2,
@@ -37,48 +37,47 @@ const MINIMAL_MAP_STYLE: google.maps.MapTypeStyle[] = [
 declare global {
   interface Window {
     google?: typeof google;
-    __googleMapsLoaded?: boolean;
-    __googleMapsCallback?: () => void;
+    __reservMapsReady?: () => void;
   }
 }
 
-// Global script loader for Google Maps JS API
+// Share script loading across pickers, including Strict Mode remounts.
+let mapsLoading: Promise<typeof google> | null = null;
 function loadGoogleMapsScript(apiKey: string): Promise<typeof google> {
-  if (typeof window === "undefined") return Promise.reject(new Error("SSR"));
-  if (window.google?.maps) return Promise.resolve(window.google);
-
-  return new Promise((resolve, reject) => {
-    const existingScript = document.getElementById("google-maps-api-script");
-    if (existingScript) {
-      if (window.google?.maps) {
-        resolve(window.google);
-        return;
-      }
-      existingScript.addEventListener("error", () => reject(new Error("Map could not load")), {once:true});
-      existingScript.addEventListener("load", () => {
-        if (window.google?.maps) resolve(window.google);
-        else reject(new Error("Google Maps failed to initialize"));
-      });
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = "google-maps-api-script";
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
-      apiKey
-    )}&libraries=places&v=weekly`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google?.maps) {
-        resolve(window.google);
-      } else {
-        reject(new Error("Google Maps loaded without window.google"));
-      }
+  if (typeof window === "undefined") return Promise.reject(new Error("Maps require a browser"));
+  if (window.google && typeof window.google.maps?.importLibrary === "function") return Promise.resolve(window.google);
+  if (mapsLoading) return mapsLoading;
+  mapsLoading = new Promise<typeof google>((resolve, reject) => {
+    const existing = document.getElementById("google-maps-api-script");
+    const script = existing ?? document.createElement("script");
+    const cleanup = () => {
+      clearTimeout(timeout);
+      script.removeEventListener("load", loaded);
+      script.removeEventListener("error", failed);
+      delete window.__reservMapsReady;
     };
-    script.onerror = (e) => reject(e);
-    document.head.appendChild(script);
-  });
+    const loaded = () => {
+      if (!window.google || typeof window.google.maps?.importLibrary !== "function") return;
+      cleanup(); resolve(window.google);
+    };
+    const failed = () => {
+      cleanup();
+      if (!existing) script.remove();
+      reject(new Error("Google Maps could not load"));
+    };
+    const timeout = setTimeout(failed, 15000);
+    if (existing) script.addEventListener("load", loaded);
+    script.addEventListener("error", failed);
+    if (!existing) {
+      window.__reservMapsReady = loaded;
+      const tag = script as HTMLScriptElement;
+      tag.id = "google-maps-api-script";
+      tag.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&libraries=places&v=weekly&callback=__reservMapsReady`;
+      tag.async = true;
+      document.head.appendChild(tag);
+    }
+  }).catch(error => { mapsLoading = null; throw error; });
+  return mapsLoading;
 }
 
 export function LocationPicker({
@@ -90,7 +89,7 @@ export function LocationPicker({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
   const query = value;
   const [mapsError,setMapsError]=useState("");
-  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [predictions, setPredictions] = useState<google.maps.places.PlacePrediction[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -100,186 +99,169 @@ export function LocationPicker({
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const placesLibraryRef = useRef<google.maps.PlacesLibrary | null>(null);
+  const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestVersion = useRef(0);
+  const mounted = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const initialAddress = useRef(value);
+  const suggestionsId = useId();
+  const [activeIndex, setActiveIndex] = useState(-1);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
-  // Load Google Maps SDK
+  // Import the new Places library once; never construct legacy Places services.
   useEffect(() => {
-    if (!apiKey) return;
-    let isMounted = true;
-
-    loadGoogleMapsScript(apiKey)
-      .then((g) => {
-        if (!isMounted) return;
-        setMapsReady(true);
+    mounted.current = true;
+    let alive = true;
+    if (apiKey) {
+      void loadGoogleMapsScript(apiKey).then(async (g) => {
+        const places = await g.maps.importLibrary("places") as google.maps.PlacesLibrary;
+        if (!alive) return;
+        placesLibraryRef.current = places;
         geocoderRef.current = new g.maps.Geocoder();
-        autocompleteServiceRef.current = new g.maps.places.AutocompleteService();
-      })
-      .catch((err) => {
-        console.warn("[LocationPicker] Could not load Google Maps SDK:", err);
-        if(isMounted)setMapsError("Map search is unavailable. You can type your full address above.");
+        setMapsReady(true);
+      }).catch(() => {
+        if (alive) setMapsError("Map search is unavailable. You can type your full address above.");
       });
-
+    }
     return () => {
-      isMounted = false;
+      alive = false;
+      mounted.current = false;
+      if (searchTimer.current) clearTimeout(searchTimer.current);
     };
   }, [apiKey]);
 
-  // Reverse geocode a LatLng coordinate and update value
-  const reverseGeocode = useCallback(
-    (latLng: google.maps.LatLng) => {
-      if (!geocoderRef.current) return;
-      geocoderRef.current.geocode({ location: latLng }, (results, status) => {
-        if (status === "OK" && results && results[0]) {
-          const formatted = results[0].formatted_address;
+  const movePin = useCallback((location: google.maps.LatLng) => {
+    mapInstanceRef.current?.setCenter(location);
+    mapInstanceRef.current?.setZoom(16);
+    markerRef.current?.setPosition(location);
+  }, []);
 
-          onChange(formatted);
-        }
-      });
-    },
-    [onChange]
-  );
+  const reverseGeocode = useCallback(async (location: google.maps.LatLng) => {
+    const version = ++requestVersion.current;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setIsSearching(false);
+    setPredictions([]);
+    setDropdownOpen(false);
+    sessionRef.current = null;
+    try {
+      const response = await geocoderRef.current?.geocode({ location });
+      if (!mounted.current || version !== requestVersion.current) return;
+      const address = response?.results[0]?.formatted_address;
+      if (!address) throw new Error("No address found");
+      onChangeRef.current(address);
+      setMapsError("");
+    } catch {
+      if (mounted.current && version === requestVersion.current) setMapsError("Couldn’t find an address for this pin. You can enter it manually.");
+    }
+  }, []);
 
-  // Initialize interactive map when container is available and SDK ready
+  // The map and its listeners are independent of the address being typed.
   useEffect(() => {
     if (!mapsReady || !mapContainerRef.current || !window.google?.maps) return;
-
-    if (!mapInstanceRef.current) {
-      // Default center: Abuja (or geocode current value)
-      const defaultCenter = { lat: 9.0765, lng: 7.3986 };
-
-      const map = new window.google.maps.Map(mapContainerRef.current, {
-        center: defaultCenter,
-        zoom: 14,
-        disableDefaultUI: true,
-        zoomControl: true,
-        styles: MINIMAL_MAP_STYLE,
-        gestureHandling: "cooperative",
-      });
-
-      mapInstanceRef.current = map;
-      placesServiceRef.current = new window.google.maps.places.PlacesService(map);
-
-      const marker = new window.google.maps.Marker({
-        position: defaultCenter,
-        map,
-        draggable: true,
-        title: "Drag to set exact location",
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#23395d",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-      });
-
-      markerRef.current = marker;
-
-      // On marker drag end, update address
-      marker.addListener("dragend", () => {
-        const pos = marker.getPosition();
-        if (pos) {
-          reverseGeocode(pos);
-        }
-      });
-
-      // On map click, move marker and update address
-      map.addListener("click", (e: google.maps.MapMouseEvent) => {
-        if (e.latLng) {
-          marker.setPosition(e.latLng);
-          reverseGeocode(e.latLng);
-        }
-      });
+    const g = window.google;
+    const defaultCenter = { lat: 9.0765, lng: 7.3986 };
+    const map = new g.maps.Map(mapContainerRef.current, {
+      center: defaultCenter, zoom: 14, disableDefaultUI: true, zoomControl: true,
+      styles: MINIMAL_MAP_STYLE, gestureHandling: "cooperative",
+    });
+    mapInstanceRef.current = map;
+    const marker = new g.maps.Marker({
+      position: defaultCenter, map, draggable: true, title: "Drag to set exact location",
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#23395d", fillOpacity: 1, strokeColor: "#ffffff", strokeWeight: 2 },
+    });
+    markerRef.current = marker;
+    const dragListener = marker.addListener("dragend", () => {
+      const position = marker.getPosition();
+      if (position) void reverseGeocode(position);
+    });
+    const clickListener = map.addListener("click", (event: google.maps.MapMouseEvent) => {
+      if (event.latLng) { marker.setPosition(event.latLng); void reverseGeocode(event.latLng); }
+    });
+    let alive = true;
+    const version = requestVersion.current;
+    if (initialAddress.current && version === 0) {
+      void geocoderRef.current?.geocode({ address: initialAddress.current }).then(({ results }) => {
+        if (alive && version === requestVersion.current && results[0]) movePin(results[0].geometry.location);
+      }).catch(() => { /* A saved address remains editable if geocoding fails. */ });
     }
+    return () => {
+      alive = false;
+      dragListener.remove(); clickListener.remove(); marker.setMap(null);
+      markerRef.current = null; mapInstanceRef.current = null;
+    };
+  }, [mapsReady, movePin, reverseGeocode]);
 
-    // If we have an existing address value, center map on it
-    if (value && geocoderRef.current) {
-      geocoderRef.current.geocode({ address: value }, (results, status) => {
-        if (status === "OK" && results && results[0] && mapInstanceRef.current && markerRef.current) {
-          const loc = results[0].geometry.location;
-          mapInstanceRef.current.setCenter(loc);
-          mapInstanceRef.current.setZoom(15);
-          markerRef.current.setPosition(loc);
-        }
-      });
-    }
-  }, [mapsReady, value, reverseGeocode]);
+  const closeSuggestions = () => {
+    requestVersion.current++;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setIsSearching(false); setDropdownOpen(false); setActiveIndex(-1);
+  };
 
-  // Autocomplete search on user typing
   const handleQueryChange = (text: string) => {
-
+    const version = ++requestVersion.current;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     onChange(text);
-
-    if (!text.trim() || !autocompleteServiceRef.current) {
-      setPredictions([]);
-      setDropdownOpen(false);
+    setIsLocating(false); setMapsError(""); setPredictions([]); setActiveIndex(-1);
+    setDropdownOpen(false);
+    const places = placesLibraryRef.current;
+    if (text.trim().length < 2 || !places) {
+      setIsSearching(false);
+      if (!text.trim()) sessionRef.current = null;
       return;
     }
-
     setIsSearching(true);
-    autocompleteServiceRef.current.getPlacePredictions(
-      {
-        input: text,
-      },
-      (res, status) => {
-        setIsSearching(false);
-        if (status === window.google?.maps.places.PlacesServiceStatus.OK && res) {
-          setPredictions(res);
-          setDropdownOpen(true);
-        } else {
-          setPredictions([]);
-        }
+    sessionRef.current ??= new places.AutocompleteSessionToken();
+    const sessionToken = sessionRef.current;
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const { suggestions } = await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: text, sessionToken });
+        if (!mounted.current || version !== requestVersion.current) return;
+        const placesFound = suggestions.flatMap(suggestion => suggestion.placePrediction ? [suggestion.placePrediction] : []);
+        setPredictions(placesFound); setDropdownOpen(placesFound.length > 0);
+      } catch {
+        if (mounted.current && version === requestVersion.current) setMapsError("Address suggestions are unavailable. You can still type your full address.");
+      } finally {
+        if (mounted.current && version === requestVersion.current) setIsSearching(false);
       }
-    );
+    }, 300);
   };
 
-  // Select place from autocomplete dropdown
-  const handleSelectPrediction = (p: google.maps.places.AutocompletePrediction) => {
-    const desc = p.description;
-
-    onChange(desc);
-    setDropdownOpen(false);
-    setPredictions([]);
-
-    // Geocode chosen place to move map
-    if (geocoderRef.current && mapInstanceRef.current && markerRef.current) {
-      geocoderRef.current.geocode({ placeId: p.place_id }, (results, status) => {
-        if (status === "OK" && results && results[0] && mapInstanceRef.current && markerRef.current) {
-          const loc = results[0].geometry.location;
-          mapInstanceRef.current.setCenter(loc);
-          mapInstanceRef.current.setZoom(16);
-          markerRef.current.setPosition(loc);
-        }
-      });
+  const handleSelectPrediction = async (prediction: google.maps.places.PlacePrediction) => {
+    closeSuggestions();
+    const version = requestVersion.current;
+    onChange(prediction.text.toString());
+    setPredictions([]); setMapsError(""); setIsSearching(true);
+    // toPlace preserves the search session token for its first fetchFields call.
+    const place = prediction.toPlace();
+    sessionRef.current = null;
+    try {
+      await place.fetchFields({ fields: ["formattedAddress", "location"] });
+      if (!mounted.current || version !== requestVersion.current) return;
+      if (place.formattedAddress) onChangeRef.current(place.formattedAddress);
+      if (place.location) movePin(place.location);
+    } catch {
+      if (mounted.current && version === requestVersion.current) setMapsError("The address is selected, but its pin couldn’t load. You can adjust the map manually.");
+    } finally {
+      if (mounted.current && version === requestVersion.current) setIsSearching(false);
     }
   };
 
-  // Use device GPS location
   const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) return;
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsLocating(false);
-        if (!window.google?.maps) return;
-        const latLng = new window.google.maps.LatLng(
-          pos.coords.latitude,
-          pos.coords.longitude
-        );
-        if (mapInstanceRef.current && markerRef.current) {
-          mapInstanceRef.current.setCenter(latLng);
-          mapInstanceRef.current.setZoom(16);
-          markerRef.current.setPosition(latLng);
-        }
-        reverseGeocode(latLng);
-      },
-      () => {
-        setIsLocating(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
+    if (!navigator.geolocation) { setMapsError("Location access is unavailable. Enter your address manually."); return; }
+    closeSuggestions();
+    const version = requestVersion.current;
+    setIsLocating(true); setMapsError("");
+    navigator.geolocation.getCurrentPosition((position) => {
+      if (!mounted.current || version !== requestVersion.current || !window.google?.maps) return;
+      setIsLocating(false);
+      const location = new window.google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+      movePin(location); void reverseGeocode(location);
+    }, () => {
+      if (!mounted.current || version !== requestVersion.current) return;
+      setIsLocating(false); setMapsError("Couldn’t access your location. Search for your address or place the pin manually.");
+    }, { timeout: 10000, enableHighAccuracy: true });
   };
 
   return (
@@ -289,6 +271,22 @@ export function LocationPicker({
         <div className="relative flex items-center">
           <Input
             type="text"
+            role="combobox"
+            aria-label="Business address"
+            aria-autocomplete="list"
+            aria-expanded={dropdownOpen && predictions.length > 0}
+            aria-controls={dropdownOpen ? suggestionsId : undefined}
+            aria-activedescendant={dropdownOpen && activeIndex >= 0 ? `${suggestionsId}-${activeIndex}` : undefined}
+            onBlur={closeSuggestions}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") { event.preventDefault(); closeSuggestions(); }
+              if (!dropdownOpen || !predictions.length) return;
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                setActiveIndex(index => (index + (event.key === "ArrowDown" ? 1 : -1) + predictions.length) % predictions.length);
+              }
+              if (event.key === "Enter" && activeIndex >= 0) { event.preventDefault(); void handleSelectPrediction(predictions[activeIndex]); }
+            }}
             required
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
@@ -304,12 +302,7 @@ export function LocationPicker({
             ) : query ? (
               <button
                 type="button"
-                onClick={() => {
-
-                  onChange("");
-                  setPredictions([]);
-                  setDropdownOpen(false);
-                }}
+                onClick={() => handleQueryChange("")}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-black/5 hover:text-foreground"
                 aria-label="Clear location input"
               >
@@ -319,7 +312,7 @@ export function LocationPicker({
             <button
               type="button"
               onClick={handleUseCurrentLocation}
-              disabled={isLocating}
+              disabled={isLocating || !mapsReady}
               title="Pin my current location"
               className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/80 text-muted-foreground hover:bg-white hover:text-primary transition shadow-none"
             >
@@ -335,20 +328,21 @@ export function LocationPicker({
         {/* Places Autocomplete Suggestions Dropdown */}
         {dropdownOpen && predictions.length > 0 && (
           <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setDropdownOpen(false)}
-            />
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-white p-1.5 shadow-none ring-1 ring-black/5">
-              {predictions.map((p) => (
+            <div id={suggestionsId} role="listbox" aria-label="Address suggestions" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-white p-1.5 shadow-none ring-1 ring-black/5">
+              {predictions.map((p, index) => (
                 <button
-                  key={p.place_id}
+                  key={p.placeId}
+                  id={`${suggestionsId}-${index}`}
+                  role="option"
+                  aria-selected={activeIndex === index}
+                  tabIndex={-1}
+                  onPointerDown={event => event.preventDefault()}
                   type="button"
-                  onClick={() => handleSelectPrediction(p)}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[12px] text-foreground transition hover:bg-muted"
+                  onClick={() => void handleSelectPrediction(p)}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[12px] text-foreground transition hover:bg-muted aria-selected:bg-muted"
                 >
                   <IconMapPin size={15} className="shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate">{p.description}</span>
+                  <span className="min-w-0 flex-1 truncate">{p.text.toString()}</span>
                 </button>
               ))}
             </div>
@@ -361,7 +355,7 @@ export function LocationPicker({
       <div className="relative h-48 w-full overflow-hidden rounded-2xl border-0 bg-muted">
         <div ref={mapContainerRef} className="h-full w-full" />
         <div className="pointer-events-none absolute bottom-2.5 left-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-medium text-foreground backdrop-blur-xs">
-          Click or drag pin to fine-tune location
+          {mapsReady ? "Click or drag pin to fine-tune location" : apiKey && !mapsError ? "Loading map…" : "Enter your address above"}
         </div>
       </div>
     </div>

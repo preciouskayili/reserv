@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLoading } from "./feedback";
 import { safeNextPath } from "@/lib/navigation";
@@ -36,6 +36,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [formError, setFormError] = useState("");
+  const submissionLock = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
@@ -55,7 +56,8 @@ function LoginForm() {
     e.preventDefault();
     if (!email.trim()) return;
 
-    if (isSubmitting) return;
+    if (submissionLock.current) return;
+    submissionLock.current = true;
     setFormError("");
     setIsSubmitting(true);
     try {
@@ -70,6 +72,7 @@ function LoginForm() {
         error instanceof Error ? error.message : "Please try again.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -78,7 +81,8 @@ function LoginForm() {
     e.preventDefault();
     if (code.trim().length !== 6) return;
 
-    if (isSubmitting) return;
+    if (submissionLock.current) return;
+    submissionLock.current = true;
     setFormError("");
     setIsSubmitting(true);
     try {
@@ -89,13 +93,15 @@ function LoginForm() {
         error instanceof Error ? error.message : "Please try again.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleResend = async () => {
     if (countdown > 0) return;
-    if (isSubmitting) return;
+    if (submissionLock.current) return;
+    submissionLock.current = true;
     setFormError("");
     setIsSubmitting(true);
     try {
@@ -109,6 +115,7 @@ function LoginForm() {
           : "Could not resend your code. Please try again.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -184,6 +191,7 @@ function LoginForm() {
                     className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                   />
                   <Input
+                disabled={isSubmitting}
                     id="email"
                     type="email"
                     autoFocus
@@ -225,6 +233,7 @@ function LoginForm() {
                 </label>
                 <div className="relative">
                   <Input
+                disabled={isSubmitting}
                     id="code"
                     type="text"
                     inputMode="numeric"

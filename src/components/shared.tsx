@@ -187,12 +187,14 @@ export function ActionCard({
   label,
   onClick,
   danger,
+  disabled = false,
   href,
 }: {
   icon: TablerIcon;
   label: string;
   onClick?: () => void;
   danger?: boolean;
+  disabled?: boolean;
   href?: string;
 }) {
   const content = (
@@ -213,6 +215,7 @@ export function ActionCard({
   ) : (
     <Button
       variant="secondary"
+      disabled={disabled}
       className={`!h-auto !w-full !p-0 ${baseClasses}`}
       onClick={onClick}
     >
@@ -226,21 +229,25 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  busy = false,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  busy?: boolean;
 }) {
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open && !busy) onClose();
       }}
     >
       <DialogContent
+        showCloseButton={!busy}
+        aria-busy={busy || undefined}
         className={`rounded-[28px] border-0 bg-white p-9 shadow-none max-[560px]:rounded-[22px] max-[560px]:p-5 ${
           wide ? "sm:max-w-[820px]" : "sm:max-w-[660px]"
         }`}

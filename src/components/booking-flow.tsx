@@ -121,6 +121,7 @@ export function BookingFlow({
   }
   return (
     <Modal
+      busy={isSubmitting}
       wide
       title={
         result
@@ -196,7 +197,7 @@ export function BookingFlow({
               return (
                 <button
                   key={label}
-                  disabled={i > step || (!!booking && i === 0)}
+                  disabled={isSubmitting || i > step || (!!booking && i === 0)}
                   className={`flex items-center gap-2 text-[12px] transition disabled:cursor-default ${
                     isActive
                       ? "font-semibold text-foreground"
@@ -399,6 +400,7 @@ export function BookingFlow({
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Full name
                   <Input
+                    disabled={isSubmitting}
                     autoComplete="name"
                     required
                     minLength={2}
@@ -412,6 +414,7 @@ export function BookingFlow({
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
                   Phone number
                   <Input
+                    disabled={isSubmitting}
                     type="tel"
                     autoComplete="tel"
                     required
@@ -427,6 +430,7 @@ export function BookingFlow({
                 Anything we should know?{" "}
                 <span className="font-normal text-muted-foreground">(optional)</span>
                 <Textarea
+                  disabled={isSubmitting}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Your preferences, or a little note for the studio…"
@@ -462,6 +466,7 @@ export function BookingFlow({
                   variant="secondary"
                   type="button"
                   className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:bg-background"
+                  disabled={isSubmitting}
                   onClick={() => setStep(1)}
                 >
                   <IconArrowLeft size={16} />

@@ -22,20 +22,19 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useStore } from "@/lib/store";
+import { useWorkspaceSave } from "@/hooks/use-workspace-save";
 import { OnboardingModal } from "./onboarding-modal";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CALL_PREFERENCES, type CallPreferences } from "@/lib/model";
 
 export function SettingsPage() {
-  const { state, update, workspaces, createWorkspace } = useStore();
+  const { state, update, workspaces, createWorkspace, isSaving } = useWorkspaceSave();
   const { user } = useAuth();
   const initialName = state.settings.owner || user?.name || "Your name";
   const [displayName, setDisplayName] = useState(initialName);
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(initialName);
-  const [isSavingName, setIsSavingName] = useState(false);
 
   const calls: CallPreferences = {
     ...DEFAULT_CALL_PREFERENCES,
@@ -50,13 +49,11 @@ export function SettingsPage() {
       toast.error("Display name cannot be empty");
       return;
     }
-    setIsSavingName(true);
     const trimmed = tempName.trim();
     const saved = await update((s) => ({
       ...s,
       settings: { ...s.settings, owner: trimmed },
     }));
-    setIsSavingName(false);
     if (saved) {
       setDisplayName(trimmed);
       setEditingName(false);
@@ -82,6 +79,7 @@ export function SettingsPage() {
     <div className="w-full max-w-2xl">
       <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
         Account
+        {isSaving && <span role="status" className="ml-3 inline-flex items-center gap-2 align-middle text-[12px] font-normal tracking-normal text-muted-foreground"><IconLoader2 size={14} className="animate-spin" aria-hidden="true" />Saving changes…</span>}
       </h1>
 
       {/* User profile */}
@@ -133,6 +131,7 @@ export function SettingsPage() {
                     className="flex items-center gap-2"
                   >
                     <Input
+                      disabled={isSaving}
                       value={tempName}
                       onChange={(e) => setTempName(e.target.value)}
                       className="h-8 w-48 rounded-lg border border-border bg-muted/40 px-2.5 text-[13px] text-foreground shadow-none focus-visible:ring-1 focus-visible:ring-primary"
@@ -140,11 +139,11 @@ export function SettingsPage() {
                     />
                     <button
                       type="submit"
-                      disabled={isSavingName}
+                      disabled={isSaving}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white transition hover:bg-primary/90 disabled:opacity-60"
                       aria-label="Save display name"
                     >
-                      {isSavingName ? (
+                      {isSaving ? (
                         <IconLoader2 size={13} className="animate-spin" />
                       ) : (
                         <IconCheck size={14} />
@@ -157,6 +156,7 @@ export function SettingsPage() {
                         setEditingName(false);
                       }}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition hover:text-foreground"
+                      disabled={isSaving}
                       aria-label="Cancel editing"
                     >
                       <IconX size={14} />
@@ -218,6 +218,7 @@ export function SettingsPage() {
                 </div>
               </div>
               <Switch
+                disabled={isSaving}
                 checked={calls.enabled}
                 onCheckedChange={(enabled) => handleUpdateCalls({ enabled })}
               />
@@ -229,7 +230,7 @@ export function SettingsPage() {
                   Call before appointment:
                 </span>
                 <div className="relative">
-                  <select
+                  <select disabled={isSaving}
                     value={calls.reminderMinutes}
                     onChange={(e) =>
                       handleUpdateCalls({
@@ -272,7 +273,7 @@ export function SettingsPage() {
                 </div>
               </div>
               <Switch
-                disabled={!calls.enabled}
+                disabled={!calls.enabled || isSaving}
                 checked={calls.unpaidEnabled}
                 onCheckedChange={(unpaidEnabled) =>
                   handleUpdateCalls({ unpaidEnabled })
@@ -286,7 +287,7 @@ export function SettingsPage() {
                   Follow-up interval:
                 </span>
                 <div className="relative">
-                  <select
+                  <select disabled={isSaving}
                     value={calls.unpaidIntervalMinutes}
                     onChange={(e) =>
                       handleUpdateCalls({

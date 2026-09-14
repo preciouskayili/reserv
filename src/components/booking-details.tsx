@@ -2,7 +2,7 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import {
@@ -31,7 +31,7 @@ import {
   TODAY,
 } from "@/lib/model";
 import { paymentSummary } from "@/lib/payments";
-import { useStore } from "@/lib/store";
+import { useWorkspaceSave } from "@/hooks/use-workspace-save";
 import {
   ActionCard,
   Avatar,
@@ -50,7 +50,7 @@ export function BookingDetails({
   booking: Booking;
   publicView?: boolean;
 }) {
-  const { state, update } = useStore();
+  const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [reschedule, setReschedule] = useState(false);
   const [cancel, setCancel] = useState(false);
   const [notes, setNotes] = useState(booking.notes);
@@ -59,6 +59,7 @@ export function BookingDetails({
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
+  const callLock = useRef(false);
   const triggerCallMutation = useTriggerCallMutation();
 
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
@@ -69,6 +70,7 @@ export function BookingDetails({
   const terminal = ["Cancelled", "Completed"].includes(booking.status);
 
   async function setStatus(status: Booking["status"]) {
+    if (!canDismiss()) return;
     if (status === "Completed") setIsCompleting(true);
     if (status === "Cancelled") setIsCancelling(true);
 
@@ -93,14 +95,14 @@ export function BookingDetails({
       ),
     }));
     if (saved) toast.success(`Reservation ${status.toLowerCase()}`);
-    setTimeout(() => {
-      setIsCompleting(false);
-      setIsCancelling(false);
-      if (saved && status === "Cancelled") setCancel(false);
-    }, 400);
+    setIsCompleting(false);
+    setIsCancelling(false);
+    if (saved && status === "Cancelled") setCancel(false);
   }
 
   const handleDispatchCall = async () => {
+    if (callLock.current) return;
+    callLock.current = true;
     try {
       await triggerCallMutation.mutateAsync({
         toNumber: customer.phone,
@@ -113,6 +115,8 @@ export function BookingDetails({
       });
     } catch {
       // Toast already handled by mutation hook
+    } finally {
+      callLock.current = false;
     }
   };
   return (
@@ -188,12 +192,14 @@ export function BookingDetails({
                 <ActionCard
                   icon={IconCalendarEvent}
                   label="Reschedule"
+                  disabled={isSaving}
                   onClick={() => setReschedule(true)}
                 />
                 <ActionCard
                   icon={IconTrash}
                   label="Cancel"
                   danger
+                  disabled={isSaving}
                   onClick={() => setCancel(true)}
                 />
               </>
@@ -287,7 +293,7 @@ export function BookingDetails({
                   {booking.status === "Confirmed" && (
                     <Button
                       variant="secondary"
-                      disabled={isCompleting}
+                      disabled={isSaving}
                       className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background disabled:opacity-60"
                       onClick={() => setStatus("Completed")}
                     >
@@ -438,6 +444,7 @@ export function BookingDetails({
                   aria-label="Booking notes"
                   value={notes}
                   rows={3}
+                  disabled={isSaving}
                   placeholder="Anything to keep in mind…"
                   onChange={(e) => setNotes(e.target.value)}
                   className="mt-3 w-full resize-y rounded-xl border-0 bg-white p-3 text-[12px] outline-none focus:border-border"
@@ -445,9 +452,10 @@ export function BookingDetails({
                 <Button
                   variant="secondary"
                   size="sm"
-                  disabled={isSavingNote}
+                  disabled={isSaving}
                   className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border disabled:opacity-60"
                   onClick={async () => {
+                    if (!canDismiss()) return;
                     setIsSavingNote(true);
                     const saved = await update((s) => ({
                       ...s,
@@ -459,10 +467,7 @@ export function BookingDetails({
                     if (!saved) return;
                     setNoteSaved(true);
                     toast.success("Visit note saved");
-                    setTimeout(() => {
-                      setIsSavingNote(false);
-                      setTimeout(() => setNoteSaved(false), 1800);
-                    }, 350);
+                    setTimeout(() => setNoteSaved(false), 1800);
                   }}
                 >
                   {isSavingNote ? (
@@ -497,7 +502,8 @@ export function BookingDetails({
         <Modal
           title="Cancel this reservation?"
           description="A little change of plans."
-          onClose={() => setCancel(false)}
+          busy={isSaving}
+          onClose={() => { if (canDismiss()) setCancel(false); }}
         >
           <div className="my-5 rounded-xl bg-background p-4 text-[12px]">
             <strong className="font-semibold text-foreground">
@@ -514,13 +520,14 @@ export function BookingDetails({
             <Button
               variant="secondary"
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-              onClick={() => setCancel(false)}
+              disabled={isSaving}
+              onClick={() => { if (canDismiss()) setCancel(false); }}
             >
               Keep reservation
             </Button>
             <Button
               variant="destructive"
-              disabled={isCancelling}
+              disabled={isSaving}
               className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#a8514b] bg-[#a8514b] px-4 text-[12px] font-semibold text-white transition hover:bg-[#91453f] disabled:opacity-60"
               onClick={() => {
                 setStatus("Cancelled");
