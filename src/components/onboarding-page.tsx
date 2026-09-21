@@ -516,7 +516,7 @@ function OnboardingForm({
                         onChange={(e) => patch({ serviceName: e.target.value })}
                       />
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 max-[560px]:grid-cols-1">
                       <label className="block text-xs font-medium">
                         Duration (minutes)
                         <Input

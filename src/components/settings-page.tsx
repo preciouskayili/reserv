@@ -434,8 +434,8 @@ export function SettingsPage() {
 
       {/* Voice call activity */}
       <section className="mt-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
             <h2 className="text-[15px] font-medium text-foreground">
               Voice call activity
             </h2>
@@ -646,7 +646,7 @@ export function SettingsPage() {
                   className="mt-1.5 h-10 bg-muted"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
                 <div>
                   <label className="block text-[12px] font-medium text-foreground">
                     Customer name

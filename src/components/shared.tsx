@@ -391,17 +391,29 @@ export function ServiceCard({
   action,
   footer,
   publicView = false,
+  onActivate,
+  activateLabel,
 }: {
   service: Service;
   action?: ReactNode;
   footer?: ReactNode;
   publicView?: boolean;
+  onActivate?: () => void;
+  activateLabel?: string;
 }) {
   const { state } = useStore();
   return (
     <Card
-      className={`flex min-h-92 h-full flex-col gap-0 rounded-2xl border-0 p-6 shadow-none ${publicView ? "bg-muted" : "bg-card"}`}
+      className={`relative flex h-full min-h-60 flex-col gap-0 rounded-2xl border-0 p-5 shadow-none sm:min-h-92 sm:p-6 ${publicView ? "bg-muted" : "bg-card"} ${onActivate ? "transition hover:bg-accent" : ""}`}
     >
+      {onActivate && (
+        <button
+          type="button"
+          onClick={onActivate}
+          aria-label={activateLabel ?? service.name}
+          className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      )}
       <div className="flex flex-1 items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-foreground">
@@ -411,7 +423,7 @@ export function ServiceCard({
             {service.description}
           </p>
         </div>
-        {action}
+        {action && <div className="relative z-20 shrink-0">{action}</div>}
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="text-[16px] font-semibold text-foreground">
@@ -438,7 +450,9 @@ export function ServiceCard({
         </span>
       </div>
       {footer && (
-        <div className="mt-5 rounded-xl bg-muted/70 px-3 py-2">{footer}</div>
+        <div className="relative z-20 mt-5 rounded-xl bg-muted/70 px-3 py-2">
+          {footer}
+        </div>
       )}
     </Card>
   );

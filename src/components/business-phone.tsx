@@ -123,7 +123,7 @@ export function NumberCountrySelect({ value, onChange, disabled = false, number 
           <IconCopy size={17} className="shrink-0 text-muted-foreground transition group-hover:text-foreground" />
         </button>
       ) : (
-        <div className={`flex w-full max-w-md items-center gap-4 rounded-2xl px-4 py-4 ${selected ? "bg-muted" : "border border-dashed border-border bg-muted/40"}`}>
+        <div className={`flex w-full max-w-md flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 py-4 ${selected ? "bg-muted" : "border border-dashed border-border bg-muted/40"}`}>
           {selected ? (
             <CountryFlag code={selected.code} size={40} />
           ) : (
@@ -131,7 +131,7 @@ export function NumberCountrySelect({ value, onChange, disabled = false, number 
               <IconWorld size={21} stroke={1.5} />
             </span>
           )}
-          <span className="min-w-0 flex-1">
+          <span className="min-w-40 flex-1">
             <span className={`block truncate text-[19px] font-medium tracking-tight tabular-nums ${selected ? "text-foreground" : "text-muted-foreground/70"}`}>
               {selected?.dialCode ? `+${selected.dialCode} ` : ""}··· ··· ····
             </span>

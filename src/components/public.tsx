@@ -137,12 +137,15 @@ export function PublicProfile() {
                     key={s.id}
                     service={s}
                     publicView
+                    onActivate={() => setService(s.id)}
+                    activateLabel={`Book ${s.name}`}
                     action={
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-accent hover:text-foreground shadow-none"
-                        aria-label={`Book ${s.name}`}
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground shadow-none"
                         onClick={() => setService(s.id)}
                       >
                         <IconArrowUpRight size={20} />
