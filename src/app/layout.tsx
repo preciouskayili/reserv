@@ -13,9 +13,9 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Reserv — A little more room in your day",
+  title: "Reserv — Booking and workspace management",
   description:
-    "A calm home for your appointments. Manage your studio, welcome your customers, and make room for what you do best.",
+    "Manage appointments, customers, payments, and automated calls for your business.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

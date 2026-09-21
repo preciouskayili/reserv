@@ -10,41 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import {
-  IconArrowRight,
   IconArrowUpRight,
-  IconCalendarEvent,
   IconCheck,
   IconChevronRight,
-  IconClock,
   IconEdit,
   IconEye,
   IconFlower,
-  IconHeadphones,
   IconLoader2,
-  IconMessageCircle,
   IconPhone,
   IconPlus,
   IconSearch,
-  IconShieldCheck,
   IconTrash,
-  IconUsers,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useWorkspaceSave } from "@/hooks/use-workspace-save";
-import { useStore } from "@/lib/store";
-import {
-  useBackendHealthQuery,
-  useCallsQuery,
-  useTriggerCallMutation,
-} from "@/hooks/use-api";
 import { DataTable, TableSummary } from "./ui/data-table";
-import { InlineError } from "./feedback";
-import { Skeleton } from "@/components/ui/skeleton";
 import { LocationPicker } from "./location-picker";
 import {
   type Booking,
@@ -72,9 +56,9 @@ export function ServicesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="WHAT YOU DO BEST"
-        title="A little of your expertise."
-        description="Thoughtful services. Ready to reserve."
+        eyebrow="SERVICE MANAGEMENT"
+        title="Services"
+        description="Manage services, prices, durations, and assigned staff."
         action={
           <Button
             className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
@@ -265,7 +249,7 @@ function ServiceEditor({
   return (
     <Modal
       wide
-      title={service ? "A little fine-tuning." : "Something new to offer."}
+      title={service ? "Edit service" : "Add service"}
       description={
         service
           ? "Edit your service details."
@@ -438,9 +422,9 @@ export function CustomersPage({
   return (
     <>
       <PageHeader
-        eyebrow="FAMILIAR FACES. NEW CONNECTIONS."
-        title="Your people."
-        description="A little care goes a long way."
+        eyebrow="CUSTOMER MANAGEMENT"
+        title="Customers"
+        description="View customer details and booking history."
         action={
           <Button
             className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
@@ -454,7 +438,7 @@ export function CustomersPage({
       <section className="table-panel">
         <div className="table-toolbar">
           <h2 className="text-[16px] font-semibold text-foreground">
-            {state.customers.length} lovely people
+            {state.customers.length} customers
           </h2>
           <div className="table-search">
             <IconSearch
@@ -556,7 +540,7 @@ export function CustomersPage({
         </DataTable>
         {!customers.length && (
           <EmptyState
-            title="No familiar faces here."
+            title="No customers found"
             description="Try another name or phone number."
             action={
               query ? (
@@ -588,7 +572,7 @@ export function CustomersPage({
       )}
       {adding && (
         <Modal
-          title="A new face at the studio."
+          title="Add customer"
           description="Keep their details for a future visit."
           busy={isSaving}
           onClose={() => { if (canDismiss()) setAdding(false); }}
@@ -704,7 +688,7 @@ function CustomerDetails({
         </Button>
       </div>
       <label className="mb-4 block text-[12px] font-semibold text-foreground">
-        A little something to remember
+        Customer notes
         <Textarea
           rows={3}
           disabled={isSaving}
@@ -744,7 +728,7 @@ function CustomerDetails({
       ))}
       {!bookings.length && (
         <EmptyState
-          title="The beginning of a good thing."
+          title="No bookings yet"
           description="Their first reservation will appear here."
         />
       )}
@@ -768,9 +752,9 @@ export function BusinessProfilePage() {
   return (
     <>
       <PageHeader
-        eyebrow="YOUR STUDIO, YOUR STORY"
-        title="Let’s make it feel like you."
-        description="Everything your customers — and receptionist — should know."
+        eyebrow="BUSINESS SETTINGS"
+        title="Business profile"
+        description="Manage your public profile, opening hours, and booking policies."
         action={
           <Link
             className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
@@ -845,7 +829,7 @@ export function BusinessProfilePage() {
                   />
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
-                  A little about your studio
+                  Business description
                   <Textarea
                     required
                     rows={5}
@@ -1167,444 +1151,6 @@ export function BusinessProfilePage() {
           </fieldset>
         </form>
       </div>
-    </>
-  );
-}
-
-export function AgentPage() {
-  const { state } = useStore();
-  const [tab, setTab] = useState("All activity");
-  const [testModalOpen, setTestModalOpen] = useState(false);
-  const [testPhone, setTestPhone] = useState("+234 800 123 4567");
-  const [testName, setTestName] = useState("Jane Doe");
-  const [testService, setTestService] = useState("Signature Cut & Style");
-  const [testCallType, setTestCallType] = useState<"reminder" | "confirmation">(
-    "reminder",
-  );
-
-  const healthQuery = useBackendHealthQuery();
-  const callsQuery = useCallsQuery(50);
-  const callLock = useRef(false);
-  const triggerCallMutation = useTriggerCallMutation();
-
-  const isAethexLive = healthQuery.data?.integrations?.aethex === "configured";
-  const isHealthy = healthQuery.isSuccess;
-
-  const activities = state.agentActivity.filter(
-    (a) =>
-      tab === "All activity" ||
-      (tab === "Reservations"
-        ? a.kind !== "confirmed"
-        : a.kind === "confirmed"),
-  );
-
-  const handleTestCall = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!testPhone.trim()) {
-      toast.error("Please provide a phone number");
-      return;
-    }
-
-    if (callLock.current) return;
-    callLock.current = true;
-    try {
-      await triggerCallMutation.mutateAsync({
-        toNumber: testPhone.trim(),
-        customerName: testName.trim(),
-        serviceName: testService.trim(),
-        appointmentTime: "10:30 AM",
-        appointmentDate: "Tomorrow",
-        callType: testCallType,
-      });
-      setTestModalOpen(false);
-    } catch {
-      // Handled in mutation hook
-    } finally {
-      callLock.current = false;
-    }
-  };
-
-  return (
-    <>
-      <PageHeader
-        eyebrow="A NEW MEMBER OF YOUR TEAM"
-        title="Meet your helping hand."
-        description="More time with your customers. Less time on the phone."
-        action={
-          <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 shadow-xs"
-            onClick={() => setTestModalOpen(true)}
-          >
-            <IconPhone size={17} />
-            Test Voice AI Call
-          </Button>
-        }
-      />
-      <div className="grid grid-cols-2 items-start gap-6 max-[760px]:grid-cols-1">
-        <Card className="rounded-[21px] bg-card p-6 shadow-none">
-          <span className="mb-7 flex h-20 w-20 items-center justify-center rounded-[25px] bg-muted text-muted-foreground">
-            <IconHeadphones size={46} stroke={1.2} />
-          </span>
-          {healthQuery.isLoading ? (
-            <Skeleton className="h-6 w-32 rounded-full" />
-          ) : healthQuery.isError ? (
-            <InlineError
-              title="Backend unavailable"
-              onRetry={() => void healthQuery.refetch()}
-              busy={healthQuery.isFetching}
-            />
-          ) : isAethexLive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-success-surface px-3 py-1 text-[12px] font-medium text-success">
-              <i className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Voice AI configured
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-medium text-primary">
-              <i className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Voice setup incomplete
-            </span>
-          )}
-          <h2 className="mt-4 text-[32px] font-medium tracking-tight text-foreground">
-            Appointment assistant
-          </h2>
-          <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-muted-foreground">
-            A thoughtful reminder. Your assistant calls customers about their
-            appointments and follows up on outstanding booking payments.
-          </p>
-          <div className="my-7 divide-y divide-border border-y border-border">
-            <div className="flex items-center gap-3 py-4 text-[12px]">
-              <IconPhone size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">
-                Agent phone line
-              </span>
-              <strong className="text-[12px] font-semibold text-foreground">
-                {healthQuery.data?.voice?.fromNumber || "Not configured"}
-              </strong>
-            </div>
-            <div className="flex items-center gap-3 py-4 text-[12px]">
-              <IconClock size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">
-                Automatic follow-ups
-              </span>
-              <strong className="text-[12px] font-semibold text-foreground">
-                {healthQuery.data?.voice?.automaticCallsEnabled ? "Running" : "Not running"}
-              </strong>
-            </div>
-            <div className="flex items-center gap-3 py-4 text-[12px]">
-              <IconShieldCheck size={18} className="text-muted-foreground" />
-              <span className="flex-1 text-muted-foreground">
-                Connection status
-              </span>
-              <strong className="text-[12px] font-semibold text-foreground">
-                {healthQuery.isLoading
-                  ? "Checking…"
-                  : isHealthy
-                    ? isAethexLive ? "Configured" : "Setup required"
-                    : "Unavailable"}
-              </strong>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 rounded-[11px] bg-background p-3 text-[12px] leading-5 text-muted-foreground">
-            Outbound Voice AI can place automated appointment reminders,
-            confirmations, and check-ins directly via Aethex.
-          </div>
-          <div className="mt-5 flex gap-3">
-            <Button
-              onClick={() => setTestModalOpen(true)}
-              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
-            >
-              <IconPhone size={16} /> Dispatch test call
-            </Button>
-            <Link
-              href="/business-profile"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
-            >
-              Studio details <IconArrowRight size={16} />
-            </Link>
-          </div>
-        </Card>
-        <section className="px-4 py-5">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            A LITTLE LESS ON YOUR PLATE
-          </p>
-          <h2 className="mb-6 mt-4 text-[32px] font-medium tracking-tight text-foreground">
-            Good with people.
-            <br />
-            Great with the details.
-          </h2>
-          {[
-            {
-              icon: IconMessageCircle,
-              title: "Personalises each reminder",
-              text: "Uses the customer’s name, business name, service, and appointment time.",
-            },
-            {
-              icon: IconCalendarEvent,
-              title: "Keeps appointments in mind",
-              text: "Reminds customers before their visit. Booking changes are handled through the studio.",
-            },
-            {
-              icon: IconPhone,
-              title: "Gives a thoughtful nudge",
-              text: "Calls about unpaid bookings at your chosen interval, pausing when a receipt is under review.",
-            },
-            {
-              icon: IconUsers,
-              title: "Keeps you informed",
-              text: "Shows call history so you can see which customers were contacted.",
-            },
-          ].map(({ icon: Icon, title, text }) => (
-            <div className="flex gap-4 border-t border-border py-5" key={title}>
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-muted text-foreground">
-                <Icon size={21} />
-              </span>
-              <div>
-                <h3 className="text-[13px] font-semibold text-foreground">
-                  {title}
-                </h3>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                  {text}
-                </p>
-              </div>
-            </div>
-          ))}
-        </section>
-      </div>
-      <Card className="mt-6 rounded-[21px] bg-card p-8 shadow-none">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-              VOICE CALL ACTIVITY & LOGS
-            </p>
-            <h2 className="mt-2 text-[23px] font-semibold tracking-tight text-foreground">
-              Your call activity.
-            </h2>
-          </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
-            {callsQuery.data?.length
-              ? `${callsQuery.data.length} calls logged`
-              : "Ready"}
-          </span>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-1 max-[560px]:overflow-x-auto">
-          {["All activity", "Call logs", "Reservations", "Confirmations"].map(
-            (t) => (
-              <button
-                key={t}
-                className={`rounded-lg px-3 py-2 text-[12px] transition max-[560px]:whitespace-nowrap ${
-                  tab === t
-                    ? "bg-muted font-semibold text-foreground"
-                    : "font-medium text-muted-foreground hover:bg-background"
-                }`}
-                onClick={() => setTab(t)}
-              >
-                {t}
-              </button>
-            ),
-          )}
-        </div>
-
-        {tab === "Call logs" ? (
-          <div className="mt-4 divide-y divide-border">
-            {callsQuery.isLoading ? (
-              <div
-                className="divide-y divide-border/60"
-                role="status"
-                aria-label="Loading call logs"
-                aria-busy="true"
-              >
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4 py-4">
-                    <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-4 w-44 rounded" />
-                        <Skeleton className="h-4 w-16 rounded-full" />
-                      </div>
-                      <Skeleton className="h-3.5 w-36 rounded" />
-                    </div>
-                    <Skeleton className="h-3 w-12 rounded" />
-                  </div>
-                ))}
-              </div>
-            ) : callsQuery.isError ? (
-              <InlineError
-                title="Call logs couldn’t load."
-                onRetry={() => void callsQuery.refetch()}
-                busy={callsQuery.isFetching}
-              />
-            ) : !callsQuery.data?.length ? (
-              <div className="py-8 text-center text-[13px] text-muted-foreground">
-                No voice calls placed yet. Use the &quot;Test Voice AI
-                Call&quot; button above to dispatch your first call.
-              </div>
-            ) : (
-              callsQuery.data.map((c) => (
-                <div key={c.id} className="flex items-center gap-4 py-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-primary">
-                    <IconPhone size={19} />
-                  </span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <strong className="text-[13px] font-medium text-foreground">
-                        Outbound call to {c.to_number}
-                      </strong>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {c.call_type}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      Status:{" "}
-                      <span className="font-medium text-foreground capitalize">
-                        {c.status}
-                      </span>
-                      {c.duration_seconds
-                        ? ` · ${c.duration_seconds}s duration`
-                        : ""}
-                    </p>
-                  </div>
-                  <small className="text-[12px] text-muted-foreground">
-                    {new Date(c.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </small>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          activities.map((a) => (
-            <div
-              className="flex items-center gap-4 border-t border-border py-5"
-              key={a.id}
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                {a.kind === "confirmed" ? (
-                  <IconCheck size={19} />
-                ) : a.kind === "created" ? (
-                  <IconPlus size={19} />
-                ) : (
-                  <IconCalendarEvent size={19} />
-                )}
-              </span>
-              <div className="flex-1">
-                <strong className="block text-[12px] font-semibold text-foreground">
-                  {a.title}
-                </strong>
-                <p className="mt-1 text-[12px] text-muted-foreground">
-                  {a.detail}
-                </p>
-              </div>
-              <small className="text-[12px] text-muted-foreground">
-                {a.time}
-              </small>
-            </div>
-          ))
-        )}
-      </Card>
-
-      {/* Test Call Modal */}
-      {testModalOpen && (
-        <Modal
-          title="Test Voice AI Call"
-          description="Place an outbound test call powered by Aethex Voice AI."
-          busy={triggerCallMutation.isPending}
-          onClose={() => { if (!callLock.current) setTestModalOpen(false); }}
-        >
-          <form onSubmit={handleTestCall} className="space-y-4">
-            <fieldset disabled={triggerCallMutation.isPending} className="contents space-y-4">
-              <div>
-                <label className="block text-[12px] font-medium text-foreground">
-                  Destination phone number (E.164 format)
-                </label>
-                <Input
-                  type="tel"
-                  required
-                  value={testPhone}
-                  onChange={(e) => setTestPhone(e.target.value)}
-                  placeholder="+234 800 123 4567 or +14155552671"
-                  className="mt-1.5 h-10 bg-muted"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-medium text-foreground">
-                    Customer name
-                  </label>
-                  <Input
-                    value={testName}
-                    onChange={(e) => setTestName(e.target.value)}
-                    placeholder="e.g. Jane Doe"
-                    className="mt-1.5 h-10 bg-muted"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-medium text-foreground">
-                    Service name
-                  </label>
-                  <Input
-                    value={testService}
-                    onChange={(e) => setTestService(e.target.value)}
-                    placeholder="e.g. Signature Cut"
-                    className="mt-1.5 h-10 bg-muted"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[12px] font-medium text-foreground">
-                  Call type
-                </label>
-                <div className="mt-1.5 flex gap-2">
-                  {(["reminder", "confirmation"] as const).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setTestCallType(type)}
-                      className={`flex-1 rounded-xl py-2 text-[12px] font-medium capitalize transition ${
-                        testCallType === type
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-background"
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={triggerCallMutation.isPending}
-                  onClick={() => { if (!callLock.current) setTestModalOpen(false); }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  loading={triggerCallMutation.isPending}
-                  loadingText="Calling…"
-                  type="submit"
-                  disabled={triggerCallMutation.isPending}
-                  className="gap-2 bg-primary text-primary-foreground"
-                >
-                  {triggerCallMutation.isPending ? (
-                    <>
-                      <IconLoader2 size={16} className="animate-spin" />
-                      <span>Placing call…</span>
-                    </>
-                  ) : (
-                    <>
-                      <IconPhone size={16} />
-                      <span>Place Voice AI Call</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-            </fieldset>
-          </form>
-        </Modal>
-      )}
     </>
   );
 }

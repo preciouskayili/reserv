@@ -2,6 +2,7 @@
 import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
+import { IconSun, IconMoon, IconDeviceDesktop } from "@tabler/icons-react";
 const subscribe = () => () => {};
 export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
@@ -15,6 +16,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     </NextThemeProvider>
   );
 }
+const themeOptions = [
+  { value: "system", label: "System", icon: IconDeviceDesktop },
+  { value: "light", label: "Light", icon: IconSun },
+  { value: "dark", label: "Dark", icon: IconMoon },
+] as const;
 export function ThemeSelect() {
   const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
@@ -22,16 +28,31 @@ export function ThemeSelect() {
     () => true,
     () => false,
   );
+  const active = mounted ? theme : "system";
   return (
-    <select
+    <div
+      role="radiogroup"
       aria-label="Appearance"
-      value={mounted ? theme : "system"}
-      onChange={(e) => setTheme(e.target.value)}
-      className="min-h-9 rounded-lg bg-muted px-3 text-xs font-medium text-foreground"
+      className="inline-flex items-center gap-0.5 rounded-full bg-muted p-1"
     >
-      <option value="system">System</option>
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-    </select>
+      {themeOptions.map(({ value, label, icon: Icon }) => (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={active === value}
+          aria-label={label}
+          title={label}
+          onClick={() => setTheme(value)}
+          className={`flex size-7 items-center justify-center rounded-full transition ${
+            active === value
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Icon size={15} stroke={1.6} />
+        </button>
+      ))}
+    </div>
   );
 }

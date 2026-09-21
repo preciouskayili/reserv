@@ -147,7 +147,7 @@ export function PaymentPage({ code }: { code: string }) {
           </div>
           <p className="mt-5 text-[12px] leading-6 text-primary-foreground/55">{state.business.depositPolicy}</p>
         </section>
-        <p className="flex items-center gap-2 text-[12px] text-primary-foreground/45"><IconLock size={15} /> Your appointment, with a little less admin.</p>
+        <p className="flex items-center gap-2 text-[12px] text-primary-foreground/45"><IconLock size={15} /> Booking and payment details</p>
       </aside>
       <section className="flex items-center justify-center px-6 py-10 lg:px-12 lg:py-16 xl:px-20">
         <div className="w-full max-w-[600px]">

@@ -12,7 +12,6 @@ import {
   IconCheck,
   IconChevronDown,
   IconCreditCard,
-  IconHeadphones,
   IconLogin,
   IconLogout,
   IconPlus,
@@ -51,7 +50,6 @@ const navigation = [
     path: "/business-profile",
     icon: IconBuildingStore,
   },
-  { name: "Agent", path: "/agent", icon: IconHeadphones },
   { name: "Settings", path: "/settings", icon: IconAdjustmentsHorizontal },
 ];
 
@@ -81,10 +79,10 @@ export function StudioShell({ children }: { children: ReactNode }) {
       (n.path !== "/" && pathname.startsWith(`${n.path}/`)),
   );
 
-  if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Let’s reconnect your workspace." message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
+  if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Connection error" message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
   if (authLoading || !isAuthenticated) return <PageLoading label="Checking your session…" />;
 
-  if (needsOnboarding) return <PageLoading label="Let’s set up your workspace…" />;
+  if (needsOnboarding) return <PageLoading label="Opening workspace setup…" />;
 
   return (
     <BookingModalContext.Provider
@@ -258,9 +256,9 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <Link
                 href="/settings"
                 aria-label="Account settings"
-                className="flex items-center gap-2.5 rounded-full bg-card py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground transition hover:text-foreground"
+                className="flex items-center gap-2.5 rounded-full bg-card h-10 py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground transition hover:text-foreground"
               >
-                <div className="relative">
+                <div className="relative flex h-7 w-7 shrink-0 items-center justify-center">
                   <Avatar src={state.staff.find(s => s.id === state.settings.ownerStaffId || (!state.settings.ownerStaffId && s.role === "Owner"))?.avatarUrl} name={state.settings.owner || user.name} size="h-7 w-7 text-[12px]" />
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-card" />
                 </div>

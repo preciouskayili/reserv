@@ -266,7 +266,7 @@ export function BookingFlow({
                 ))}
               {!state.services.some((s) => s.active) && (
                 <EmptyState
-                  title="A little pause"
+                  title="No services available"
                   description="The studio has no services available to book right now. Please call us."
                 />
               )}

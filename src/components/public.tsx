@@ -35,7 +35,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background pt-10 max-[760px]:pt-5">
       {children}
       <footer className="mx-auto flex max-w-[840px] items-center justify-between gap-4 border-t border-border px-10 py-8 text-[12px] text-muted-foreground max-[760px]:px-5 max-[560px]:flex-wrap">
-        <span>A little time, well spent.</span>
+        <span>Booking management</span>
         <span className="flex items-center gap-1.5 transition hover:text-foreground">
           Made possible with <Brand small />
         </span>
@@ -108,7 +108,7 @@ export function PublicProfile() {
               <div className="flex items-center gap-2">
                 <IconMapPin size={18} className="text-foreground" />
                 <h2 className="text-[18px] font-semibold tracking-tight text-foreground">
-                  Find your way to us
+                  Location
                 </h2>
               </div>
               <p className="text-[12px] text-muted-foreground">
@@ -153,10 +153,10 @@ export function PublicProfile() {
             </div>
             <section className="mt-14 border-t border-border pt-11">
               <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-                IN GOOD HANDS
+                OUR TEAM
               </p>
               <h2 className="mt-2 text-[27px] font-medium tracking-tight text-foreground">
-                Meet your people.
+                Staff
               </h2>
               <div className="mt-6 flex flex-col gap-3">
                 {activeState.staff.map((s) => (
@@ -178,7 +178,7 @@ export function PublicProfile() {
             {activeState.business.faqs?.length > 0 && (
               <section className="mt-14">
                 <h2 className="text-[27px] font-medium tracking-tight text-foreground">
-                  A few things to know.
+                  Frequently asked questions
                 </h2>
                 <div className="mt-4">
                   {activeState.business.faqs.map((faq, i) => (

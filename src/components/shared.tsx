@@ -16,10 +16,17 @@ import {
   IconChevronRight,
   IconCopy,
   IconClock,
-  IconFlower,
   IconBuildingStore,
-  IconScissors,
-  IconSparkles,
+  IconBuildingFactory2,
+  IconBuildingWarehouse,
+  IconBuildingSkyscraper,
+  IconBuildingCottage,
+  IconBuildingCommunity,
+  IconBuildingEstate,
+  IconBuildingHospital,
+  IconBuildingBank,
+  IconBuildingPavilion,
+  IconInbox,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -50,11 +57,16 @@ export function Brand({ small = false }: { small?: boolean }) {
     </Link>
   );
 }
-export const studioIcons = { store: IconBuildingStore, flower: IconFlower, scissors: IconScissors, sparkles: IconSparkles };
+export const studioIcons = {
+  store: IconBuildingStore, factory: IconBuildingFactory2, warehouse: IconBuildingWarehouse,
+  office: IconBuildingSkyscraper, cottage: IconBuildingCottage, community: IconBuildingCommunity,
+  estate: IconBuildingEstate, hospital: IconBuildingHospital, bank: IconBuildingBank, pavilion: IconBuildingPavilion,
+};
+
 export function StudioMark({ large = false }: { large?: boolean }) {
   const { state } = useStore();
-  const Icon = studioIcons[state.business.icon ?? "store"];
-  return <span className={`inline-flex shrink-0 items-center justify-center overflow-hidden bg-muted text-foreground ${large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"}`}>
+  const Icon = studioIcons[state.business.icon as keyof typeof studioIcons] ?? IconBuildingStore;
+  return <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-muted text-foreground ${large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"}`}>
     {state.business.logoUrl ? <ProfileImage src={state.business.logoUrl} name={state.business.name} fallback={<Icon stroke={1.4} size={large ? 28 : 20} />} /> : <Icon stroke={1.4} size={large ? 28 : 20} />}
   </span>;
 }
@@ -62,7 +74,7 @@ function ProfileImage({ src, name, fallback }: { src: string; name: string; fall
   const [failed, setFailed] = useState<string | null>(null);
   // User-uploaded, bounded images; retain initials if a remote image becomes unavailable.
   // eslint-disable-next-line @next/next/no-img-element
-  return failed === src ? fallback : <img src={src} alt={name} className="h-full w-full object-cover" onError={() => setFailed(src)} />;
+  return failed === src ? fallback : <img src={src} alt={name} className="absolute inset-0 block h-full w-full object-cover" onError={() => setFailed(src)} />;
 }
 export function PageHeader({
   eyebrow,
@@ -173,7 +185,7 @@ export function Avatar({
           : "h-9 w-9 text-[12px]";
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted font-bold text-foreground ${sizeClasses} ${className}`}
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted font-bold text-foreground ${sizeClasses} ${className}`}
     >
       {src ? <ProfileImage src={src} name={name} fallback={initials(name)} /> : initials(name)}
     </span>
@@ -282,7 +294,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl p-8 text-center text-muted-foreground">
-      <IconFlower size={32} stroke={1.2} />
+      <IconInbox size={32} stroke={1.2} />
       <h3 className="mt-4 text-[17px] font-semibold text-foreground">
         {title}
       </h3>

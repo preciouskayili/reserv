@@ -297,7 +297,7 @@ function ScheduleTimeline({
       )}
       {!hours.closed && !events.length && (
         <div className="absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-tight text-muted-foreground">
-          A little room in your day.
+          No appointments scheduled
           <span className="mt-2 block text-[12px] font-normal tracking-normal text-muted-foreground">Click an open time to add a reservation.</span>
         </div>
       )}
@@ -382,7 +382,7 @@ function ScheduleScaffold({
             <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               {all.length
                 ? `Your first appointment is at ${time(all[0].startTime)}.`
-                : "A little room to breathe."}
+                : "No appointments scheduled"}
             </p>
           </div>
           {attention.length > 0 && (
@@ -519,7 +519,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
           <h1 className="mt-2 text-[30px] font-medium tracking-tight text-foreground max-[760px]:text-[30px]">
             Your calendar.
           </h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">All seven days, with room for what’s next.</p>
+          <p className="mt-2 text-[13px] text-muted-foreground">View and manage appointments for the week.</p>
         </div>
         <Button
           className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
@@ -812,9 +812,9 @@ export function BookingsPage({ onNew, onBooking }: Props) {
   return (
     <>
       <PageHeader
-        eyebrow="EVERY VISIT, IN ONE PLACE"
-        title="Reservations."
-        description="Good things on the calendar."
+        eyebrow="BOOKING MANAGEMENT"
+        title="Bookings"
+        description="Search bookings, check payment status, and manage appointments."
         action={
           <Button
             className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
@@ -883,7 +883,7 @@ export function BookingsPage({ onNew, onBooking }: Props) {
         </DataTable>
         {!bookings.length && (
           <EmptyState
-            title="Nothing here just yet."
+            title="No bookings found"
             description="Try another filter or search, or make a new reservation."
             action={query || filter !== "All" ? <Button variant="outline" onClick={() => { setQuery(""); setFilter("All"); }}>Clear filters</Button> : <Button onClick={() => onNew()}>New booking</Button>}
           />

@@ -135,7 +135,7 @@ function CallSettingsForm({ initial }: { initial: CallPreferences }) {
             Automatic calls
           </h2>
           <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-            A timely reminder, without the follow-up work.
+            Set when customers receive appointment and payment calls.
           </p>
         </div>
       </div>
