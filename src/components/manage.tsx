@@ -77,7 +77,7 @@ export function ServicesPage() {
         description="Thoughtful services. Ready to reserve."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
             disabled={isSaving}
             onClick={() => setEditing("new")}
           >
@@ -191,7 +191,7 @@ export function ServicesPage() {
                 page to preserve those records.
               </p>
               <Button
-                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
                 loading={isSaving}
                 loadingText="Saving…"
                 onClick={async () => {
@@ -310,7 +310,7 @@ function ServiceEditor({
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               placeholder="e.g. Silk press"
-              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </label>
           <label className="block text-[12px] font-semibold text-foreground">
@@ -323,7 +323,7 @@ function ServiceEditor({
                 setDraft({ ...draft, description: e.target.value })
               }
               placeholder="Tell customers what makes this service special…"
-              className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+              className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </label>
           <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
@@ -339,7 +339,7 @@ function ServiceEditor({
                 onChange={(e) =>
                   setDraft({ ...draft, duration: Number(e.target.value) })
                 }
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </label>
             <label className="block text-[12px] font-semibold text-foreground">
@@ -352,7 +352,7 @@ function ServiceEditor({
                 onChange={(e) =>
                   setDraft({ ...draft, price: Number(e.target.value) })
                 }
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </label>
             <label className="block text-[12px] font-semibold text-foreground">
@@ -366,7 +366,7 @@ function ServiceEditor({
                 onChange={(e) =>
                   setDraft({ ...draft, deposit: Number(e.target.value) })
                 }
-                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </label>
           </div>
@@ -377,7 +377,7 @@ function ServiceEditor({
             {state.staff.map((s) => (
               <label
                 key={s.id}
-                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-[12px] text-foreground transition hover:border-border"
+                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[12px] text-foreground transition hover:border-border"
               >
                 <input
                   type="checkbox"
@@ -392,14 +392,14 @@ function ServiceEditor({
                     })
                   }
                 />
-                <Avatar name={s.name} />
+                <Avatar name={s.name} src={s.avatarUrl} />
                 {s.name}
               </label>
             ))}
           </div>
           {error && (
             <p
-              className="mt-3 text-[12px] font-medium text-[#af625b]"
+              className="mt-3 text-[12px] font-medium text-destructive"
               role="alert"
             >
               {error}
@@ -409,7 +409,7 @@ function ServiceEditor({
             loading={isSaving}
             loadingText="Saving…"
             type="submit"
-            className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+            className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           >
             {service ? "Save changes" : "Create service"}
             <IconCheck size={17} />
@@ -443,7 +443,7 @@ export function CustomersPage({
         description="A little care goes a long way."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
             onClick={() => setAdding(true)}
           >
             <IconPlus size={18} />
@@ -466,7 +466,7 @@ export function CustomersPage({
               placeholder="Search by name or phone"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-card focus-visible:ring-1 focus-visible:ring-primary"
             />
           </div>
         </div>
@@ -632,7 +632,7 @@ export function CustomersPage({
                   name="name"
                   required
                   minLength={2}
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </label>
               <label className="block text-[12px] font-semibold text-foreground">
@@ -643,14 +643,14 @@ export function CustomersPage({
                   required
                   pattern="[+0-9 ()-]{10,20}"
                   placeholder="+234 800 000 0000"
-                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </label>
               <Button
                 loading={isSaving}
                 loadingText="Saving…"
                 type="submit"
-                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
               >
                 Add customer
               </Button>
@@ -688,14 +688,14 @@ function CustomerDetails({
     >
       <div className="my-6 flex gap-2">
         <a
-          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
           href={`tel:${customer.phone.replaceAll(" ", "")}`}
         >
           <IconPhone size={16} />
           Call customer
         </a>
         <Button
-          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           disabled={isSaving}
           onClick={onNew}
         >
@@ -710,13 +710,13 @@ function CustomerDetails({
           disabled={isSaving}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+          className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </label>
       <Button
         variant="secondary"
         size="sm"
-        className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
+        className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-card px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
         loading={isSaving}
         loadingText="Saving…"
         onClick={async () => {
@@ -773,7 +773,7 @@ export function BusinessProfilePage() {
         description="Everything your customers — and receptionist — should know."
         action={
           <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
             href={`/b/${state.business.slug}`}
           >
             <IconEye size={17} />
@@ -794,7 +794,7 @@ export function BusinessProfilePage() {
               Your public studio page
             </span>
           </div>
-          <nav className="flex flex-wrap gap-1 rounded-xl bg-white p-2">
+          <nav className="flex flex-wrap gap-1 rounded-xl bg-card p-2">
             {[
               "The essentials",
               "Opening hours",
@@ -841,7 +841,7 @@ export function BusinessProfilePage() {
                     required
                     value={draft.name}
                     onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -853,7 +853,7 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, description: e.target.value })
                     }
-                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
@@ -899,7 +899,7 @@ export function BusinessProfilePage() {
                       onChange={(e) =>
                         setDraft({ ...draft, phone: e.target.value })
                       }
-                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </label>
                 </div>
@@ -926,7 +926,7 @@ export function BusinessProfilePage() {
                 <p className="text-[12px] text-muted-foreground">
                   A time for work, and a time for yourself. All times are in WAT.
                 </p>
-                <div className="mt-5 divide-y divide-[#f0f0f0]">
+                <div className="mt-5 divide-y divide-border">
                   {draft.hours.map((h, i) => (
                     <div
                       key={h.day}
@@ -959,7 +959,7 @@ export function BusinessProfilePage() {
                             type="time"
                             required
                             value={h.open}
-                            className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
+                            className="min-w-0 rounded-lg border border-border bg-card px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
                             onChange={(e) =>
                               setDraft({
                                 ...draft,
@@ -977,7 +977,7 @@ export function BusinessProfilePage() {
                             type="time"
                             required
                             value={h.close}
-                            className="min-w-0 rounded-lg border border-border bg-white px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
+                            className="min-w-0 rounded-lg border border-border bg-card px-2 py-1 text-[12px] text-foreground shadow-none outline-none max-[560px]:px-1 max-[560px]:text-[12px]"
                             onChange={(e) =>
                               setDraft({
                                 ...draft,
@@ -1005,7 +1005,7 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, bookingPolicy: e.target.value })
                     }
-                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -1017,7 +1017,7 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, cancellationPolicy: e.target.value })
                     }
-                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -1028,7 +1028,7 @@ export function BusinessProfilePage() {
                     onChange={(e) =>
                       setDraft({ ...draft, depositPolicy: e.target.value })
                     }
-                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
@@ -1048,7 +1048,7 @@ export function BusinessProfilePage() {
                           },
                         })
                       }
-                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </label>
                   <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -1067,7 +1067,7 @@ export function BusinessProfilePage() {
                           },
                         })
                       }
-                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                      className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </label>
                 </div>
@@ -1088,7 +1088,7 @@ export function BusinessProfilePage() {
                         variant="ghost"
                         size="icon"
                         type="button"
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-card hover:text-foreground"
                         aria-label={`Remove question ${i + 1}`}
                         onClick={() =>
                           setDraft({
@@ -1113,7 +1113,7 @@ export function BusinessProfilePage() {
                             ),
                           })
                         }
-                        className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                        className="mt-2 min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       />
                     </label>
                     <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -1130,14 +1130,14 @@ export function BusinessProfilePage() {
                             ),
                           })
                         }
-                        className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                        className="mt-2 min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       />
                     </label>
                   </div>
                 ))}
                 <Button
                   variant="secondary"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
                   type="button"
                   onClick={() =>
                     setDraft({
@@ -1156,7 +1156,7 @@ export function BusinessProfilePage() {
                 Changes update your public profile.
               </span>
               <Button
-                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
                 loading={isSaving}
                 loadingText="Saving…"
                 type="submit"
@@ -1232,7 +1232,7 @@ export function AgentPage() {
         description="More time with your customers. Less time on the phone."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-xs"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 shadow-xs"
             onClick={() => setTestModalOpen(true)}
           >
             <IconPhone size={17} />
@@ -1254,43 +1254,40 @@ export function AgentPage() {
               busy={healthQuery.isFetching}
             />
           ) : isAethexLive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[12px] font-medium text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-success-surface px-3 py-1 text-[12px] font-medium text-success">
               <i className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Aethex Voice AI Live
+              Voice AI configured
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-medium text-primary">
               <i className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Voice AI Simulation Ready
+              Voice setup incomplete
             </span>
           )}
           <h2 className="mt-4 text-[32px] font-medium tracking-tight text-foreground">
-            AI Receptionist
+            Appointment assistant
           </h2>
           <p className="mt-2 max-w-[400px] text-[13px] leading-6 text-muted-foreground">
-            A thoughtful first hello. Powered by Aethex Voice AI to answer
-            calls, reach out with timely visit reminders, and look after your
-            reservations.
+            A thoughtful reminder. Your assistant calls customers about their
+            appointments and follows up on outstanding booking payments.
           </p>
-          <div className="my-7 divide-y divide-[#efefef] border-y border-border">
+          <div className="my-7 divide-y divide-border border-y border-border">
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconPhone size={18} className="text-muted-foreground" />
               <span className="flex-1 text-muted-foreground">
                 Agent phone line
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                {isAethexLive
-                  ? "+1 (415) 555-0199"
-                  : "+1 (415) 555-0000 (Demo)"}
+                {healthQuery.data?.voice?.fromNumber || "Not configured"}
               </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
               <IconClock size={18} className="text-muted-foreground" />
               <span className="flex-1 text-muted-foreground">
-                Calling hours
+                Automatic follow-ups
               </span>
               <strong className="text-[12px] font-semibold text-foreground">
-                Studio opening hours
+                {healthQuery.data?.voice?.automaticCallsEnabled ? "Running" : "Not running"}
               </strong>
             </div>
             <div className="flex items-center gap-3 py-4 text-[12px]">
@@ -1302,7 +1299,7 @@ export function AgentPage() {
                 {healthQuery.isLoading
                   ? "Checking…"
                   : isHealthy
-                    ? "Online & Ready"
+                    ? isAethexLive ? "Configured" : "Setup required"
                     : "Unavailable"}
               </strong>
             </div>
@@ -1314,13 +1311,13 @@ export function AgentPage() {
           <div className="mt-5 flex gap-3">
             <Button
               onClick={() => setTestModalOpen(true)}
-              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               <IconPhone size={16} /> Dispatch test call
             </Button>
             <Link
               href="/business-profile"
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
             >
               Studio details <IconArrowRight size={16} />
             </Link>
@@ -1338,23 +1335,23 @@ export function AgentPage() {
           {[
             {
               icon: IconMessageCircle,
-              title: "Knows your studio",
-              text: "Answers questions about your services, pricing, hours, and policies.",
+              title: "Personalises each reminder",
+              text: "Uses the customer’s name, business name, service, and appointment time.",
             },
             {
               icon: IconCalendarEvent,
-              title: "Keeps your calendar in order",
-              text: "Checks availability, makes reservations, and helps with rescheduling or cancellations.",
+              title: "Keeps appointments in mind",
+              text: "Reminds customers before their visit. Booking changes are handled through the studio.",
             },
             {
               icon: IconPhone,
               title: "Gives a thoughtful nudge",
-              text: "Confirms upcoming visits and calls customers with timely reminders.",
+              text: "Calls about unpaid bookings at your chosen interval, pausing when a receipt is under review.",
             },
             {
               icon: IconUsers,
-              title: "Remembers familiar faces",
-              text: "Finds returning customers by phone number and reservations by booking code.",
+              title: "Keeps you informed",
+              text: "Shows call history so you can see which customers were contacted.",
             },
           ].map(({ icon: Icon, title, text }) => (
             <div className="flex gap-4 border-t border-border py-5" key={title}>
@@ -1380,7 +1377,7 @@ export function AgentPage() {
               VOICE CALL ACTIVITY & LOGS
             </p>
             <h2 className="mt-2 text-[23px] font-semibold tracking-tight text-foreground">
-              Live receptionist activity.
+              Your call activity.
             </h2>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
@@ -1566,7 +1563,7 @@ export function AgentPage() {
                       onClick={() => setTestCallType(type)}
                       className={`flex-1 rounded-xl py-2 text-[12px] font-medium capitalize transition ${
                         testCallType === type
-                          ? "bg-primary text-white"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-background"
                       }`}
                     >
@@ -1589,7 +1586,7 @@ export function AgentPage() {
                   loadingText="Calling…"
                   type="submit"
                   disabled={triggerCallMutation.isPending}
-                  className="gap-2 bg-primary text-white"
+                  className="gap-2 bg-primary text-primary-foreground"
                 >
                   {triggerCallMutation.isPending ? (
                     <>

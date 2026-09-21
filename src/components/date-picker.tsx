@@ -38,7 +38,7 @@ export function DatePicker({ value, onChange, children }: { value: string; onCha
             <SelectContent alignItemWithTrigger={false}>{years.map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <Calendar mode="single" month={month} onMonthChange={setMonth} selected={toDate(value)} onSelect={(date) => date && choose(date)} className="bg-white [--cell-size:2.25rem]" />
+        <Calendar mode="single" month={month} onMonthChange={setMonth} selected={toDate(value)} onSelect={(date) => date && choose(date)} className="bg-card [--cell-size:2.25rem]" />
         <Button variant="secondary" className="mt-2 w-full" onClick={() => choose(toDate(TODAY))}>Today</Button>
       </PopoverContent>
     </Popover>

@@ -7,6 +7,7 @@ import {
   IconMapPin,
   IconX,
 } from "@tabler/icons-react";
+import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 
 interface LocationPickerProps {
@@ -32,6 +33,16 @@ const MINIMAL_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#e3e8ee" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+];
+
+const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#263140" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#a0adbf" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1b2330" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#39475a" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#131e2b" }] },
 ];
 
 declare global {
@@ -86,6 +97,7 @@ export function LocationPicker({
   placeholder = "Enter your business address",
   className = "",
 }: LocationPickerProps) {
+  const { resolvedTheme } = useTheme();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
   const query = value;
   const [mapsError,setMapsError]=useState("");
@@ -193,6 +205,10 @@ export function LocationPicker({
     };
   }, [mapsReady, movePin, reverseGeocode]);
 
+  useEffect(() => {
+    mapInstanceRef.current?.setOptions({ styles: resolvedTheme === "dark" ? DARK_MAP_STYLE : MINIMAL_MAP_STYLE });
+  }, [resolvedTheme, mapsReady]);
+
   const closeSuggestions = () => {
     requestVersion.current++;
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -294,7 +310,7 @@ export function LocationPicker({
               if (predictions.length > 0) setDropdownOpen(true);
             }}
             placeholder={placeholder}
-            className="min-h-10 w-full rounded-xl border-0 bg-muted pl-3.5 pr-20 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary transition"
+            className="min-h-10 w-full rounded-xl border-0 bg-muted pl-3.5 pr-20 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:bg-card focus-visible:ring-1 focus-visible:ring-primary transition"
           />
           <div className="absolute right-2 flex items-center gap-1">
             {isSearching ? (
@@ -303,7 +319,7 @@ export function LocationPicker({
               <button
                 type="button"
                 onClick={() => handleQueryChange("")}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-black/5 hover:text-foreground"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
                 aria-label="Clear location input"
               >
                 <IconX size={13} />
@@ -314,7 +330,7 @@ export function LocationPicker({
               onClick={handleUseCurrentLocation}
               disabled={isLocating || !mapsReady}
               title="Pin my current location"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/80 text-muted-foreground hover:bg-white hover:text-primary transition shadow-none"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-card/80 text-muted-foreground hover:bg-card hover:text-primary transition shadow-none"
             >
               {isLocating ? (
                 <IconLoader2 size={14} className="animate-spin text-primary" />
@@ -328,7 +344,7 @@ export function LocationPicker({
         {/* Places Autocomplete Suggestions Dropdown */}
         {dropdownOpen && predictions.length > 0 && (
           <>
-            <div id={suggestionsId} role="listbox" aria-label="Address suggestions" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-white p-1.5 shadow-none ring-1 ring-black/5">
+            <div id={suggestionsId} role="listbox" aria-label="Address suggestions" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-card p-1.5 shadow-none ring-1 ring-black/5">
               {predictions.map((p, index) => (
                 <button
                   key={p.placeId}
@@ -354,7 +370,7 @@ export function LocationPicker({
       {/* Interactive Google Map Pin Picker */}
       <div className="relative h-48 w-full overflow-hidden rounded-2xl border-0 bg-muted">
         <div ref={mapContainerRef} className="h-full w-full" />
-        <div className="pointer-events-none absolute bottom-2.5 left-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-medium text-foreground backdrop-blur-xs">
+        <div className="pointer-events-none absolute bottom-2.5 left-3 rounded-full bg-card/90 px-3 py-1 text-[11px] font-medium text-foreground backdrop-blur-xs">
           {mapsReady ? "Click or drag pin to fine-tune location" : apiKey && !mapsError ? "Loading map…" : "Enter your address above"}
         </div>
       </div>

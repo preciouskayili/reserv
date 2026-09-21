@@ -10,7 +10,7 @@ import { useAuth } from "./auth-context";
 import { normalizePayments } from "./payments";
 import { type AppState } from "./model";
 import { api, ApiError, getStoredWorkspaceId, setStoredWorkspaceId, type Snapshot } from "./api";
-import type { OnboardingData } from "@/components/onboarding-modal";
+import type { OnboardingData } from "@/components/onboarding-page";
 export interface WorkspaceSummary { id: string; name: string; slug: string; role: string; }
 export const emptyWorkspaceState: AppState = {
   business: {
@@ -138,6 +138,6 @@ function ScopedStore({children,pathname,publicPath}:{children:ReactNode;pathname
  let content=children;
  if(!bypass&&isLoading)content=<RouteLoading pathname={pathname} withShell={!publicPath} />;
  else if(error)content=<main className="mx-auto max-w-2xl px-5 py-16"><InlineError title={notFound?"We couldn’t find that page.":"Couldn’t load your workspace."} message={error} onRetry={notFound?undefined:()=>{setError("");setIsLoading(true);setReload(value=>value+1);}} /><Link href="/reservation" className="mt-5 inline-flex text-sm text-primary">Find a reservation</Link></main>;
- return <Store.Provider value={{state,update,reset:()=>void refresh(),workspaces,activeWorkspaceId,switchWorkspace,createWorkspace,needsOnboarding,setNeedsOnboarding,isLoading,refresh,acceptSnapshot}}>{saving&&<div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs text-white shadow-sm">Saving changes…</div>}{content}</Store.Provider>;
+ return <Store.Provider value={{state,update,reset:()=>void refresh(),workspaces,activeWorkspaceId,switchWorkspace,createWorkspace,needsOnboarding,setNeedsOnboarding,isLoading,refresh,acceptSnapshot}}>{saving&&<div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs text-primary-foreground shadow-sm">Saving changes…</div>}{content}</Store.Provider>;
 }
 export function useStore(){const value=useContext(Store);if(!value)throw new Error("StoreProvider is required");return value;}

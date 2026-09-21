@@ -106,9 +106,9 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
       ] as const).map(item => {
         const unavailable = item.id !== "transfer" && !config.data?.providers.find(p => p.id === item.id)?.enabled;
         const disabled = busy || externalBusy || unavailable || Boolean(active && item.id !== current.provider);
-        return <label key={item.id} className={`flex items-center gap-3 rounded-2xl p-4 transition ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${selected === item.id && !unavailable ? "bg-primary text-white" : "bg-muted/70 text-foreground"}`}>
+        return <label key={item.id} className={`flex items-center gap-3 rounded-2xl p-4 transition ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${selected === item.id && !unavailable ? "bg-primary text-primary-foreground" : "bg-muted/70 text-foreground"}`}>
           <input type="radio" name="checkout-provider" className="sr-only peer" disabled={disabled} checked={selected === item.id} onChange={() => { setMethod(item.id); setError(""); }} />
-          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${selected === item.id && !unavailable ? "bg-white/10" : "bg-white"}`}><item.icon size={19} /></span>
+          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${selected === item.id && !unavailable ? "bg-card/10" : "bg-card"}`}><item.icon size={19} /></span>
           <span className="flex-1"><strong className="block text-[13px] font-medium">{item.title}{unavailable && <span className="ml-2 text-[11px] font-normal">Unavailable</span>}</strong><span className={`mt-1 block text-[12px] leading-5 ${selected === item.id && !unavailable ? "text-white/65" : "text-muted-foreground"}`}>{unavailable ? "This payment option is not available yet." : item.detail}</span></span>
           {selected === item.id && !unavailable && <IconCheck size={18} />}
         </label>;
@@ -116,7 +116,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
     </fieldset>
     <div className="mt-4 rounded-2xl bg-muted/70 p-5">
       {selected === "transfer" ? children : <form onSubmit={begin}>
-        {!(active && current.url) && <label className="mb-4 block text-[12px] font-medium">Email for your payment receipt<Input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || externalBusy || !enabled} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 h-11 rounded-xl bg-white" /></label>}
+        {!(active && current.url) && <label className="mb-4 block text-[12px] font-medium">Email for your payment receipt<Input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || externalBusy || !enabled} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 h-11 rounded-xl bg-card" /></label>}
         <Button loading={busy} loadingText="Checking securely…" type="submit" disabled={busy || externalBusy || !enabled || amount <= 0 && !active} className="h-11 w-full gap-2 rounded-xl"><IconLock size={16} />{busy ? "Checking securely…" : active ? "Resume checkout" : `Pay ${money(amount)}`}</Button>
         <p className="mt-3 text-[12px] leading-5 text-muted-foreground">You’ll complete payment on {selected === "paystack" ? "Paystack" : "Stripe"}. Your reservation updates after we verify the payment.</p>
       </form>}

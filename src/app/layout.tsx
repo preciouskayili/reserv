@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,8 +20,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${figtree.className} h-full antialiased`}>
+    <html suppressHydrationWarning lang="en" className={`${figtree.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <ThemeProvider>
         <QueryProvider>
           <AuthProvider>
             <TooltipProvider>
@@ -28,7 +30,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </TooltipProvider>
           </AuthProvider>
         </QueryProvider>
-        <Toaster theme="light" position="bottom-right" />
+        <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

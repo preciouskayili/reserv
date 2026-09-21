@@ -19,6 +19,7 @@ import { useStore } from "@/lib/store";
 import { getReservationByCode, time, TODAY } from "@/lib/model";
 import {
   Avatar,
+  StudioMark,
   Brand,
   BusinessHours,
   EmptyState,
@@ -35,7 +36,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {children}
       <footer className="mx-auto flex max-w-[840px] items-center justify-between gap-4 border-t border-border px-10 py-8 text-[12px] text-muted-foreground max-[760px]:px-5 max-[560px]:flex-wrap">
         <span>A little time, well spent.</span>
-        <span className="flex items-center gap-1.5 transition hover:text-[#555]">
+        <span className="flex items-center gap-1.5 transition hover:text-foreground">
           Made possible with <Brand small />
         </span>
         <span className="max-[760px]:hidden">Times shown in WAT</span>
@@ -55,13 +56,13 @@ export function PublicProfile() {
   return (
     <PublicLayout>
       <main className="mx-auto max-w-[840px] px-10 pb-16 max-[760px]:px-5">
-        <div className="flex flex-wrap items-end justify-between gap-6 rounded-t-[48px] border-0 bg-white px-12 pb-8 pt-11 max-[760px]:rounded-t-[34px] max-[760px]:px-6 max-[760px]:py-8">
+        <div className="flex flex-wrap items-end justify-between gap-6 rounded-t-[48px] border-0 bg-card px-12 pb-8 pt-11 max-[760px]:rounded-t-[34px] max-[760px]:px-6 max-[760px]:py-8">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               {activeState.business.category}
             </p>
             <h1 className="mt-2 flex items-center gap-3 text-[34px] font-medium tracking-tight text-foreground">
-              {activeState.business.name}
+              <StudioMark large />{activeState.business.name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
               <a
@@ -82,26 +83,26 @@ export function PublicProfile() {
           <div className="flex w-full flex-wrap items-center gap-2 pb-1">
             <Link
               href="/reservation"
-              className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-muted px-5 text-sm font-medium text-muted-foreground transition hover:bg-black/5 hover:text-foreground shadow-none"
+              className="mr-auto inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-muted px-5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground shadow-none"
             >
               <IconSearch size={14} /> Find my reservation
             </Link>
             <a
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-muted px-4 text-[12px] font-semibold text-foreground transition hover:bg-black/5 max-[560px]:flex-1 shadow-none"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-muted px-4 text-[12px] font-semibold text-foreground transition hover:bg-accent max-[560px]:flex-1 shadow-none"
               href={`tel:${activeState.business.phone.replaceAll(" ", "")}`}
             >
               <IconPhone size={17} />
               Call studio
             </a>
             <Button
-              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
+              className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 shadow-none"
               onClick={() => setService(null)}
             >
               Book an appointment <IconArrowUpRight size={17} />
             </Button>
           </div>
         </div>
-        <div className="public-columns flex flex-col gap-10 rounded-b-[48px] bg-white px-12 pb-12 pt-4 max-[760px]:rounded-b-[34px] max-[760px]:px-6">
+        <div className="public-columns flex flex-col gap-10 rounded-b-[48px] bg-card px-12 pb-12 pt-4 max-[760px]:rounded-b-[34px] max-[760px]:px-6">
           <section id="location" className="w-full">
             <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -140,7 +141,7 @@ export function PublicProfile() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-black/5 hover:text-foreground shadow-none"
+                        className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-accent hover:text-foreground shadow-none"
                         aria-label={`Book ${s.name}`}
                         onClick={() => setService(s.id)}
                       >
@@ -163,7 +164,7 @@ export function PublicProfile() {
                     key={s.id}
                     className="rounded-[17px] bg-muted p-5 text-left"
                   >
-                    <Avatar name={s.name} size="large" />
+                    <Avatar name={s.name} src={s.avatarUrl} size="large" />
                     <strong className="mt-4 block text-[13px] font-semibold text-foreground">
                       {s.name}
                     </strong>
@@ -287,7 +288,7 @@ export function ReservationLookup({ code }: { code?: string }) {
             description="Check your 12-character booking code and try again."
             action={
               <Link
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border-0 bg-primary px-5 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 shadow-none"
                 href="/reservation"
               >
                 Find my reservation
@@ -330,7 +331,7 @@ export function ReservationLookup({ code }: { code?: string }) {
               <label className="mb-4 block text-[12px] font-semibold text-foreground">
                 Booking code
                 <Input
-                  className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-center font-mono text-[18px] font-semibold tracking-[0.08em] uppercase text-foreground shadow-none outline-none focus:ring-2 focus:ring-[#d8d8da]"
+                  className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-center font-mono text-[18px] font-semibold tracking-[0.08em] uppercase text-foreground shadow-none outline-none focus:ring-2 focus:ring-ring"
                   placeholder="A82LPR7K9M2X"
                   maxLength={12}
                   minLength={12}
@@ -345,7 +346,7 @@ export function ReservationLookup({ code }: { code?: string }) {
               </label>
               {error && (
                 <p
-                  className="mt-3 text-[12px] font-medium text-[#af625b]"
+                  className="mt-3 text-[12px] font-medium text-destructive"
                   role="alert"
                 >
                   {error}
@@ -353,7 +354,7 @@ export function ReservationLookup({ code }: { code?: string }) {
               )}
               <Button
                 type="submit"
-                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border-0 bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 shadow-none"
+                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border-0 bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 shadow-none"
               >
                 <IconSearch size={17} />
                 Find my reservation

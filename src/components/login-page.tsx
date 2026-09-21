@@ -139,7 +139,7 @@ function LoginForm() {
             </button>
           </div>
         )}
-        <div className="overflow-hidden rounded-[28px] bg-white p-8 transition-all sm:p-8">
+        <div className="overflow-hidden rounded-[28px] bg-card p-8 transition-all sm:p-8">
           <div className="mb-6">
             <div className="mb-8">
               <span className="inline-block transition hover:opacity-80">
@@ -207,7 +207,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isSubmitting || !email.trim()}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -245,7 +245,7 @@ function LoginForm() {
                     onChange={(e) =>
                       setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
-                    className="h-14 rounded-xl border-border bg-background text-center font-mono text-[24px] font-bold tracking-[0.35em] text-foreground placeholder:text-muted-foreground/40 shadow-none transition focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+                    className="h-14 rounded-xl border-border bg-background text-center font-mono text-[24px] font-bold tracking-[0.35em] text-foreground placeholder:text-muted-foreground/40 shadow-none transition focus-visible:bg-card focus-visible:ring-1 focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -253,7 +253,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isSubmitting || code.length !== 6}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

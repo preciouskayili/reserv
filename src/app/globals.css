@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@custom-variant dark (&:where(.dark, .dark *));
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -12,7 +13,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--foreground);
   --color-primary: var(--primary);
-  --color-primary-foreground: #fff;
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--muted);
   --color-secondary-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -20,17 +21,23 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--primary);
   --color-destructive: var(--destructive);
-  --color-success: #397052;
-  --color-success-surface: #edf4ef;
-  --color-warning: #916333;
-  --color-warning-surface: #f8f1e7;
-  --color-danger-surface: #f8eceb;
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-danger-surface: var(--danger-surface);
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 }
 :root {
+  color-scheme: light;
+  --success: #397052;
+  --success-surface: #edf4ef;
+  --warning: #916333;
+  --warning-surface: #f8f1e7;
+  --danger-surface: #f8eceb;
   --background: #f6f7f9;
   --foreground: #283143;
   --border: #e5e8ee;
@@ -50,6 +57,32 @@
   --accent-foreground: #23395d;
   --destructive: #b45e52;
   --radius: 0.75rem;
+}
+.dark {
+  color-scheme: dark;
+  --background: #131922;
+  --foreground: #e5eaf2;
+  --border: #303a49;
+  --input: #303a49;
+  --ring: #9aadc9;
+  --card: #1b2330;
+  --card-foreground: #e5eaf2;
+  --popover: #222c3b;
+  --popover-foreground: #e5eaf2;
+  --primary: #abc6ed;
+  --primary-foreground: #15243a;
+  --secondary: #263140;
+  --secondary-foreground: #e5eaf2;
+  --muted: #263140;
+  --muted-foreground: #a0adbf;
+  --accent: #2c3b50;
+  --accent-foreground: #abc6ed;
+  --destructive: #eea397;
+  --success: #9dceae;
+  --success-surface: #203a30;
+  --warning: #e0bc87;
+  --warning-surface: #3b3226;
+  --danger-surface: #402c2d;
 }
 @layer base {
   * {

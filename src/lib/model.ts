@@ -6,6 +6,7 @@ export type BookingStatus =
   | "Completed"
   | "Rescheduled";
 export interface StaffMember {
+  avatarUrl?: string;
   id: string;
   name: string;
   role: string;
@@ -63,6 +64,8 @@ export interface AvailabilityRule {
   slotMinutes: number;
 }
 export interface Business {
+  logoUrl?: string;
+  icon?: "store" | "flower" | "scissors" | "sparkles";
   id: string;
   name: string;
   slug: string;
@@ -123,7 +126,7 @@ export interface AppState {
   bookings: Booking[];
   payments?: Payment[];
   agentActivity: AgentActivity[];
-  settings: { reminders: boolean; confirmations: boolean; owner: string; calls?: CallPreferences };
+  settings: { reminders: boolean; confirmations: boolean; owner: string; ownerStaffId?: string; calls?: CallPreferences };
   loaded: boolean;
 }
 // Business-local wall time in WAT. Live availability is also validated by the server.

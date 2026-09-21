@@ -94,7 +94,7 @@ function WeekStrip({
             <strong
               className={`flex h-10 w-10 items-center justify-center rounded-full text-[13px] font-semibold transition max-[560px]:h-7 max-[560px]:w-7 max-[560px]:text-[12px] ${
                 isSelected
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "text-foreground hover:bg-muted"
               }`}
             >
@@ -185,7 +185,7 @@ function ScheduleTimeline({
                 })
               }
             >
-              <IconPlus size={14} className="rounded-full bg-white p-0.5" />
+              <IconPlus size={14} className="rounded-full bg-card p-0.5" />
               <span>Add a booking</span>
             </button>
           );
@@ -196,7 +196,7 @@ function ScheduleTimeline({
           style={{ top: nowOffset }}
         >
           <i className="absolute -left-[5px] -top-[5px] h-[11px] w-[11px] rounded-full bg-[#d7958e]" />
-          <span className="absolute -top-[17px] right-0 text-[12px] font-bold tracking-wide text-[#bf817b]">NOW · 10:15</span>
+          <span className="absolute -top-[17px] right-0 text-[12px] font-bold tracking-wide text-[#bf817b]">NOW · {time(NOW)}</span>
         </div>
       )}
       {placeEvents(events).map(({ booking: b, lane, lanes }) => {
@@ -226,7 +226,7 @@ function ScheduleTimeline({
                   ? "border-border bg-muted text-foreground"
                   : needsAttention
                     ? "border-[#f0cfca] bg-[#f8e4e2] text-[#b26e68]"
-                    : "border-border bg-white text-foreground"
+                    : "border-border bg-card text-foreground"
               }`}
             >
               <ReservationIcon size={18} />
@@ -278,7 +278,7 @@ function ScheduleTimeline({
         return (
           <button
             key={`gap-${b.id}`}
-            className="absolute z-20 flex items-center gap-2 rounded-full bg-muted px-2 py-1 text-[12px] text-muted-foreground transition hover:bg-white hover:text-foreground [left:calc(15%_+_32px)] max-[560px]:[left:calc(15%_+_22px)]"
+            className="absolute z-20 flex items-center gap-2 rounded-full bg-muted px-2 py-1 text-[12px] text-muted-foreground transition hover:bg-card hover:text-foreground [left:calc(15%_+_32px)] max-[560px]:[left:calc(15%_+_22px)]"
             style={{
               top: offset(b.endTime) + Math.min((gap / 120) * HOUR_HEIGHT, 16),
             }}
@@ -342,7 +342,7 @@ function ScheduleScaffold({
           <button
             aria-label="Previous day"
             onClick={() => setDay(addDays(day, -1))}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition hover:text-foreground "
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-foreground "
           >
             <IconChevronLeft size={18} />
           </button>
@@ -350,7 +350,7 @@ function ScheduleScaffold({
           <button
             aria-label="Next day"
             onClick={() => setDay(addDays(day, 1))}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition hover:text-foreground "
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-foreground "
           >
             <IconChevronRight size={18} />
           </button>
@@ -358,7 +358,7 @@ function ScheduleScaffold({
         <div className="flex flex-wrap items-center justify-end gap-2">
           {modeControl}
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
             onClick={() => onNew({ date: day })}
           >
             <IconPlus size={17} />
@@ -401,7 +401,7 @@ function ScheduleScaffold({
                     <Avatar name={c.name} />
                     <span className="min-w-0 flex-1">
                       <strong className="block text-[12px] font-semibold text-foreground">{c.name}</strong>
-                      <small className="mt-0.5 block text-[12px] text-[#a47f74]">{b.status}</small>
+                      <small className="mt-0.5 block text-[12px] text-warning">{b.status}</small>
                     </span>
                     <IconArrowRight size={15} className="text-muted-foreground" />
                   </button>
@@ -522,7 +522,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
           <p className="mt-2 text-[13px] text-muted-foreground">All seven days, with room for what’s next.</p>
         </div>
         <Button
-          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+          className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
           onClick={() => onNew({ date: day })}
         >
           <IconPlus size={17} />
@@ -535,7 +535,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-white hover:text-foreground"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-card hover:text-foreground"
               aria-label="Previous week"
               onClick={() => setDay(addDays(day, -7))}
             >
@@ -545,7 +545,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-white hover:text-foreground"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-card hover:text-foreground"
               aria-label="Next week"
               onClick={() => setDay(addDays(day, 7))}
             >
@@ -554,7 +554,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             <Button
               variant="secondary"
               size="sm"
-              className="ml-2 inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
+              className="ml-2 inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-3 text-[12px] font-semibold text-foreground transition hover:border-border"
               onClick={() => setDay(TODAY)}
             >
               Today
@@ -585,7 +585,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
               return (
                 <button
                   key={date}
-                  className={`sticky top-0 z-30 flex h-[72px] flex-col items-center justify-center border-b-0 border-l-0 border-border text-[12px] transition hover:bg-muted [box-shadow:inset_-1px_0_#ededf0] ${
+                  className={`sticky top-0 z-30 flex h-[72px] flex-col items-center justify-center border-b-0 border-l-0 border-border text-[12px] transition hover:bg-muted [box-shadow:inset_-1px_0_var(--border)] ${
                     isToday ? "bg-background text-foreground" : "bg-card text-muted-foreground"
                   }`}
                   onClick={() => {
@@ -602,7 +602,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                   <strong
                     className={`my-1 flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold ${
                       isToday
-                        ? "bg-primary text-white"
+                        ? "bg-primary text-primary-foreground"
                         : "text-foreground"
                     }`}
                   >
@@ -649,7 +649,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
               return (
                 <div
                   key={date}
-                  className={`relative border-r-0 border-border [box-shadow:inset_-1px_0_#ededf0] [background-image:repeating-linear-gradient(_to_bottom,#e9e9eb_0,#e9e9eb_1px,transparent_1px,transparent_78px_)] ${
+                  className={`relative border-r-0 border-border [box-shadow:inset_-1px_0_var(--border)] [background-image:repeating-linear-gradient(to_bottom,var(--border)_0,var(--border)_1px,transparent_1px,transparent_78px)] ${
                     isToday ? "bg-background" : hours.closed ? "bg-background" : "bg-card"
                   }`}
                   style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
@@ -684,7 +684,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                             })
                           }
                         >
-                          <IconPlus size={15} className="h-5 w-5 rounded-full bg-white p-0.5" />
+                          <IconPlus size={15} className="h-5 w-5 rounded-full bg-card p-0.5" />
                         </button>
                       );
                     },
@@ -714,7 +714,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                           isCompleted
                             ? "bg-muted text-muted-foreground"
                             : isPending
-                              ? "bg-warning-surface text-[#8d6762]"
+                              ? "bg-warning-surface text-warning"
                               : "bg-accent text-primary"
                         }`}
                         style={{
@@ -729,14 +729,14 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                         onClick={() => onBooking(booking)}
                         aria-label={`${service.name} with ${customer.name}, ${time(booking.startTime)} to ${time(booking.endTime)}. ${booking.status}.`}
                       >
-                        <small className={`block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-medium ${isPending ? "text-[#a88580]" : "text-muted-foreground"}`}>
+                        <small className={`block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-medium ${isPending ? "text-warning" : "text-muted-foreground"}`}>
                           {time(booking.startTime)} – {time(booking.endTime)}
                         </small>
                         <strong className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold leading-[1.3] ${isCompleted ? "line-through" : ""}`}>
                           {service.name}
                         </strong>
                         {minutes >= 60 && (
-                          <span className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] ${isPending ? "text-[#a88580]" : "text-foreground"}`}>
+                          <span className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] ${isPending ? "text-warning" : "text-foreground"}`}>
                             {customer.name}
                           </span>
                         )}
@@ -817,7 +817,7 @@ export function BookingsPage({ onNew, onBooking }: Props) {
         description="Good things on the calendar."
         action={
           <Button
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
             onClick={() => onNew()}
           >
             <IconPlus size={18} />
@@ -854,7 +854,7 @@ export function BookingsPage({ onNew, onBooking }: Props) {
               placeholder="Name, phone or booking code"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+              className="h-10 w-full rounded-xl border border-transparent bg-muted pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground shadow-none transition focus-visible:border-border focus-visible:bg-card focus-visible:ring-1 focus-visible:ring-primary"
             />
           </div>
         </div>
@@ -872,7 +872,7 @@ export function BookingsPage({ onNew, onBooking }: Props) {
                     <td><span className="table-primary">{customer?.name}</span><span className="table-secondary font-mono">{b.code}</span></td>
                     <td><span className="table-primary">{service?.name}</span><span className="table-secondary">{service ? duration(service.duration) : ""}</span></td>
                     <td className="whitespace-nowrap tabular-nums">{time(b.startTime)}<span className="table-secondary">until {time(b.endTime)}</span></td>
-                    <td><span className="flex items-center gap-2"><Avatar name={staff?.name ?? "Unassigned"} /><span>{staff?.name ?? "Unassigned"}</span></span></td>
+                    <td><span className="flex items-center gap-2"><Avatar name={staff?.name ?? "Unassigned"} src={staff?.avatarUrl} /><span>{staff?.name ?? "Unassigned"}</span></span></td>
                     <td><BookingStatus status={b.status} /></td>
                     <td className="text-right"><button className="table-action" onClick={() => onBooking(b)} aria-label={`View reservation ${b.code}`}>View <IconChevronRight size={15} /></button></td>
                   </tr>;

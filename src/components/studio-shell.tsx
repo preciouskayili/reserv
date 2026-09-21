@@ -22,9 +22,8 @@ import {
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { InlineError, PageLoading } from "./feedback";
-import { Avatar, Brand } from "./shared";
+import { Avatar, Brand, StudioMark } from "./shared";
 import { BookingFlow, type BookingPreset } from "./booking-flow";
-import { OnboardingModal } from "./onboarding-modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type BookingModalContextType = {
@@ -64,17 +63,17 @@ export function StudioShell({ children }: { children: ReactNode }) {
     workspaces,
     activeWorkspaceId,
     switchWorkspace,
-    createWorkspace,
     needsOnboarding,
   } = useStore();
   const { user, isAuthenticated, isLoading: authLoading, sessionError, retrySession, logout } = useAuth();
   const [newBooking, setNewBooking] = useState<BookingPreset | null>(null);
-  const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !sessionError && !isAuthenticated) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [authLoading, sessionError, isAuthenticated, pathname, router]);
+
+  useEffect(() => { if (isAuthenticated && needsOnboarding) router.replace("/onboarding"); }, [isAuthenticated, needsOnboarding, router]);
 
   const current = navigation.find(
     (n) =>
@@ -85,7 +84,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
   if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Let’s reconnect your workspace." message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
   if (authLoading || !isAuthenticated) return <PageLoading label="Checking your session…" />;
 
-  if (needsOnboarding) return <main className="min-h-screen bg-background p-8"><Brand /><OnboardingModal open onSubmit={createWorkspace} initialOwner={user?.name || ""} /></main>;
+  if (needsOnboarding) return <PageLoading label="Let’s set up your workspace…" />;
 
   return (
     <BookingModalContext.Provider
@@ -102,9 +101,9 @@ export function StudioShell({ children }: { children: ReactNode }) {
             {/* Workspace Switcher */}
             <Popover open={workspaceDropdownOpen} onOpenChange={setWorkspaceDropdownOpen}>
               <PopoverTrigger
-                className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-left text-[12px] transition hover:bg-black/5"
+                className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-left text-[12px] transition hover:bg-accent"
               >
-                <div className="min-w-0 flex-1">
+                <StudioMark /><div className="min-w-0 flex-1">
                   <strong className="block truncate font-semibold text-foreground">
                     {state.business.name || "Select workspace"}
                   </strong>
@@ -117,7 +116,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <PopoverContent
                 align="start"
                 sideOffset={6}
-                className="w-56 rounded-2xl border-0 bg-white p-1.5 shadow-none ring-0"
+                className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-none ring-0"
               >
                 <div className="px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground">
                   Workspaces ({workspaces.length})
@@ -151,7 +150,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
                     type="button"
                     onClick={() => {
                       setWorkspaceDropdownOpen(false);
-                      setShowNewWorkspaceModal(true);
+                      router.push("/onboarding");
                     }}
                     className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] font-medium text-primary transition hover:bg-accent"
                   >
@@ -165,7 +164,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
 
           <button
             onClick={() => setNewBooking({})}
-            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-white transition hover:bg-primary/90"
+            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-primary-foreground transition hover:bg-primary/90"
           >
             <IconPlus size={17} /> New booking
           </button>
@@ -184,7 +183,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           </nav>
           <Link
             href={`/b/${state.business.slug}`}
-            className="mt-7 flex items-center gap-3 rounded-xl p-3 text-[12px] text-muted-foreground bg-muted hover:bg-black/5"
+            className="mt-7 flex items-center gap-3 rounded-xl p-3 text-[12px] text-muted-foreground bg-muted hover:bg-accent"
           >
             <span className="min-w-0 flex-1">
               <strong className="block truncate font-medium text-foreground">
@@ -211,7 +210,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
                 <PopoverContent
                   align="start"
                   sideOffset={6}
-                  className="w-52 rounded-2xl border-0 bg-white p-1.5 shadow-none ring-0"
+                  className="w-52 rounded-2xl border-0 bg-card p-1.5 shadow-none ring-0"
                 >
                   <div className="max-h-48 space-y-0.5 overflow-y-auto">
                     {workspaces.map((ws) => (
@@ -235,7 +234,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
                   <div className="mt-1 border-t border-border/40 pt-1">
                     <button
                       type="button"
-                      onClick={() => setShowNewWorkspaceModal(true)}
+                      onClick={() => router.push("/onboarding")}
                       className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12px] font-medium text-primary transition hover:bg-accent"
                     >
                       <IconPlus size={15} />
@@ -259,21 +258,21 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <Link
                 href="/settings"
                 aria-label="Account settings"
-                className="flex items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground transition hover:text-foreground"
+                className="flex items-center gap-2.5 rounded-full bg-card py-1.5 pl-1.5 pr-3 text-[12px] text-muted-foreground transition hover:text-foreground"
               >
                 <div className="relative">
-                  <Avatar name={user.name || state.settings.owner} size="h-7 w-7 text-[12px]" />
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+                  <Avatar src={state.staff.find(s => s.id === state.settings.ownerStaffId || (!state.settings.ownerStaffId && s.role === "Owner"))?.avatarUrl} name={state.settings.owner || user.name} size="h-7 w-7 text-[12px]" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-card" />
                 </div>
                 <span className="max-w-[110px] truncate font-medium text-foreground">
-                  {(user.name || state.settings.owner).split(" ")[0]}
+                  {(state.settings.owner || user.name).split(" ")[0]}
                 </span>
               </Link>
               <button
                 onClick={logout}
                 title="Sign out"
                 aria-label="Sign out"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-foreground transition hover:bg-rose-50 hover:text-rose-600"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-card text-muted-foreground transition hover:bg-danger-surface hover:text-destructive"
               >
                 <IconLogout size={15} />
               </button>
@@ -281,7 +280,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[12px] font-medium text-white transition hover:bg-primary/90"
+              className="flex items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[12px] font-medium text-primary-foreground transition hover:bg-primary/90"
             >
               <IconLogin size={15} />
               <span>Sign in</span>
@@ -306,7 +305,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           <button
             aria-label="New booking"
             onClick={() => setNewBooking({})}
-            className="shrink-0 rounded-full bg-primary px-3 text-white"
+            className="shrink-0 rounded-full bg-primary px-3 text-primary-foreground"
           >
             <IconPlus size={17} />
           </button>
@@ -323,16 +322,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           />
         )}
 
-        {/* Onboarding / New Workspace Modal */}
-        <OnboardingModal
-          open={needsOnboarding || showNewWorkspaceModal}
-          onClose={needsOnboarding ? undefined : () => setShowNewWorkspaceModal(false)}
-          onSubmit={async (data) => {
-            await createWorkspace(data);
-            setShowNewWorkspaceModal(false);
-          }}
-          initialOwner={user?.name || ""}
-        />
+
       </div>
     </BookingModalContext.Provider>
   );

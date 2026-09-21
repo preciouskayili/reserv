@@ -23,14 +23,25 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useWorkspaceSave } from "@/hooks/use-workspace-save";
-import { OnboardingModal } from "./onboarding-modal";
+import { useRouter } from "next/navigation";
+import { ThemeSelect } from "./theme-provider";
+import { ImageUpload } from "./image-upload";
+import { studioIcons } from "./shared";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_CALL_PREFERENCES, type CallPreferences } from "@/lib/model";
+import {
+  DEFAULT_CALL_PREFERENCES,
+  initials,
+  type CallPreferences,
+} from "@/lib/model";
 
 export function SettingsPage() {
-  const { state, update, workspaces, createWorkspace, isSaving } = useWorkspaceSave();
+  const { state, update, workspaces, isSaving } = useWorkspaceSave();
   const { user } = useAuth();
+  const router = useRouter();
+  const ownerStaff =
+    state.staff.find((s) => s.id === state.settings.ownerStaffId) ??
+    state.staff.find((s) => s.role === "Owner");
   const initialName = state.settings.owner || user?.name || "Your name";
   const [displayName, setDisplayName] = useState(initialName);
   const [editingName, setEditingName] = useState(false);
@@ -41,8 +52,6 @@ export function SettingsPage() {
     ...state.settings.calls,
   };
 
-  const [newWorkspaceModalOpen, setNewWorkspaceModalOpen] = useState(false);
-
   async function handleSaveName(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!tempName.trim()) {
@@ -52,7 +61,13 @@ export function SettingsPage() {
     const trimmed = tempName.trim();
     const saved = await update((s) => ({
       ...s,
-      settings: { ...s.settings, owner: trimmed },
+      settings: { ...s.settings, owner: trimmed, ownerStaffId: ownerStaff?.id },
+      business: { ...s.business, owner: trimmed },
+      staff: s.staff.map((member) =>
+        member.id === ownerStaff?.id
+          ? { ...member, name: trimmed, initials: initials(trimmed) }
+          : member,
+      ),
     }));
     if (saved) {
       setDisplayName(trimmed);
@@ -79,7 +94,19 @@ export function SettingsPage() {
     <div className="w-full max-w-2xl">
       <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
         Account
-        {isSaving && <span role="status" className="ml-3 inline-flex items-center gap-2 align-middle text-[12px] font-normal tracking-normal text-muted-foreground"><IconLoader2 size={14} className="animate-spin" aria-hidden="true" />Saving changes…</span>}
+        {isSaving && (
+          <span
+            role="status"
+            className="ml-3 inline-flex items-center gap-2 align-middle text-[12px] font-normal tracking-normal text-muted-foreground"
+          >
+            <IconLoader2
+              size={14}
+              className="animate-spin"
+              aria-hidden="true"
+            />
+            Saving changes…
+          </span>
+        )}
       </h1>
 
       {/* User profile */}
@@ -94,6 +121,30 @@ export function SettingsPage() {
         </div>
 
         <Card className="mt-3 divide-y divide-border overflow-hidden rounded-[14px] border border-border bg-card p-0 shadow-none">
+          <div className="px-4 py-4">
+            <ImageUpload
+              label="Profile photo"
+              name={displayName}
+              value={ownerStaff?.avatarUrl}
+              disabled={isSaving || !ownerStaff}
+              onChange={async (avatarUrl) => {
+                const saved = await update((s) => ({
+                  ...s,
+                  settings: { ...s.settings, ownerStaffId: ownerStaff?.id },
+                  staff: s.staff.map((member) =>
+                    member.id === ownerStaff?.id
+                      ? { ...member, avatarUrl }
+                      : member,
+                  ),
+                }));
+                if (saved) toast.success("Profile photo updated");
+              }}
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Shown on your staff profile, appointments, and public booking
+              page.
+            </p>
+          </div>
           {/* Username */}
           <div className="flex items-center px-4 py-3.5 max-sm:flex-wrap max-sm:gap-2">
             <div className="flex w-52 shrink-0 items-center gap-3 text-[13px] font-medium text-foreground max-sm:w-full">
@@ -105,7 +156,7 @@ export function SettingsPage() {
               <span>Username</span>
             </div>
             <div className="flex flex-1 items-center gap-1.5 text-[13px] text-foreground">
-              <span>{user?.email || "preciouskayili@gmail.com"}</span>
+              <span>{user?.email || ""}</span>
               <IconCircleCheckFilled
                 size={16}
                 className="shrink-0 text-emerald-500"
@@ -140,7 +191,7 @@ export function SettingsPage() {
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white transition hover:bg-primary/90 disabled:opacity-60"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
                       aria-label="Save display name"
                     >
                       {isSaving ? (
@@ -212,8 +263,8 @@ export function SettingsPage() {
                     Booking reminder calls
                   </span>
                   <p className="mt-0.5 max-w-[540px] text-[12px] leading-relaxed text-muted-foreground">
-                    Call customers before their appointment so they can confirm
-                    or reschedule their booking without staff follow-up work.
+                    Call customers before their appointment to remind them of
+                    the time and service they booked.
                   </p>
                 </div>
               </div>
@@ -230,7 +281,8 @@ export function SettingsPage() {
                   Call before appointment:
                 </span>
                 <div className="relative">
-                  <select disabled={isSaving}
+                  <select
+                    disabled={isSaving}
                     value={calls.reminderMinutes}
                     onChange={(e) =>
                       handleUpdateCalls({
@@ -254,7 +306,7 @@ export function SettingsPage() {
           </div>
 
           {/* Unpaid booking follow-ups */}
-          <div className={`px-4 py-4 ${!calls.enabled ? "opacity-60" : ""}`}>
+          <div className="px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
                 <IconCreditCard
@@ -268,12 +320,14 @@ export function SettingsPage() {
                   </span>
                   <p className="mt-0.5 max-w-[540px] text-[12px] leading-relaxed text-muted-foreground">
                     Follow up on outstanding deposits and payments at chosen
-                    intervals until confirmed or cancelled.
+                    intervals until the required payment is confirmed or the
+                    booking is cancelled. Follow-ups pause while a receipt is
+                    under review.
                   </p>
                 </div>
               </div>
               <Switch
-                disabled={!calls.enabled || isSaving}
+                disabled={isSaving}
                 checked={calls.unpaidEnabled}
                 onCheckedChange={(unpaidEnabled) =>
                   handleUpdateCalls({ unpaidEnabled })
@@ -281,13 +335,14 @@ export function SettingsPage() {
               />
             </div>
 
-            {calls.enabled && calls.unpaidEnabled && (
+            {calls.unpaidEnabled && (
               <div className="ml-8 mt-3 flex flex-wrap items-center gap-2.5 pt-2 border-t border-border/50 text-[12px]">
                 <span className="text-muted-foreground font-medium">
                   Follow-up interval:
                 </span>
                 <div className="relative">
-                  <select disabled={isSaving}
+                  <select
+                    disabled={isSaving}
                     value={calls.unpaidIntervalMinutes}
                     onChange={(e) =>
                       handleUpdateCalls({
@@ -308,6 +363,58 @@ export function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-[15px] font-medium">Business identity</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Make your workspace and booking page recognisable.
+        </p>
+        <Card className="mt-3 gap-5 rounded-[14px] bg-card p-4">
+          <ImageUpload
+            label="Business logo"
+            name={state.business.name}
+            value={state.business.logoUrl}
+            disabled={isSaving}
+            onChange={async (logoUrl) => {
+              if (
+                await update((s) => ({
+                  ...s,
+                  business: { ...s.business, logoUrl },
+                }))
+              )
+                toast.success("Business logo updated");
+            }}
+          />
+          <div>
+            <p className="mb-2 text-xs font-medium">
+              Store icon · shown when there is no logo
+            </p>
+            <div className="flex gap-2">
+              {Object.entries(studioIcons).map(([key, Icon]) => (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={isSaving}
+                  aria-label={`${key} icon`}
+                  aria-pressed={(state.business.icon ?? "store") === key}
+                  onClick={() =>
+                    void update((s) => ({
+                      ...s,
+                      business: {
+                        ...s.business,
+                        icon: key as typeof s.business.icon,
+                      },
+                    }))
+                  }
+                  className={`flex size-10 items-center justify-center rounded-xl ${(state.business.icon ?? "store") === key ? "bg-accent text-primary ring-1 ring-primary" : "bg-muted text-muted-foreground"}`}
+                >
+                  <Icon size={20} stroke={1.5} />
+                </button>
+              ))}
+            </div>
           </div>
         </Card>
       </section>
@@ -370,9 +477,7 @@ export function SettingsPage() {
                 Appearance
               </span>
             </div>
-            <strong className="text-[13px] font-semibold text-foreground">
-              Light & calm
-            </strong>
+            <ThemeSelect />
           </div>
 
           {/* Active Studio Workspace */}
@@ -388,14 +493,15 @@ export function SettingsPage() {
                   {state.business.name || "Studio Workspace"}
                 </span>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Public page: /b/{state.business.slug} · {workspaces.length} workspace{workspaces.length === 1 ? "" : "s"}
+                  Public page: /b/{state.business.slug} · {workspaces.length}{" "}
+                  workspace{workspaces.length === 1 ? "" : "s"}
                 </p>
               </div>
             </div>
             <Button
               variant="secondary"
-              onClick={() => setNewWorkspaceModalOpen(true)}
-              className="shrink-0 rounded-full border-0 bg-muted px-3.5 py-1.5 text-[12px] font-medium text-foreground hover:bg-black/5 shadow-none"
+              onClick={() => router.push("/onboarding")}
+              className="shrink-0 rounded-full border-0 bg-muted px-3.5 py-1.5 text-[12px] font-medium text-foreground hover:bg-accent shadow-none"
             >
               <IconPlus size={14} className="mr-1" />
               New workspace
@@ -408,19 +514,6 @@ export function SettingsPage() {
       <div className="mt-12 text-[11px] text-muted-foreground/60">
         <span>Reserv Studio 1.0.0</span>
       </div>
-
-      {/* New Workspace Modal */}
-      {newWorkspaceModalOpen && (
-        <OnboardingModal
-          open={newWorkspaceModalOpen}
-          onClose={() => setNewWorkspaceModalOpen(false)}
-          onSubmit={async (data) => {
-            await createWorkspace(data);
-            setNewWorkspaceModalOpen(false);
-          }}
-          initialOwner={user?.name || ""}
-        />
-      )}
     </div>
   );
 }

@@ -266,6 +266,9 @@ export const api = {
       }>("/api/workspaces"),
 
     create: (payload: {
+      avatarUrl?: string;
+      logoUrl?: string;
+      icon?: "store" | "flower" | "scissors" | "sparkles";
       name: string;
       slug: string;
       owner: string;
@@ -344,6 +347,7 @@ export const api = {
     request<{
       status: string;
       service: string;
+      voice?: { fromNumber: string | null; automaticCallsEnabled: boolean };
       integrations: {
         supabase: string;
         aethex: string;

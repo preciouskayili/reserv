@@ -17,6 +17,9 @@ import {
   IconCopy,
   IconClock,
   IconFlower,
+  IconBuildingStore,
+  IconScissors,
+  IconSparkles,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -31,7 +34,7 @@ import {
 } from "@/lib/model";
 import { useStore } from "@/lib/store";
 import { GoogleLocationCard } from "./google-map";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 export function Brand({ small = false }: { small?: boolean }) {
   return (
@@ -47,16 +50,19 @@ export function Brand({ small = false }: { small?: boolean }) {
     </Link>
   );
 }
+export const studioIcons = { store: IconBuildingStore, flower: IconFlower, scissors: IconScissors, sparkles: IconSparkles };
 export function StudioMark({ large = false }: { large?: boolean }) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center bg-muted text-foreground ${
-        large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"
-      }`}
-    >
-      <IconFlower stroke={1.1} size={large ? 28 : 20} />
-    </span>
-  );
+  const { state } = useStore();
+  const Icon = studioIcons[state.business.icon ?? "store"];
+  return <span className={`inline-flex shrink-0 items-center justify-center overflow-hidden bg-muted text-foreground ${large ? "h-14 w-14 rounded-[18px]" : "h-9 w-9 rounded-xl"}`}>
+    {state.business.logoUrl ? <ProfileImage src={state.business.logoUrl} name={state.business.name} fallback={<Icon stroke={1.4} size={large ? 28 : 20} />} /> : <Icon stroke={1.4} size={large ? 28 : 20} />}
+  </span>;
+}
+function ProfileImage({ src, name, fallback }: { src: string; name: string; fallback: ReactNode }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  // User-uploaded, bounded images; retain initials if a remote image becomes unavailable.
+  // eslint-disable-next-line @next/next/no-img-element
+  return failed === src ? fallback : <img src={src} alt={name} className="h-full w-full object-cover" onError={() => setFailed(src)} />;
 }
 export function PageHeader({
   eyebrow,
@@ -130,7 +136,7 @@ export function BookingCode({ code }: { code: string }) {
       <Button
         variant="ghost"
         size="icon"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-white hover:text-foreground"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-card hover:text-foreground"
         aria-label="Copy booking code"
         onClick={async () => {
           try {
@@ -148,10 +154,12 @@ export function BookingCode({ code }: { code: string }) {
 }
 export function Avatar({
   name,
+  src,
   size = "",
   className = "",
 }: {
   name: string;
+  src?: string;
   size?: "large" | "tiny" | string;
   className?: string;
 }) {
@@ -165,9 +173,9 @@ export function Avatar({
           : "h-9 w-9 text-[12px]";
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-muted font-bold text-foreground ${sizeClasses} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted font-bold text-foreground ${sizeClasses} ${className}`}
     >
-      {initials(name)}
+      {src ? <ProfileImage src={src} name={name} fallback={initials(name)} /> : initials(name)}
     </span>
   );
 }
@@ -248,7 +256,7 @@ export function Modal({
       <DialogContent
         showCloseButton={!busy}
         aria-busy={busy || undefined}
-        className={`rounded-[28px] border-0 bg-white p-9 shadow-none max-[560px]:rounded-[22px] max-[560px]:p-5 ${
+        className={`rounded-[28px] border-0 bg-card p-9 shadow-none max-[560px]:rounded-[22px] max-[560px]:p-5 ${
           wide ? "sm:max-w-[820px]" : "sm:max-w-[660px]"
         }`}
       >
@@ -301,7 +309,7 @@ export function SegmentedControl<T extends string>({
           <TabsTrigger
             key={option}
             value={option}
-            className="rounded-lg border-0 px-4 py-1.5 text-[12px] font-semibold text-muted-foreground transition data-active:bg-white data-active:text-foreground data-active:shadow-none"
+            className="rounded-lg border-0 px-4 py-1.5 text-[12px] font-semibold text-muted-foreground transition data-active:bg-card data-active:text-foreground data-active:shadow-none"
           >
             {option}
           </TabsTrigger>
@@ -324,7 +332,7 @@ export function BookingCard({
   const customer = state.customers.find((c) => c.id === booking.customerId)!;
   const staff = state.staff.find((s) => s.id === booking.staffId)!;
   return (
-    <Card className="rounded-xl border-0 bg-white p-0 shadow-none">
+    <Card className="rounded-xl border-0 bg-card p-0 shadow-none">
       <button
         className={`flex w-full items-start gap-3 rounded-xl px-4 py-3 text-left transition hover:bg-background ${
           compact ? "p-3" : ""
@@ -349,9 +357,7 @@ export function BookingCard({
           {!compact && (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-[12px] text-muted-foreground max-[560px]:mt-2">
               <span>
-                <span className="mr-1.5 inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">
-                  {staff.initials}
-                </span>
+                <Avatar name={staff.name} src={staff.avatarUrl} size="h-[18px] w-[18px] text-[10px]" className="mr-1.5" />
                 with {staff.name}
               </span>
               <span>

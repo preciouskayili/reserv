@@ -78,7 +78,7 @@ export function useTriggerCallMutation() {
         booking_id: newCallPayload.bookingId || null,
         aethex_call_id: "dispatching...",
         to_number: newCallPayload.toNumber,
-        from_number: "+14155550000",
+        from_number: "",
         status: "queued",
         call_type: newCallPayload.callType || "reminder",
         duration_seconds: null,

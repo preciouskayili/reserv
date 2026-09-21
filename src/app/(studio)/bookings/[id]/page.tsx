@@ -24,7 +24,7 @@ export default function BookingDetailsRoute({
         description="Your reservations are saved in this browser’s demo workspace."
         action={
           <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-white px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
+            className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-[#e5e5e7] bg-card px-4 text-[11px] font-semibold text-[#303033] transition hover:border-[#c8c8ca] hover:bg-[#f7f7f8]"
             href="/bookings"
           >
             All reservations

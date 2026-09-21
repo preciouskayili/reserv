@@ -137,7 +137,7 @@ export function BookingDetails({
             : "mx-auto block w-full min-w-0 max-w-[940px]"
         }
       >
-        <Card className="relative w-full min-w-0 gap-0 rounded-[40px] border-0 bg-white px-10 pb-10 pt-14 max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-12 max-[560px]:rounded-[35px] max-[560px]:px-5">
+        <Card className="relative w-full min-w-0 gap-0 rounded-[40px] border-0 bg-card px-10 pb-10 pt-14 max-[760px]:rounded-[46px] max-[760px]:px-7 max-[760px]:pb-8 max-[760px]:pt-12 max-[560px]:rounded-[35px] max-[560px]:px-5">
           <div className="absolute left-1/2 top-6 h-[7px] w-[78px] -translate-x-1/2 rounded-full bg-muted" />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[24px] font-medium leading-none tracking-tight text-muted-foreground max-[760px]:text-[20px]">
@@ -157,7 +157,7 @@ export function BookingDetails({
             ) : (
               <Link
                 href={`/pay/${booking.code}`}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-medium text-white hover:bg-primary/90"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
               >
                 <IconCreditCard size={17} />{" "}
                 {publicView ? "Pay to confirm" : "Awaiting payment"}
@@ -244,7 +244,7 @@ export function BookingDetails({
                 Your specialist
               </p>
               <strong className="mt-3 flex items-center justify-center gap-2 text-[23px] font-medium tracking-tight text-foreground max-[760px]:text-[17px] max-[560px]:text-[13px]">
-                <Avatar name={staff.name} className="h-6 w-6 text-[12px]" />
+                <Avatar name={staff.name} src={staff.avatarUrl} className="h-6 w-6 text-[12px]" />
                 {staff.name}
               </strong>
               <span className="mt-1 block text-[14px] text-muted-foreground max-[760px]:text-[12px] max-[560px]:text-[12px]">
@@ -281,7 +281,7 @@ export function BookingDetails({
                 ) : (
                   <Link
                     href={`/pay/${booking.code}`}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
                   >
                     <IconCreditCard size={16} />
                     Pay to confirm
@@ -294,7 +294,7 @@ export function BookingDetails({
                     <Button
                       variant="secondary"
                       disabled={isSaving}
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background disabled:opacity-60"
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background disabled:opacity-60"
                       onClick={() => setStatus("Completed")}
                     >
                       {isCompleting ? (
@@ -317,7 +317,7 @@ export function BookingDetails({
                     ) : (
                       <Link
                         href={`/pay/${booking.code}`}
-                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:bg-muted"
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:bg-muted"
                       >
                         <IconCreditCard size={15} />
                         Record payment to confirm
@@ -409,7 +409,7 @@ export function BookingDetails({
                         size="sm"
                         disabled={triggerCallMutation.isPending}
                         onClick={handleDispatchCall}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border-0 bg-white px-3.5 text-[12px] font-semibold text-foreground shadow-none transition hover:bg-black/5 hover:text-primary disabled:opacity-60"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border-0 bg-card px-3.5 text-[12px] font-semibold text-foreground shadow-none transition hover:bg-accent hover:text-primary disabled:opacity-60"
                       >
                         {triggerCallMutation.isPending ? (
                           <>
@@ -447,13 +447,13 @@ export function BookingDetails({
                   disabled={isSaving}
                   placeholder="Anything to keep in mind…"
                   onChange={(e) => setNotes(e.target.value)}
-                  className="mt-3 w-full resize-y rounded-xl border-0 bg-white p-3 text-[12px] outline-none focus:border-border"
+                  className="mt-3 w-full resize-y rounded-xl border-0 bg-card p-3 text-[12px] outline-none focus:border-border"
                 />
                 <Button
                   variant="secondary"
                   size="sm"
                   disabled={isSaving}
-                  className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-[12px] font-semibold text-foreground transition hover:border-border disabled:opacity-60"
+                  className="mt-3 inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-[12px] font-semibold text-foreground transition hover:border-border disabled:opacity-60"
                   onClick={async () => {
                     if (!canDismiss()) return;
                     setIsSavingNote(true);
@@ -519,7 +519,7 @@ export function BookingDetails({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
             <Button
               variant="secondary"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:border-border hover:bg-background"
               disabled={isSaving}
               onClick={() => { if (canDismiss()) setCancel(false); }}
             >

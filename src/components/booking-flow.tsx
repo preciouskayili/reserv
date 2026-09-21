@@ -181,7 +181,7 @@ export function BookingFlow({
           )}
           <Link href={`/pay/${result.code}`} onClick={onClose} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-[13px] font-medium text-primary transition hover:bg-muted"><IconCreditCard size={17} /> View payment options</Link>
           <Link
-            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90"
+            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
             href={publicFlow ? `/r/${result.code}` : `/bookings/${result.id}`}
             onClick={onClose}
           >
@@ -210,7 +210,7 @@ export function BookingFlow({
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-full text-[12px] ${
                       isActive || isDone
-                        ? "bg-primary text-white"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
@@ -296,14 +296,14 @@ export function BookingFlow({
                         className={`flex items-center gap-2 rounded-xl border p-2 text-left text-[12px] transition ${
                           isSelected
                             ? "border-border bg-background"
-                            : "border-border bg-white hover:bg-background"
+                            : "border-border bg-card hover:bg-background"
                         }`}
                         onClick={() => {
                           setStaffId(s.id);
                           setSlot("");
                         }}
                       >
-                        <Avatar name={s.name} />
+                        <Avatar name={s.name} src={s.avatarUrl} />
                         <span className="min-w-0 flex-1">
                           <span className="block font-semibold text-foreground">{s.name}</span>
                           <small className="block text-[12px] text-muted-foreground">{s.role}</small>
@@ -323,7 +323,7 @@ export function BookingFlow({
                     <Calendar mode="single" selected={new Date(`${date || TODAY}T12:00:00`)} defaultMonth={new Date(`${date || TODAY}T12:00:00`)}
                       disabled={{ before: new Date(`${TODAY}T00:00:00`), after: new Date(`${addDays(TODAY, state.business.rules.maxAdvanceDays)}T23:59:59`) }}
                       onSelect={(selected) => { if (selected) { setDate(`${selected.getFullYear()}-${String(selected.getMonth()+1).padStart(2,"0")}-${String(selected.getDate()).padStart(2,"0")}`); setSlot(""); setDateOpen(false); } }}
-                      className="bg-white [--cell-size:2.5rem]" />
+                      className="bg-card [--cell-size:2.5rem]" />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -342,7 +342,7 @@ export function BookingFlow({
                     <button
                       className={`rounded-lg border py-2 text-[12px] font-semibold transition ${
                         isSelected
-                          ? "border-transparent bg-primary text-white"
+                          ? "border-transparent bg-primary text-primary-foreground"
                           : "border-transparent bg-muted text-foreground hover:bg-accent"
                       }`}
                       key={s}
@@ -363,7 +363,7 @@ export function BookingFlow({
                 </p>
               )}
               {error && (
-                <p className="mt-3 text-[12px] font-medium text-[#af625b]" role="alert">
+                <p className="mt-3 text-[12px] font-medium text-destructive" role="alert">
                   {error}
                 </p>
               )}
@@ -371,7 +371,7 @@ export function BookingFlow({
                 {!booking && (
                   <Button
                     variant="secondary"
-                    className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:bg-background"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:bg-background"
                     onClick={() => setStep(0)}
                   >
                     <IconArrowLeft size={16} />
@@ -379,7 +379,7 @@ export function BookingFlow({
                   </Button>
                 )}
                 <Button
-                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
                   disabled={!slots.includes(slot)}
                   onClick={() => setStep(2)}
                 >
@@ -408,7 +408,7 @@ export function BookingFlow({
                     onChange={(e) => setName(e.target.value)}
                     readOnly={!!booking}
                     placeholder="Your first and last name"
-                    className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none read-only:bg-background read-only:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none read-only:bg-background read-only:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
                 <label className="mb-4 block text-[12px] font-semibold text-foreground">
@@ -422,7 +422,7 @@ export function BookingFlow({
                     onChange={(e) => setPhone(e.target.value)}
                     readOnly={!!booking}
                     placeholder="+234 800 000 0000"
-                    className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none read-only:bg-background read-only:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                    className="mt-2 block min-h-10 w-full rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none read-only:bg-background read-only:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </label>
               </div>
@@ -435,7 +435,7 @@ export function BookingFlow({
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Your preferences, or a little note for the studio…"
                   rows={3}
-                  className="mt-2 block min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8da]"
+                  className="mt-2 block min-h-16 w-full resize-y rounded-[10px] border-0 bg-muted px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </label>
               <div className="flex justify-between border-y border-dashed border-border py-4 text-[12px]">
@@ -457,7 +457,7 @@ export function BookingFlow({
                 policies.
               </label>
               {error && (
-                <p className="mt-3 text-[12px] font-medium text-[#af625b]" role="alert">
+                <p className="mt-3 text-[12px] font-medium text-destructive" role="alert">
                   {error}
                 </p>
               )}
@@ -465,7 +465,7 @@ export function BookingFlow({
                 <Button
                   variant="secondary"
                   type="button"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-white px-4 text-[12px] font-semibold text-foreground transition hover:bg-background"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card px-4 text-[12px] font-semibold text-foreground transition hover:bg-background"
                   disabled={isSubmitting}
                   onClick={() => setStep(1)}
                 >
@@ -474,7 +474,7 @@ export function BookingFlow({
                 </Button>
                 <Button
                   disabled={isSubmitting}
-                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                  className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
                   type="submit"
                 >
                   {isSubmitting ? (

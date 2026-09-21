@@ -101,6 +101,7 @@ export function CategorySelect({
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
+          role="combobox"
           aria-expanded={isOpen}
           aria-autocomplete="list"
           aria-controls={listId}
@@ -131,7 +132,7 @@ export function CategorySelect({
         <div
           id={listId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-white p-1.5 shadow-none ring-1 ring-black/5"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-2xl border-0 bg-card p-1.5 shadow-none ring-1 ring-black/5"
         >
           {filtered.length > 0 ? (
             <>
