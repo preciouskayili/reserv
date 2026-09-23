@@ -79,7 +79,7 @@ export function SettingsPage() {
     (c) =>
       (callType === "All" || c.call_type === callType) &&
       (!callQuery ||
-        `${c.to_number} ${c.status} ${c.call_type}`
+        `${c.to_number} ${c.from_number} ${c.status} ${c.call_type}`
           .toLowerCase()
           .includes(callQuery)),
   );
@@ -545,7 +545,7 @@ export function SettingsPage() {
                   <div className="py-8 text-center text-[13px] text-muted-foreground">
                     {callsQuery.data?.length
                       ? "No calls match this search."
-                      : "No voice calls placed yet. Use “Test call” above to dispatch your first call."}
+                      : "No voice calls yet. Customers can call your business number, or use “Test call” above."}
                   </div>
                 ) : (
                   visibleCalls.map((c) => (
@@ -556,7 +556,9 @@ export function SettingsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <strong className="text-[13px] font-medium text-foreground">
-                            Outbound call to {c.to_number}
+                            {c.direction === "inbound"
+                              ? `Call from ${c.from_number || "a hidden number"}`
+                              : `Outbound call to ${c.to_number}`}
                           </strong>
                           <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                             {c.call_type}

@@ -1,4 +1,6 @@
 "use client";
+
+import { useBusinessClock } from "@/hooks/use-business-clock";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +32,6 @@ import {
   endTime,
   money,
   time,
-  TODAY,
 } from "@/lib/model";
 import { Avatar, BookingCode, EmptyState, Modal, ServiceIcon } from "./shared";
 
@@ -52,6 +53,7 @@ export function BookingFlow({
   booking?: Booking;
   publicFlow?: boolean;
 }) {
+  const { TODAY } = useBusinessClock();
   const { state, update, acceptSnapshot } = useStore();
   const [step, setStep] = useState(booking || preset.serviceId ? 1 : 0);
   const [serviceId, setServiceId] = useState(

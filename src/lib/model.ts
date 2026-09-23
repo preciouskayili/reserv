@@ -138,8 +138,7 @@ export interface AppState {
   loaded: boolean;
 }
 // Business-local wall time in WAT. Live availability is also validated by the server.
-export const NOW = new Date(Date.now() + 3600000).toISOString().slice(0,19);
-export const TODAY = NOW.slice(0,10);
+export function businessNow() { return new Date(Date.now() + 3600000).toISOString().slice(0,19); }
 export const money = (value: number) => `₦${value.toLocaleString("en-NG")}`;
 export const duration = (mins: number) =>
   mins >= 60
@@ -203,6 +202,7 @@ export function availableSlots(
   date: string,
   excludeId?: string,
 ) {
+  const today = businessNow().slice(0, 10);
   const service = state.services.find((s) => s.id === serviceId);
   const hours =
     state.business.hours[(new Date(`${date}T12:00:00`).getDay() + 6) % 7];
@@ -211,8 +211,8 @@ export function availableSlots(
     !service.staffIds.includes(staffId) ||
     !hours ||
     hours.closed ||
-    date < TODAY ||
-    date > addDays(TODAY, state.business.rules.maxAdvanceDays)
+    date < today ||
+    date > addDays(today, state.business.rules.maxAdvanceDays)
   )
     return [];
   const toMins = (v: string) =>
@@ -226,8 +226,8 @@ export function availableSlots(
     const start = `${date}T${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}:00`;
     const end = endTime(start, service.duration);
     if (
-      new Date(start).getTime() <
-      new Date(new Date(Date.now() + 3600000).toISOString().slice(0,19)).getTime() + state.business.rules.minNoticeMinutes * 60000
+      Date.parse(`${start}+01:00`) <
+      Date.now() + state.business.rules.minNoticeMinutes * 60000
     )
       continue;
     if (

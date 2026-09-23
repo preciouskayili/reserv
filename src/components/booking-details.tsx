@@ -1,5 +1,7 @@
 "use client";
 
+import { useBusinessClock } from "@/hooks/use-business-clock";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
@@ -26,9 +28,7 @@ import {
   DEFAULT_CALL_PREFERENCES,
   dateLabel,
   duration,
-  NOW,
   time,
-  TODAY,
 } from "@/lib/model";
 import { paymentSummary } from "@/lib/payments";
 import { useWorkspaceSave } from "@/hooks/use-workspace-save";
@@ -50,6 +50,7 @@ export function BookingDetails({
   booking: Booking;
   publicView?: boolean;
 }) {
+  const { NOW, TODAY } = useBusinessClock();
   const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [reschedule, setReschedule] = useState(false);
   const [cancel, setCancel] = useState(false);

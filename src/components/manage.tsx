@@ -1,4 +1,6 @@
 "use client";
+
+import { useBusinessClock } from "@/hooks/use-business-clock";
 import {
   Select,
   SelectTrigger,
@@ -35,7 +37,6 @@ import {
   type Customer,
   type Service,
   dateLabel,
-  NOW,
 } from "@/lib/model";
 import {
   Avatar,
@@ -411,6 +412,7 @@ export function CustomersPage({
   onBooking: (b: Booking) => void;
   onNew: (p?: BookingPreset) => void;
 }) {
+  const { NOW } = useBusinessClock();
   const { state, update, isSaving, canDismiss } = useWorkspaceSave();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);

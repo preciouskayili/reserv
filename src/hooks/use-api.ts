@@ -14,6 +14,7 @@ export interface CallItem {
   aethex_call_id?: string | null;
   to_number: string;
   from_number: string;
+  direction?: "inbound" | "outbound";
   status: string;
   call_type: string;
   duration_seconds?: number | null;
@@ -43,7 +44,7 @@ export function useCallsQuery(limit = 50) {
     refetchInterval: (query) => {
       const calls = query.state.data;
       const hasActive = calls?.some((c) =>
-        ["queued", "ringing", "in-progress"].includes(c.status)
+        ["queued", "ringing", "in-progress", "connected"].includes(c.status)
       );
       return hasActive ? 8000 : false;
     },

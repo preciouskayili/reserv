@@ -1,4 +1,6 @@
 "use client";
+
+import { useBusinessClock } from "@/hooks/use-business-clock";
 import { DatePicker } from "./date-picker";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -22,9 +24,7 @@ import {
   type Booking,
   dateLabel,
   duration,
-  NOW,
   time,
-  TODAY,
 } from "@/lib/model";
 import {
   Avatar,
@@ -126,6 +126,7 @@ function ScheduleTimeline({
   onNew,
   onBooking,
 }: { day: string; staff: string } & Props) {
+  const { NOW, TODAY } = useBusinessClock();
   const { state } = useStore();
   const events = state.bookings
     .filter(
@@ -318,6 +319,7 @@ function ScheduleScaffold({
   dayOnly?: boolean;
   modeControl?: React.ReactNode;
 } & Props) {
+  const { NOW, TODAY } = useBusinessClock();
   const { state } = useStore();
   const [staff, setStaff] = useState("all");
   const all = state.bookings.filter(
@@ -332,7 +334,7 @@ function ScheduleScaffold({
       <div className="relative mb-7 flex flex-wrap items-center justify-between gap-4">
         <div className="max-[760px]:col-span-2">
           <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            {calendar ? "YOUR WEEK, YOUR WAY" : "A GOOD DAY BEGINS HERE"}
+            {calendar ? "WEEKLY SCHEDULE" : "DAILY SCHEDULE"}
           </span>
           <h1 className="mt-2 text-[27px] font-medium tracking-tight text-foreground max-[760px]:text-[24px]">
             {calendar ? "Calendar" : `Good morning, ${state.settings.owner}.`}
@@ -482,6 +484,7 @@ function placeEvents(events: Booking[]) {
   });
 }
 export function CalendarPage({ onNew, onBooking }: Props) {
+  const { NOW, TODAY } = useBusinessClock();
   const { state } = useStore();
   const [day, setDay] = useState(TODAY);
   const [mode, setMode] = useState<"Week" | "Day">("Week");
@@ -781,6 +784,7 @@ export function CalendarPage({ onNew, onBooking }: Props) {
 }
 
 export function BookingsPage({ onNew, onBooking }: Props) {
+  const { NOW, TODAY } = useBusinessClock();
   const { state } = useStore();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("Upcoming");

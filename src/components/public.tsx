@@ -1,5 +1,7 @@
 "use client";
 
+import { useBusinessClock } from "@/hooks/use-business-clock";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store";
-import { getReservationByCode, time, TODAY } from "@/lib/model";
+import { getReservationByCode, time } from "@/lib/model";
 import {
   Avatar,
   StudioMark,
@@ -29,6 +31,12 @@ import {
 import { BookingFlow } from "./booking-flow";
 import { BookingDetails } from "./booking-details";
 import { PageLoading } from "./feedback";
+
+/** Customers reach the business's voice assistant when it has a live number; otherwise the business phone. */
+function callNumber(business: { phone: string; voice?: { status: string; number?: string } }) {
+  const number = business.voice?.status === "active" && business.voice.number ? business.voice.number : business.phone;
+  return number.replace(/[^\d+]/g, "");
+}
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,6 +54,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 }
 
 export function PublicProfile() {
+  const { TODAY } = useBusinessClock();
   const { state: activeState } = useStore();
   const [service, setService] = useState<string | null | undefined>(undefined);
   const hours =
@@ -89,7 +98,7 @@ export function PublicProfile() {
             </Link>
             <a
               className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-muted px-4 text-[12px] font-semibold text-foreground transition hover:bg-accent max-[560px]:flex-1 shadow-none"
-              href={`tel:${activeState.business.phone.replaceAll(" ", "")}`}
+              href={`tel:${callNumber(activeState.business)}`}
             >
               <IconPhone size={17} />
               Call studio
@@ -239,12 +248,13 @@ export function PublicProfile() {
                 More of a phone person?
               </h3>
               <p className="text-[12px] leading-5 text-muted-foreground">
-                We’re happy to help you find the right service and a time that
-                works.
+                {activeState.business.voice?.status === "active"
+                  ? "Call any time to ask about services and prices, check open times, or book, reschedule and cancel."
+                  : "We’re happy to help you find the right service and a time that works."}
               </p>
               <a
                 className="mt-5 inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground transition hover:text-foreground"
-                href={`tel:${activeState.business.phone.replaceAll(" ", "")}`}
+                href={`tel:${callNumber(activeState.business)}`}
               >
                 Give us a call <IconArrowUpRight size={16} />
               </a>
@@ -366,7 +376,7 @@ export function ReservationLookup({ code }: { code?: string }) {
             <p className="mt-6 text-[12px] leading-6 text-muted-foreground">
               Can’t find your code?{" "}
               <a
-                href={`tel:${localStoreState.business.phone.replaceAll(" ", "")}`}
+                href={`tel:${callNumber(localStoreState.business)}`}
                 className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:underline"
               >
                 Call the studio <IconArrowRight size={12} />

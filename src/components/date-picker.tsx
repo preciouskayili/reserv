@@ -1,17 +1,19 @@
 "use client";
 
+import { useBusinessClock } from "@/hooks/use-business-clock";
+
 import { useState, type ReactNode } from "react";
 import { IconCalendarEvent, IconChevronDown } from "@tabler/icons-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { TODAY } from "@/lib/model";
 
 const months = Array.from({ length: 12 }, (_, value) => ({ value: String(value), label: new Date(2026, value, 1).toLocaleDateString("en-US", { month: "long" }) }));
 const toDate = (value: string) => new Date(`${value}T12:00:00`);
 
 export function DatePicker({ value, onChange, children }: { value: string; onChange: (value: string) => void; children?: ReactNode }) {
+  const { TODAY } = useBusinessClock();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(toDate(value));
   const year = month.getFullYear();

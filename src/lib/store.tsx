@@ -100,7 +100,21 @@ function ScopedStore({children,pathname,publicPath}:{children:ReactNode;pathname
    // The parent keys this component by account/public route; reload is explicit.
    // eslint-disable-next-line react-hooks/exhaustive-deps
  },[reload]);
- async function refresh(){const result=publicPath?await fetchPublic():await api.workspaces.getState(activeRef.current!);if(mounted.current)acceptSnapshot(result);}
+ async function refresh(){const generation=epoch.current;const previous=snapshotRef.current;const result=publicPath?await fetchPublic():await api.workspaces.getState(activeRef.current!);if(mounted.current&&generation===epoch.current&&snapshotRef.current===previous)acceptSnapshot(result);}
+ useEffect(()=>{
+   if(publicPath||bypass||!activeWorkspaceId)return;
+   let alive=true, pending=false;
+   async function check(){
+     if(pending||saveCount.current||document.visibilityState!=="visible")return;
+     pending=true;const generation=epoch.current;const previous=snapshotRef.current;
+     try{const result=await api.workspaces.getState(activeWorkspaceId!);
+       if(alive&&mounted.current&&generation===epoch.current&&!saveCount.current&&snapshotRef.current===previous&&result.revision!==previous?.revision)acceptSnapshot(result);
+     }catch{/* Keep the current workspace available during a temporary outage. */}
+     finally{pending=false;}
+   }
+   const timer=setInterval(check,30000);window.addEventListener("focus",check);document.addEventListener("visibilitychange",check);
+   return()=>{alive=false;clearInterval(timer);window.removeEventListener("focus",check);document.removeEventListener("visibilitychange",check);};
+ },[activeWorkspaceId,publicPath,bypass]);
  async function switchWorkspace(id:string){
    if(!workspaces.some(w=>w.id===id)||id===activeRef.current)return;
    if(saveCount.current){toast.info("Please wait for your changes to finish saving.");return;}

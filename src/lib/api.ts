@@ -208,6 +208,7 @@ export const api = {
           aethex_call_id?: string | null;
           to_number: string;
           from_number: string;
+          direction?: "inbound" | "outbound";
           status: string;
           call_type: string;
           duration_seconds?: number | null;

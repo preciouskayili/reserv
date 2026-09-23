@@ -183,7 +183,7 @@ export function BusinessPhoneSettings() {
       {pending && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><IconLoader2 size={14} className="animate-spin" />Setting up your number. You can leave this page and check back.</p>}
       {(error || voice?.error) && <p role="alert" className="rounded-xl bg-danger-surface p-3 text-xs leading-5 text-destructive">{error || voice?.error}</p>}
       {!active && <Button type="submit" disabled={pending || query.isError || !(country || voice?.country)} className="rounded-xl">{voice?.status === "needs_review" ? "Check setup status" : voice?.status === "failed" ? "Retry phone setup" : "Set up business number"}</Button>}
-      <p className="text-xs leading-5 text-muted-foreground">{active ? "Tap the number to copy it. Calls and reminders go out from this line." : "Availability varies by country. Some countries require business verification before a number can be assigned."}</p>
+      <p className="text-xs leading-5 text-muted-foreground">{active ? "Share it with customers: callers can ask about your location, hours and prices, and book, reschedule or cancel. Reminders go out from this line too. Tap the number to copy it." : "Availability varies by country. Some countries require business verification before a number can be assigned."}</p>
     </form>}
   </Card>;
 }

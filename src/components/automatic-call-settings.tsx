@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { request } from "@/lib/api";
 import {
   IconPhoneCall,
   IconClock,
@@ -97,6 +99,14 @@ export function AutomaticCallSettings() {
 
 function CallSettingsForm({ initial }: { initial: CallPreferences }) {
   const { update, isSaving } = useWorkspaceSave();
+  const { activeWorkspaceId } = useStore();
+  const availability = useQuery({
+    queryKey: ["automatic-call-status", activeWorkspaceId],
+    queryFn: () => request<{ available: boolean; phoneReady: boolean }>("/api/calls/status"),
+    enabled: !!activeWorkspaceId,
+    refetchInterval: 60000,
+    retry: false,
+  });
   const [draft, setDraft] = useState(initial);
 
   async function save(event: FormEvent) {
@@ -200,9 +210,12 @@ function CallSettingsForm({ initial }: { initial: CallPreferences }) {
             review.
           </p>
         </div>
-        <p className="text-[12px] leading-5 text-muted-foreground">
-          Powered by Aethex Voice AI. Reminders and check-ins dispatch
-          automatically according to your schedule.
+        <p role="status" className="text-[12px] leading-5 text-muted-foreground">
+          {availability.isError ? "Couldn’t check call availability. Try again shortly."
+            : availability.isPending ? "Checking call availability…"
+            : !availability.data?.phoneReady ? "Set up your business phone number to send automatic calls."
+            : !availability.data.available ? "Automatic calls are currently unavailable. Your preferences are saved. Contact support if this continues."
+            : "Automatic calls are available. Calls are checked every few minutes."}
         </p>
         <Button type="submit" disabled={isSaving} className="gap-2 rounded-xl">
           {isSaving ? (
