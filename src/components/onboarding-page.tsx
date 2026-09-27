@@ -54,7 +54,7 @@ const stepMeta = {
   },
   number: {
     title: "Business number",
-    hint: "Get a dedicated phone number for automated calls, reminders, and payment follow-ups. Optional — you can set this up anytime from Settings.",
+    hint: "Get one dedicated phone number for this business’s calls and reminders. Setup is automatic. You can skip this and start taking bookings now.",
   },
 } as const;
 type StepId = keyof typeof stepMeta;

@@ -1,28 +1,25 @@
-# Production readiness review — 13 September 2026
+# Customer readiness review — 27 September 2026
 
-Status: **not ready for real customer traffic**. Local fixes pass lint, production compilation, and targeted security tests. No deployment or remote database migration was performed. Interactive visual QA could not run because no browser was connected.
+Local implementation checks pass. Production launch remains unverified. The current detailed review is in [the backend launch report](../backend/LAUNCH.md), with deployment steps in [RAILWAY.md](../backend/RAILWAY.md).
 
-## Completed fixes
+This replaces the 13 September review: its browser-local storage, simulated checkout, fixed demo-clock and single-workspace blockers have since been addressed. Customer data now uses scoped backend workspaces, booking conflicts are checked on the server, and hosted payments use verified provider results. This does not establish that production integrations are configured or working.
 
-- Constrained the public reservation layout, aligned its back link, reduced oversized card spacing and type, wrapped its status row, and made service cards stack on narrow screens.
-- Added explicit submit types to reservation lookup, service editing, and customer editing buttons.
-- Fixed the OTP resend countdown and error handling; moved login navigation out of render; restricted redirect destinations; prevented expired-cookie login loops; gated studio content on session verification.
-- Added API request timeouts and storage fallback. New bookings wait for API acceptance before local success. Rescheduling no longer sends a duplicate booking creation request. Failed call dispatch removes its optimistic activity entry.
-- Required authentication for booking reads/updates, call reads/dispatch, and uploads. Added upload limits, booking payload validation, JSON error handling, strong production signing-secret checks, an owner email allowlist, cryptographic OTPs, resend cooldown, and production email/calling fail-closed behavior.
-- Database errors no longer masquerade as successful in-memory booking writes. Live service pricing is read on the server. Added RLS schema statements and a separate migration to restrict direct Data API access. The backend now requires a service-role key for database access.
+## Changes in this pass
 
-## Remaining launch blockers
+- Business phone setup is automatic with one dedicated number per business. Repeated setup requests reuse the existing number. Customers can skip phone setup and start taking bookings immediately.
+- Payment methods hide disabled Stripe and Paystack providers. Transfer receipt submission remains available; existing pending checkout protection is preserved.
+- Outbound calls use a named identity check and their actual purpose; inbound calls retain the inquiry and booking welcome.
+- Settings practice calls explicitly identify the sample appointment, start with an empty destination number, and cannot alter real customer records through voice tools.
+- Uncertain call requests tell staff to check history before dialing again. The call request timeout allows the backend's provider request to complete.
+- Customer records retain the optional call opt-out field across workspace saves.
+- Both repositories pin the patched pnpm 11.11.0.
 
-1. The shared store still loads seeded data and persists business, services, customers, bookings, payments, settings, cancellations, and reschedules in localStorage. Most mutations have no corresponding server endpoints. Public reservation lookup only searches that browser's store. Implement authoritative API reads and writes for all flows, authenticated owner access, and scoped customer reservation access before launch.
-2. New customers are created only in the local UI; the booking endpoint expects an existing database customer. Supabase seed service IDs, prices, location, and staff differ from frontend seed data. Unify the data model, migrate seed data deliberately, and create customer + booking + activity in one transaction.
-3. Implement database-enforced prevention of overlapping staff appointments, server-side opening hours/notice validation, consistent business timezone handling, idempotency, and atomic rescheduling. The current local availability calculation and memory duplicate check cannot protect concurrent live bookings.
-4. The online gateway is simulated; transfer receipts and approval are browser-local. Integrate the chosen payment provider, verify signed payment webhooks server-side, store receipts securely, and calculate confirmation status from verified payments.
-5. Replace the fixed September 12, 2026 demo clock throughout scheduling, activity timestamps, and booking creation. Use an explicit Africa/Lagos business clock with hydration-safe rendering and advancing time.
-6. OTP challenges are in process memory. Add durable shared storage before running multiple replicas. OWNER_EMAILS currently authorizes a single Bloom workspace; multi-business membership and query scoping are not implemented.
-7. Configure and verify Supabase, email, voice, hosting origins, signing secret, OWNER_EMAILS, proxy hop count, and cron credentials. Webhook updates now require AETHEX_WEBHOOK_SECRET in x-webhook-secret; verify the provider can supply that header or implement its documented signature scheme before enabling delivery. Apply ../backend/supabase/migrations/20260913_restrict_direct_access.sql with a database owner connection. Review existing policies on an existing database: enabling RLS does not remove pre-existing permissive policies.
-8. Run browser interaction and screenshot checks at mobile and desktop sizes, then live staging checks across two independent customer/studio sessions. The screenshot issue has a layout fix, but no browser-based visual confirmation was possible in this session.
+## Validation
 
-## Local verification
+Frontend lint, production build and all 12 tests pass. The backend build and all 55 tests pass, including one-number provisioning, inbound booking and changes, outbound call context, opt-outs and practice-call isolation. The isolated PostgreSQL payment suite passes. Frozen lockfile installs succeed and both production dependency audits report no known vulnerabilities.
 
-Frontend: `pnpm lint`, `pnpm build`, `node --test tests/navigation.test.mjs` (Node 22.18+ for native TypeScript stripping).
-Backend: `pnpm test` builds and tests against an isolated environment without external integrations.
+## Remaining checks
+
+The local backend production preflight rejects its JWT secret, development origins/default email sender, and missing voice webhook/tool configuration. Online-checkout credentials are also absent locally. Confirm the actual deployed settings and use a public HTTPS `NEXT_PUBLIC_API_URL` when building this frontend.
+
+The production backend passes read-only health, authentication and public database lookup checks; both hosted payment providers are disabled as intended. The latest source changes remain local and need deployment. No production frontend URL or Browser connection was available for interactive mobile/desktop QA. No live call, email delivery, payment or deployed agent update was performed in this pass. Complete the controlled release checks on the deployed URLs before accepting customer traffic.

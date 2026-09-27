@@ -103,7 +103,7 @@ export function CheckoutOptions({ code, choice, amount, onSnapshot, onLock, chil
         { id: "paystack", title: "Pay with Paystack", detail: "Secure checkout with cards and supported local payment methods.", icon: IconCreditCard },
         { id: "stripe", title: "Pay with Stripe", detail: "Secure card checkout.", icon: IconCreditCard },
         { id: "transfer", title: "I’ve already made a transfer", detail: "Share your receipt with the studio for review.", icon: IconReceipt },
-      ] as const).map(item => {
+      ] as const).filter(item => item.id === "transfer" || config.data?.providers.some(p => p.id === item.id && p.enabled) || active && current.provider === item.id).map(item => {
         const unavailable = item.id !== "transfer" && !config.data?.providers.find(p => p.id === item.id)?.enabled;
         const disabled = busy || externalBusy || unavailable || Boolean(active && item.id !== current.provider);
         return <label key={item.id} className={`flex items-center gap-3 rounded-2xl p-4 transition ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${selected === item.id && !unavailable ? "bg-primary text-primary-foreground" : "bg-muted/70 text-foreground"}`}>

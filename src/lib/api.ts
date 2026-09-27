@@ -96,6 +96,8 @@ export async function request<T>(
       headers,
     });
   } catch (error) {
+    if (endpoint === "/api/calls/trigger")
+      throw new ApiError("The call request could not be confirmed. Check call history before placing another call.", 0);
     if (options.signal?.aborted) throw error;
     throw new ApiError(error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)
       ? "The request took too long. Please try again."
@@ -174,6 +176,7 @@ export const api = {
   // Calls
   calls: {
     trigger: (payload: {
+      testCall?: boolean;
       toNumber: string;
       customerName?: string;
       serviceName?: string;
@@ -198,6 +201,7 @@ export const api = {
       }>("/api/calls/trigger", {
         method: "POST",
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30000),
       }),
 
     list: (limit = 50) =>

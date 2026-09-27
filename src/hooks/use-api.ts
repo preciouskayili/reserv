@@ -57,6 +57,7 @@ export function useTriggerCallMutation() {
 
   return useMutation({
     mutationFn: (payload: {
+      testCall?: boolean;
       toNumber: string;
       customerName?: string;
       serviceName?: string;

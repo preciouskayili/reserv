@@ -62,9 +62,9 @@ export function SettingsPage() {
   const [callSearch, setCallSearch] = useState("");
   const [callType, setCallType] = useState("All");
   const [testModalOpen, setTestModalOpen] = useState(false);
-  const [testPhone, setTestPhone] = useState("+234 800 123 4567");
-  const [testName, setTestName] = useState("Jane Doe");
-  const [testService, setTestService] = useState("Signature Cut & Style");
+  const [testPhone, setTestPhone] = useState("");
+  const [testName, setTestName] = useState("");
+  const [testService, setTestService] = useState(state.services.find(s => s.active)?.name ?? "");
   const [testCallType, setTestCallType] = useState<
     "reminder" | "confirmation"
   >("reminder");
@@ -107,6 +107,7 @@ export function SettingsPage() {
         appointmentTime: "10:30 AM",
         appointmentDate: "Tomorrow",
         callType: testCallType,
+        testCall: true,
       });
       setTestModalOpen(false);
     } catch {
@@ -624,7 +625,7 @@ export function SettingsPage() {
       {testModalOpen && (
         <Modal
           title="Test Voice AI Call"
-          description="Place an outbound test call powered by Aethex Voice AI."
+          description="Try a reminder or confirmation on your own number. The sample appointment is tomorrow at 10:30 AM WAT; real bookings stay unchanged."
           busy={triggerCallMutation.isPending}
           onClose={() => {
             if (!callLock.current) setTestModalOpen(false);

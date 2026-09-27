@@ -178,7 +178,7 @@ export function BusinessPhoneSettings() {
         value={country || voice?.country || ""}
         onChange={setCountry}
         number={active ? voice.number : undefined}
-        disabled={pending || voice?.status === "needs_review"}
+        disabled={pending || active || voice?.status === "needs_review"}
       />
       {pending && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><IconLoader2 size={14} className="animate-spin" />Setting up your number. You can leave this page and check back.</p>}
       {(error || voice?.error) && <p role="alert" className="rounded-xl bg-danger-surface p-3 text-xs leading-5 text-destructive">{error || voice?.error}</p>}

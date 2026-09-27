@@ -31,3 +31,11 @@ test('HTML fallback responses do not masquerade as successful API data', async (
     await assert.rejects(api.health(), error => error instanceof ApiError && error.status === 502);
   });
 });
+
+test('an uncertain call request tells staff to check history before dialing again', async () => {
+  for (const failure of [new DOMException('Timed out', 'TimeoutError'), new TypeError('Failed to fetch')]) {
+    await withFetch(async () => { throw failure; }, async () => {
+      await assert.rejects(api.calls.trigger({ toNumber: '+2348035550000', callType: 'manual' }), error => error instanceof ApiError && error.status === 0 && /Check call history before placing another call/.test(error.message));
+    });
+  }
+});
