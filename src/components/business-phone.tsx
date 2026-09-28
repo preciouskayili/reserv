@@ -86,18 +86,21 @@ export function NumberCountrySelect({ value, onChange, disabled = false, number 
   const countries = usePhoneCountries();
   const [open, setOpen] = useState(false);
   const selected = countries.data?.countries.find(c => c.code === value);
+  // With a single offered country there is nothing to pick: the button adds or removes the number.
+  const only = countries.data?.countries.length === 1 ? countries.data.countries[0] : undefined;
   const picker = !disabled && !countries.isError && (
     <button
       type="button"
       disabled={countries.isPending}
-      onClick={() => setOpen(true)}
+      onClick={() => only ? onChange(selected ? "" : only.code) : setOpen(true)}
       className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition disabled:opacity-60 ${
         selected ? "bg-card text-foreground hover:bg-background" : "bg-primary text-primary-foreground hover:bg-primary/90"
       }`}
     >
-      {countries.isPending ? "Loading…" : selected ? "Change" : "Select country"}
+      {countries.isPending ? "Loading…" : only ? (selected ? "Remove" : `Get a ${only.code} number`) : selected ? "Change" : "Select country"}
     </button>
   );
+  const placeholder = selected ?? only;
   return (
     <div>
       {number ? (
@@ -136,10 +139,10 @@ export function NumberCountrySelect({ value, onChange, disabled = false, number 
           )}
           <span className="min-w-40 flex-1">
             <span className={`block truncate text-[19px] font-medium tracking-tight tabular-nums ${selected ? "text-foreground" : "text-muted-foreground/70"}`}>
-              {selected?.dialCode ? `+${selected.dialCode} ` : ""}··· ··· ····
+              {placeholder?.dialCode ? `+${placeholder.dialCode} ` : ""}··· ··· ····
             </span>
             <span className="mt-1 block truncate text-xs text-muted-foreground">
-              {selected ? selected.name : "Pick where your number lives"}
+              {selected ? selected.name : only ? `${only.name} number` : "Pick where your number lives"}
             </span>
           </span>
           {picker}
@@ -293,10 +296,14 @@ export function BusinessPhoneSettings() {
   const voice = query.data?.voice ?? state.business.voice;
   const pending = submitting || voice?.status === "queued" || voice?.status === "provisioning";
   const active = voice?.status === "active";
+  // A setup saved for a country that is no longer offered (numbers are US only) falls back to the offered one.
+  const offered = usePhoneCountries().data?.countries ?? [];
+  const savedCountry = voice && offered.some(c => c.code === voice.country) ? voice.country : "";
+  const setupCountry = active ? voice.country : country || savedCountry || (offered.length === 1 ? offered[0].code : "");
   async function setup(event: React.FormEvent) {
     event.preventDefault(); if (pending || !activeWorkspaceId) return;
     setSubmitting(true); setError("");
-    try { await request(`/api/workspaces/${activeWorkspaceId}/voice`, { method: "POST", body: JSON.stringify({ country: country || voice?.country }) }); await query.refetch(); }
+    try { await request(`/api/workspaces/${activeWorkspaceId}/voice`, { method: "POST", body: JSON.stringify({ country: setupCountry }) }); await query.refetch(); }
     catch (err) { setError(err instanceof Error ? err.message : "Phone setup failed."); }
     finally { setSubmitting(false); }
   }
@@ -304,15 +311,15 @@ export function BusinessPhoneSettings() {
     <div className="flex items-start gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-primary"><IconPhone size={20} /></span><div><h2 className="text-[18px] font-medium">Business phone number</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">A dedicated number for this business’s incoming calls, reminders, and payment follow-ups.</p></div></div>
     {query.isPending ? <p className="mt-4 text-xs text-muted-foreground">Loading phone settings…</p> : query.isError ? <p role="alert" className="mt-4 text-xs text-destructive">Phone settings could not load. <button onClick={() => void query.refetch()} className="underline">Retry</button></p> : <form onSubmit={setup} className="mt-5 max-w-md space-y-4">
       <NumberCountrySelect
-        value={country || voice?.country || ""}
+        value={setupCountry}
         onChange={setCountry}
         number={active ? voice.number : undefined}
-        disabled={pending || active || voice?.status === "needs_review"}
+        disabled={pending || active || voice?.status === "needs_review" || offered.length === 1}
       />
       {pending && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><IconLoader2 size={14} className="animate-spin" />Setting up your number. You can leave this page and check back.</p>}
       {(error || voice?.error) && <p role="alert" className="rounded-xl bg-danger-surface p-3 text-xs leading-5 text-destructive">{error || voice?.error}</p>}
-      {!active && <Button type="submit" disabled={pending || query.isError || !(country || voice?.country)} className="rounded-xl">{voice?.status === "needs_review" ? "Check setup status" : voice?.status === "failed" ? "Retry phone setup" : "Set up business number"}</Button>}
-      <p className="text-xs leading-5 text-muted-foreground">{active ? "Share it with customers: callers can ask about your location, hours and prices, and book, reschedule or cancel. Reminders go out from this line too. Tap the number to copy it." : "Availability varies by country. Some countries require business verification before a number can be assigned."}</p>
+      {!active && <Button type="submit" disabled={pending || query.isError || !setupCountry} className="rounded-xl">{voice?.status === "needs_review" ? "Check setup status" : voice?.status === "failed" ? "Retry phone setup" : "Set up business number"}</Button>}
+      <p className="text-xs leading-5 text-muted-foreground">{active ? "Share it with customers: callers can ask about your location, hours and prices, and book, reschedule or cancel. Reminders go out from this line too. Tap the number to copy it." : "Business numbers are US numbers (+1). Customers outside the US, including Nigeria, can still call it as an international call, and reminders reach them as usual."}</p>
     </form>}
     {!query.isPending && !query.isError && voice && <AgentVoiceSetting voice={voice} onChanged={() => query.refetch()} />}
   </Card>;

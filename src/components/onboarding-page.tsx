@@ -14,7 +14,6 @@ import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import type { Business } from "@/lib/model";
 import { Brand, studioIcons, Avatar } from "./shared";
-import { NumberCountrySelect } from "./business-phone";
 import { ImageUpload } from "./image-upload";
 import { ThemeSelect } from "./theme-provider";
 import { Input } from "./ui/input";
@@ -24,7 +23,6 @@ import { CategorySelect } from "./category-select";
 import { InlineError, PageLoading } from "./feedback";
 
 export interface OnboardingData {
-  voiceCountry?: string;
   name: string;
   slug: string;
   owner: string;
@@ -51,10 +49,6 @@ const stepMeta = {
   service: {
     title: "Your first service",
     hint: "Add a service, duration, and price. You can add more services later.",
-  },
-  number: {
-    title: "Business number",
-    hint: "Get one dedicated phone number for this business’s calls and reminders. Setup is automatic. You can skip this and start taking bookings now.",
   },
 } as const;
 type StepId = keyof typeof stepMeta;
@@ -120,9 +114,10 @@ function OnboardingForm({
   onSubmit: (data: OnboardingData) => Promise<void>;
   onSignOut: () => void;
 }) {
+  // The business number is assigned automatically once the workspace exists.
   const flow: StepId[] = hasProfile
-    ? ["business", "service", "number"]
-    : ["profile", "business", "service", "number"];
+    ? ["business", "service"]
+    : ["profile", "business", "service"];
   const [step, setStep] = useState(0);
   const current = flow[step];
   const isLast = step === flow.length - 1;
@@ -196,7 +191,7 @@ function OnboardingForm({
     setStep(next);
     requestAnimationFrame(() => heading.current?.focus());
   }
-  async function finalize(voiceCountry?: string) {
+  async function finalize() {
     if (uploading || lock.current) return;
     setError("");
     lock.current = true;
@@ -204,7 +199,6 @@ function OnboardingForm({
     try {
       await onSubmit({
         ...draft,
-        voiceCountry,
         slug: slug || "studio",
         owner: draft.owner.trim(),
         name: draft.name.trim(),
@@ -243,7 +237,7 @@ function OnboardingForm({
       go(step + 1);
       return;
     }
-    await finalize(draft.voiceCountry);
+    await finalize();
   }
   return (
     <main className="min-h-dvh bg-background text-foreground lg:grid lg:h-dvh lg:grid-cols-[minmax(330px,0.82fr)_minmax(0,1.18fr)] lg:overflow-hidden">
@@ -565,27 +559,6 @@ function OnboardingForm({
                         your hours and booking policies in Business profile.
                       </p>
                     </div>
-                  </>
-                )}
-                {current === "number" && (
-                  <>
-                    <NumberCountrySelect
-                      value={draft.voiceCountry ?? ""}
-                      onChange={(voiceCountry) => patch({ voiceCountry })}
-                    />
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => finalize(undefined)}
-                      className="flex min-h-11 w-full max-w-md items-center justify-between rounded-xl bg-muted px-4 text-[13px] font-medium text-foreground transition hover:bg-accent disabled:opacity-50"
-                    >
-                      Skip for now — go to workspace
-                      <IconArrowRight size={16} />
-                    </button>
-                    <p className="text-xs leading-5 text-muted-foreground">
-                      Availability varies by country. Some countries require
-                      business verification before a number can be assigned.
-                    </p>
                   </>
                 )}
                 {error && (
