@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   IconPhone,
@@ -8,6 +8,9 @@ import {
   IconSearch,
   IconCopy,
   IconWorld,
+  IconPlayerPlayFilled,
+  IconPlayerStopFilled,
+  IconMicrophone,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { request } from "@/lib/api";
@@ -151,6 +154,132 @@ export function NumberCountrySelect({ value, onChange, disabled = false, number 
     </div>
   );
 }
+export interface AgentVoice { id: string; name: string; gender: string; country?: string; description?: string; tags: string[]; previewUrl?: string }
+function useAgentVoices(enabled = true) {
+  return useQuery({ queryKey: ["agent-voices"], queryFn: () => request<{ voices: AgentVoice[]; defaultVoiceId?: string }>("/api/workspaces/voice/voices"), staleTime: 3600000, retry: 1, enabled });
+}
+const regionNames = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames(["en"], { type: "region" }) : undefined;
+const regionName = (code?: string) => { try { return code ? regionNames?.of(code) ?? code : undefined; } catch { return code; } };
+const voiceLabel = (voice: AgentVoice) => [voice.gender.charAt(0).toUpperCase() + voice.gender.slice(1), regionName(voice.country)].filter(Boolean).join(" · ");
+/** One preview at a time across the page; stops when the component unmounts. */
+function useVoicePreview() {
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const [state, setState] = useState<{ id: string; loading: boolean } | null>(null);
+  const stop = () => { audio.current?.pause(); audio.current = null; setState(null); };
+  useEffect(() => () => { audio.current?.pause(); }, []);
+  function toggle(voice: AgentVoice) {
+    if (state?.id === voice.id) return stop();
+    audio.current?.pause();
+    if (!voice.previewUrl) return;
+    const player = new Audio(voice.previewUrl);
+    audio.current = player;
+    setState({ id: voice.id, loading: true });
+    player.onplaying = () => setState(current => current?.id === voice.id ? { id: voice.id, loading: false } : current);
+    player.onended = () => { if (audio.current === player) stop(); };
+    player.onerror = () => { if (audio.current === player) { stop(); toast.error("That preview could not play."); } };
+    void player.play().catch(() => { if (audio.current === player) stop(); });
+  }
+  return { playing: state, toggle, stop };
+}
+function PreviewButton({ voice, preview }: { voice: AgentVoice; preview: ReturnType<typeof useVoicePreview> }) {
+  if (!voice.previewUrl) return <span className="size-8 shrink-0" />;
+  const active = preview.playing?.id === voice.id;
+  return (
+    <button
+      type="button"
+      onClick={event => { event.stopPropagation(); preview.toggle(voice); }}
+      aria-label={active ? `Stop ${voice.name} preview` : `Play ${voice.name} preview`}
+      className={`flex size-8 shrink-0 items-center justify-center rounded-full transition ${active ? "bg-primary text-primary-foreground" : "bg-card text-foreground ring-1 ring-border hover:bg-background"}`}
+    >
+      {active && preview.playing?.loading ? <IconLoader2 size={14} className="animate-spin" /> : active ? <IconPlayerStopFilled size={13} /> : <IconPlayerPlayFilled size={13} />}
+    </button>
+  );
+}
+function VoicePickerModal({ current, onChoose, onClose }: { current?: string; onChoose: (voiceId: string) => Promise<void>; onClose: () => void }) {
+  const voices = useAgentVoices();
+  const preview = useVoicePreview();
+  const [query, setQuery] = useState("");
+  const [gender, setGender] = useState<"all" | "female" | "male">("all");
+  const [saving, setSaving] = useState<string>();
+  const search = query.trim().toLowerCase();
+  const filtered = voices.data?.voices.filter(v =>
+    (gender === "all" || v.gender === gender) &&
+    `${v.name} ${regionName(v.country) ?? ""} ${v.tags.join(" ")}`.toLowerCase().includes(search));
+  async function choose(voiceId: string) {
+    if (saving) return;
+    setSaving(voiceId);
+    try { await onChoose(voiceId); preview.stop(); onClose(); }
+    catch (err) { toast.error(err instanceof Error ? err.message : "The voice could not be saved."); }
+    finally { setSaving(undefined); }
+  }
+  return (
+    <Modal title="Choose a receptionist voice" description="Tap play to hear a sample. Your receptionist uses this voice for every call." onClose={() => { preview.stop(); onClose(); }} busy={Boolean(saving)}>
+      <div className="relative">
+        <IconSearch size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name or country…" className="h-10 rounded-xl bg-muted pl-9 pr-3 text-[13px] shadow-none" />
+      </div>
+      <div className="mt-3 flex gap-1.5" role="group" aria-label="Filter by voice">
+        {(["all", "female", "male"] as const).map(value => (
+          <button key={value} type="button" aria-pressed={gender === value} onClick={() => setGender(value)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${gender === value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+            {value === "all" ? "All" : value === "female" ? "Female" : "Male"}
+          </button>
+        ))}
+      </div>
+      <div className="-mx-2 mt-3 max-h-80 overflow-y-auto">
+        {voices.isPending ? (
+          <p className="flex items-center justify-center gap-2 py-8 text-[13px] text-muted-foreground"><IconLoader2 size={14} className="animate-spin" />Loading voices…</p>
+        ) : voices.isError ? (
+          <p role="alert" className="py-8 text-center text-[13px] text-destructive">Voices could not load. <button type="button" onClick={() => void voices.refetch()} className="underline">Retry</button></p>
+        ) : filtered?.length ? filtered.map(voice => {
+          const selected = (current ?? voices.data?.defaultVoiceId) === voice.id;
+          return (
+            <div key={voice.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${selected ? "bg-accent" : "hover:bg-muted"}`}>
+              <PreviewButton voice={voice} preview={preview} />
+              <button type="button" disabled={Boolean(saving)} onClick={() => void choose(voice.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60">
+                <span className="min-w-0 flex-1">
+                  <span className={`block truncate text-[13px] font-medium ${selected ? "text-primary" : "text-foreground"}`}>{voice.name}{voice.id === voices.data?.defaultVoiceId && <span className="ml-1.5 font-normal text-muted-foreground">(default)</span>}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{voiceLabel(voice)}</span>
+                </span>
+                {saving === voice.id ? <IconLoader2 size={16} className="shrink-0 animate-spin text-muted-foreground" /> : selected ? <IconCheck size={16} className="shrink-0 text-primary" /> : <span className="w-4 shrink-0" />}
+              </button>
+            </div>
+          );
+        }) : (
+          <p className="py-8 text-center text-[13px] text-muted-foreground">No voices match{query ? ` “${query}”` : ""}.</p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+function AgentVoiceSetting({ voice, onChanged }: { voice: BusinessVoice; onChanged: () => Promise<unknown> }) {
+  const { activeWorkspaceId } = useStore();
+  const voices = useAgentVoices();
+  const preview = useVoicePreview();
+  const [open, setOpen] = useState(false);
+  const currentId = voice.voiceId ?? voices.data?.defaultVoiceId;
+  const current = voices.data?.voices.find(v => v.id === currentId);
+  async function choose(voiceId: string) {
+    await request(`/api/workspaces/${activeWorkspaceId}/voice/agent-voice`, { method: "PUT", body: JSON.stringify({ voiceId }) });
+    await onChanged();
+    toast.success(voice.status === "active" ? "Voice updated. New calls will use it within a minute." : "Voice saved. Your receptionist will use it once your number is ready.");
+  }
+  return (
+    <div className="mt-6 max-w-md border-t border-border pt-5">
+      <h3 className="flex items-center gap-2 text-[14px] font-medium"><IconMicrophone size={16} className="text-primary" />Receptionist voice</h3>
+      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
+        {current ? <PreviewButton voice={current} preview={preview} /> : <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-border"><IconMicrophone size={14} className="text-muted-foreground" /></span>}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[14px] font-medium">{voices.isPending ? "Loading…" : current?.name ?? "Default voice"}</span>
+          {current && <span className="block truncate text-xs text-muted-foreground">{voiceLabel(current)}{!voice.voiceId && " · default"}</span>}
+          {voices.isError && <span className="block text-xs text-destructive">Voices could not load.</span>}
+        </span>
+        <button type="button" disabled={voices.isPending} onClick={() => { preview.stop(); setOpen(true); }} className="shrink-0 rounded-full bg-card px-3.5 py-1.5 text-[12px] font-medium text-foreground transition hover:bg-background disabled:opacity-60">Change</button>
+      </div>
+      {open && <VoicePickerModal current={voice.voiceId} onChoose={choose} onClose={() => setOpen(false)} />}
+    </div>
+  );
+}
 export function BusinessPhoneSettings() {
   const { activeWorkspaceId, state } = useStore();
   const [country, setCountry] = useState("");
@@ -185,5 +314,6 @@ export function BusinessPhoneSettings() {
       {!active && <Button type="submit" disabled={pending || query.isError || !(country || voice?.country)} className="rounded-xl">{voice?.status === "needs_review" ? "Check setup status" : voice?.status === "failed" ? "Retry phone setup" : "Set up business number"}</Button>}
       <p className="text-xs leading-5 text-muted-foreground">{active ? "Share it with customers: callers can ask about your location, hours and prices, and book, reschedule or cancel. Reminders go out from this line too. Tap the number to copy it." : "Availability varies by country. Some countries require business verification before a number can be assigned."}</p>
     </form>}
+    {!query.isPending && !query.isError && voice && <AgentVoiceSetting voice={voice} onChanged={() => query.refetch()} />}
   </Card>;
 }
