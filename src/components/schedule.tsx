@@ -2,7 +2,13 @@
 
 import { useBusinessClock } from "@/hooks/use-business-clock";
 import { DatePicker } from "./date-picker";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,13 +25,7 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 import { useStore } from "@/lib/store";
-import {
-  addDays,
-  type Booking,
-  dateLabel,
-  duration,
-  time,
-} from "@/lib/model";
+import { addDays, type Booking, dateLabel, duration, time } from "@/lib/model";
 import {
   Avatar,
   BookingStatus,
@@ -43,6 +43,49 @@ type Props = {
 const START_HOUR = 8;
 const END_HOUR = 19;
 const HOUR_HEIGHT = 78;
+
+// Strong, Google Calendar-style fills: one colour per team member. White text keeps at least
+// 4.5:1 contrast on every colour, in light and dark themes alike.
+const STAFF_COLORS = [
+  "#3F51B5",
+  "#0B8043",
+  "#8E24AA",
+  "#B84E00",
+  "#00796B",
+  "#C2185B",
+  "#5D4037",
+  "#1565C0",
+];
+const staffColor = (staff: { id: string }[], staffId: string) =>
+  STAFF_COLORS[
+    Math.max(
+      0,
+      staff.findIndex((s) => s.id === staffId),
+    ) % STAFF_COLORS.length
+  ];
+
+function eventFill(
+  color: string,
+  status: Booking["status"],
+): React.CSSProperties {
+  const tentative = status === "Pending" || status === "Needs confirmation";
+  return {
+    backgroundColor: color,
+    opacity: status === "Completed" ? 0.5 : 1,
+    backgroundImage: tentative
+      ? "repeating-linear-gradient(135deg, rgb(255 255 255 / 0.22) 0 6px, transparent 6px 12px)"
+      : undefined,
+  };
+}
+function StaffDot({ color }: { color: string }) {
+  return (
+    <i
+      aria-hidden="true"
+      className="inline-block size-2.5 shrink-0 rounded-full"
+      style={{ backgroundColor: color }}
+    />
+  );
+}
 function offset(dateTime: string) {
   const d = new Date(dateTime);
   return (d.getHours() - START_HOUR + d.getMinutes() / 60) * HOUR_HEIGHT;
@@ -197,7 +240,9 @@ function ScheduleTimeline({
           style={{ top: nowOffset }}
         >
           <i className="absolute -left-[5px] -top-[5px] h-[11px] w-[11px] rounded-full bg-[#d7958e]" />
-          <span className="absolute -top-[17px] right-0 text-[12px] font-bold tracking-wide text-[#bf817b]">NOW · {time(NOW)}</span>
+          <span className="absolute -top-[17px] right-0 text-[12px] font-bold tracking-wide text-[#bf817b]">
+            NOW · {time(NOW)}
+          </span>
         </div>
       )}
       {placeEvents(events).map(({ booking: b, lane, lanes }) => {
@@ -213,50 +258,49 @@ function ScheduleTimeline({
             4,
         );
         const isFinished = b.status === "Completed";
-        const needsAttention = ["Needs confirmation", "Pending"].includes(b.status);
+        const needsAttention = ["Needs confirmation", "Pending"].includes(
+          b.status,
+        );
         return (
           <button
             key={b.id}
             onClick={() => onBooking(b)}
-            className="absolute z-10 flex items-center rounded-xl bg-muted/70 px-3 text-left transition hover:bg-accent"
-            style={{ top: offset(b.startTime) + 2, height, left: `calc(64px + ${lane * 100 / lanes}% - ${lane * 76 / lanes}px)`, width: `calc(${100 / lanes}% - ${76 / lanes + 6}px)` }}
+            className="absolute z-10 flex items-center rounded-xl px-3 text-left text-white transition hover:brightness-110"
+            style={{
+              top: offset(b.startTime) + 2,
+              height,
+              left: `calc(64px + ${(lane * 100) / lanes}% - ${(lane * 76) / lanes}px)`,
+              width: `calc(${100 / lanes}% - ${76 / lanes + 6}px)`,
+              ...eventFill(staffColor(state.staff, b.staffId), b.status),
+            }}
           >
-            <span
-              className={`absolute bottom-0 left-0 top-0 flex w-9 items-center justify-center rounded-full border ${
-                isFinished
-                  ? "border-border bg-muted text-foreground"
-                  : needsAttention
-                    ? "border-[#f0cfca] bg-[#f8e4e2] text-[#b26e68]"
-                    : "border-border bg-card text-foreground"
-              }`}
-            >
+            <span className="absolute bottom-0 left-0 top-0 flex w-9 items-center justify-center rounded-full bg-white/20 text-white">
               <ReservationIcon size={18} />
             </span>
             <span className="ml-12 flex min-w-0 flex-1 flex-col justify-center py-1 max-[560px]:ml-11">
-              <small className="text-[12px] font-medium text-muted-foreground max-[560px]:text-[12px]">
+              <small className="text-[12px] font-medium text-white/80 max-[560px]:text-[12px]">
                 {time(b.startTime)} – {time(b.endTime)} ·{" "}
                 {duration(service.duration)}
               </small>
               <strong
-                className={`mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold max-[560px]:text-[12px] ${
-                  isFinished
-                    ? "text-muted-foreground line-through"
-                    : "text-foreground"
+                className={`mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold text-white max-[560px]:text-[12px] ${
+                  isFinished ? "line-through" : ""
                 }`}
               >
                 {service.name}
               </strong>
-              <em className="mt-1 text-[12px] not-italic text-muted-foreground max-[560px]:text-[12px]">
-                {customer.name} <span className="text-muted-foreground max-[560px]:hidden">· {staffMember.name}</span>
+              <em className="mt-1 text-[12px] not-italic text-white/90 max-[560px]:text-[12px]">
+                {customer.name}{" "}
+                <span className="text-white/75 max-[560px]:hidden">
+                  · {staffMember.name}
+                </span>
               </em>
             </span>
             <span
-              className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                isFinished
-                  ? "border-[#d59a93] bg-[#e8aaa3] text-white"
-                  : needsAttention
-                    ? "border-[#c9877e] text-[#b8746b]"
-                    : "border-border text-foreground"
+              className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-white ${
+                needsAttention
+                  ? "border-dashed border-white/80"
+                  : "border-white/70 bg-white/15"
               }`}
               aria-label={b.status}
             >
@@ -286,20 +330,26 @@ function ScheduleTimeline({
             onClick={() => onNew({ date: day, startTime: b.endTime })}
           >
             <IconClock size={13} /> {duration(gap)} free{" "}
-            <span className="ml-1 font-semibold text-muted-foreground">＋ Add booking</span>
+            <span className="ml-1 font-semibold text-muted-foreground">
+              ＋ Add booking
+            </span>
           </button>
         );
       })}
       {hours.closed && (
         <div className="absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-tight text-muted-foreground">
           A day to pause.
-          <span className="mt-2 block text-[12px] font-normal tracking-normal text-muted-foreground">The studio is closed today.</span>
+          <span className="mt-2 block text-[12px] font-normal tracking-normal text-muted-foreground">
+            The studio is closed today.
+          </span>
         </div>
       )}
       {!hours.closed && !events.length && (
         <div className="absolute left-[36%] right-[8%] top-[34%] text-center text-[22px] font-medium tracking-tight text-muted-foreground">
           No appointments scheduled
-          <span className="mt-2 block text-[12px] font-normal tracking-normal text-muted-foreground">Click an open time to add a reservation.</span>
+          <span className="mt-2 block text-[12px] font-normal tracking-normal text-muted-foreground">
+            Click an open time to add a reservation.
+          </span>
         </div>
       )}
     </div>
@@ -380,7 +430,9 @@ function ScheduleScaffold({
                 {all.length} bookings
               </span>
             </div>
-            <h2 className="mt-7 text-[20px] font-medium tracking-tight text-foreground">{dateLabel(day).split(",")[0]}</h2>
+            <h2 className="mt-7 text-[20px] font-medium tracking-tight text-foreground">
+              {dateLabel(day).split(",")[0]}
+            </h2>
             <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               {all.length
                 ? `Your first appointment is at ${time(all[0].startTime)}.`
@@ -402,10 +454,17 @@ function ScheduleScaffold({
                   >
                     <Avatar name={c.name} />
                     <span className="min-w-0 flex-1">
-                      <strong className="block text-[12px] font-semibold text-foreground">{c.name}</strong>
-                      <small className="mt-0.5 block text-[12px] text-warning">{b.status}</small>
+                      <strong className="block text-[12px] font-semibold text-foreground">
+                        {c.name}
+                      </strong>
+                      <small className="mt-0.5 block text-[12px] text-warning">
+                        {b.status}
+                      </small>
                     </span>
-                    <IconArrowRight size={15} className="text-muted-foreground" />
+                    <IconArrowRight
+                      size={15}
+                      className="text-muted-foreground"
+                    />
                   </button>
                 );
               })}
@@ -416,7 +475,9 @@ function ScheduleScaffold({
               <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                 COMING UP
               </span>
-              <strong className="mt-5 block text-[23px] font-medium text-foreground">{time(next.startTime)}</strong>
+              <strong className="mt-5 block text-[23px] font-medium text-foreground">
+                {time(next.startTime)}
+              </strong>
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                 {state.services.find((s) => s.id === next.serviceId)?.name} with{" "}
                 {state.customers.find((c) => c.id === next.customerId)?.name}
@@ -438,9 +499,31 @@ function ScheduleScaffold({
             </span>
             <label className="flex items-center gap-2">
               Staff{" "}
-              <Select value={staff} onValueChange={(value) => value && setStaff(value)} items={[{value: "all", label: "All staff"}, ...state.staff.map(s => ({value: s.id, label: s.name}))]}>
-                <SelectTrigger aria-label="Filter timeline by staff" className="h-10 min-w-32 border-0 bg-muted px-3 text-[12px]"><SelectValue /></SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}><SelectItem value="all">All staff</SelectItem>{state.staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+              <Select
+                value={staff}
+                onValueChange={(value) => value && setStaff(value)}
+                items={[
+                  { value: "all", label: "All staff" },
+                  ...state.staff.map((s) => ({ value: s.id, label: s.name })),
+                ]}
+              >
+                <SelectTrigger
+                  aria-label="Filter timeline by staff"
+                  className="h-10 min-w-32 border-0 bg-muted px-3 text-[12px]"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent alignItemWithTrigger={false}>
+                  <SelectItem value="all">All staff</SelectItem>
+                  {state.staff.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      <span className="flex items-center gap-2">
+                        <StaffDot color={staffColor(state.staff, s.id)} />
+                        {s.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </label>
           </div>
@@ -522,7 +605,9 @@ export function CalendarPage({ onNew, onBooking }: Props) {
           <h1 className="mt-2 text-[30px] font-medium tracking-tight text-foreground max-[760px]:text-[30px]">
             Your calendar.
           </h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">View and manage appointments for the week.</p>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            View and manage appointments for the week.
+          </p>
         </div>
         <Button
           className="inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:bg-primary/90"
@@ -544,7 +629,9 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             >
               <IconChevronLeft size={18} />
             </Button>
-            <DatePicker value={day} onChange={setDay}>{range}</DatePicker>
+            <DatePicker value={day} onChange={setDay}>
+              {range}
+            </DatePicker>
             <Button
               variant="ghost"
               size="icon"
@@ -564,10 +651,32 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={staff} onValueChange={(value) => value && setStaff(value)} items={[{value: "all", label: "All staff"}, ...state.staff.map(s => ({value: s.id, label: s.name}))]}>
-                <SelectTrigger aria-label="Filter calendar by staff" className="h-10 min-w-32 border-0 bg-muted px-3 text-[12px]"><SelectValue /></SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}><SelectItem value="all">All staff</SelectItem>{state.staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-              </Select>
+            <Select
+              value={staff}
+              onValueChange={(value) => value && setStaff(value)}
+              items={[
+                { value: "all", label: "All staff" },
+                ...state.staff.map((s) => ({ value: s.id, label: s.name })),
+              ]}
+            >
+              <SelectTrigger
+                aria-label="Filter calendar by staff"
+                className="h-10 min-w-32 border-0 bg-muted px-3 text-[12px]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectItem value="all">All staff</SelectItem>
+                {state.staff.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    <span className="flex items-center gap-2">
+                      <StaffDot color={staffColor(state.staff, s.id)} />
+                      {s.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <SegmentedControl
               options={["Week", "Day"]}
               value={mode}
@@ -589,7 +698,9 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                 <button
                   key={date}
                   className={`sticky top-0 z-30 flex h-[72px] flex-col items-center justify-center border-b-0 border-l-0 border-border text-[12px] transition hover:bg-muted [box-shadow:inset_-1px_0_var(--border)] ${
-                    isToday ? "bg-background text-foreground" : "bg-card text-muted-foreground"
+                    isToday
+                      ? "bg-background text-foreground"
+                      : "bg-card text-muted-foreground"
                   }`}
                   onClick={() => {
                     setDay(date);
@@ -653,7 +764,11 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                 <div
                   key={date}
                   className={`relative border-r-0 border-border [box-shadow:inset_-1px_0_var(--border)] [background-image:repeating-linear-gradient(to_bottom,var(--border)_0,var(--border)_1px,transparent_1px,transparent_78px)] ${
-                    isToday ? "bg-background" : hours.closed ? "bg-background" : "bg-card"
+                    isToday
+                      ? "bg-background"
+                      : hours.closed
+                        ? "bg-background"
+                        : "bg-card"
                   }`}
                   style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
                 >
@@ -687,7 +802,10 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                             })
                           }
                         >
-                          <IconPlus size={15} className="h-5 w-5 rounded-full bg-card p-0.5" />
+                          <IconPlus
+                            size={15}
+                            className="h-5 w-5 rounded-full bg-card p-0.5"
+                          />
                         </button>
                       );
                     },
@@ -709,18 +827,15 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                         new Date(booking.startTime).getTime()) /
                       60000;
                     const isCompleted = booking.status === "Completed";
-                    const isPending = ["Pending", "Needs confirmation"].includes(booking.status);
                     return (
                       <button
                         key={booking.id}
-                        className={`absolute z-10 overflow-hidden rounded-[9px] border-0 p-2 text-left transition hover:z-20 hover:bg-muted ${
-                          isCompleted
-                            ? "bg-muted text-muted-foreground"
-                            : isPending
-                              ? "bg-warning-surface text-warning"
-                              : "bg-accent text-primary"
-                        }`}
+                        className="absolute z-10 overflow-hidden rounded-[9px] border-0 p-2 text-left text-white transition hover:z-20 hover:brightness-110"
                         style={{
+                          ...eventFill(
+                            staffColor(state.staff, booking.staffId),
+                            booking.status,
+                          ),
                           top: offset(booking.startTime) + 2,
                           height: Math.max(
                             32,
@@ -732,19 +847,21 @@ export function CalendarPage({ onNew, onBooking }: Props) {
                         onClick={() => onBooking(booking)}
                         aria-label={`${service.name} with ${customer.name}, ${time(booking.startTime)} to ${time(booking.endTime)}. ${booking.status}.`}
                       >
-                        <small className={`block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-medium ${isPending ? "text-warning" : "text-muted-foreground"}`}>
+                        <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-medium text-white/80">
                           {time(booking.startTime)} – {time(booking.endTime)}
                         </small>
-                        <strong className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold leading-[1.3] ${isCompleted ? "line-through" : ""}`}>
+                        <strong
+                          className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold leading-[1.3] ${isCompleted ? "line-through" : ""}`}
+                        >
                           {service.name}
                         </strong>
                         {minutes >= 60 && (
-                          <span className={`mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] ${isPending ? "text-warning" : "text-foreground"}`}>
+                          <span className="mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-white/90">
                             {customer.name}
                           </span>
                         )}
                         {minutes >= 120 && (
-                          <em className="mt-2 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] not-italic text-muted-foreground">
+                          <em className="mt-2 block overflow-hidden text-ellipsis whitespace-nowrap text-[12px] not-italic text-white/75">
                             {
                               state.staff.find((s) => s.id === booking.staffId)
                                 ?.name
@@ -776,7 +893,9 @@ export function CalendarPage({ onNew, onBooking }: Props) {
             <i className="h-2 w-2 rounded-[2px] bg-[#dba9a3]" />
             Needs attention
           </span>
-          <p className="ml-auto text-muted-foreground max-[760px]:ml-0">Click an open time to add a reservation · All times WAT</p>
+          <p className="ml-auto text-muted-foreground max-[760px]:ml-0">
+            Click an open time to add a reservation · All times WAT
+          </p>
         </div>
       </Card>
     </>
@@ -863,24 +982,85 @@ export function BookingsPage({ onNew, onBooking }: Props) {
           </div>
         </div>
         <DataTable label="Reservations">
-          <thead><tr><th scope="col">Customer / booking</th><th scope="col">Service</th><th scope="col">Time</th><th scope="col">Specialist</th><th scope="col">Status</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
+          <thead>
+            <tr>
+              <th scope="col">Customer / booking</th>
+              <th scope="col">Service</th>
+              <th scope="col">Time</th>
+              <th scope="col">Specialist</th>
+              <th scope="col">Status</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
           <tbody>
             {dates.map((d) => (
               <Fragment key={d}>
-                <tr className="table-group"><th colSpan={6} scope="rowgroup"><span className="font-medium text-foreground">{d === TODAY ? "Today · " : ""}{dateLabel(d)}</span></th></tr>
-                {bookings.filter((b) => b.startTime.startsWith(d)).map((b) => {
-                  const customer = state.customers.find((c) => c.id === b.customerId);
-                  const service = state.services.find((s) => s.id === b.serviceId);
-                  const staff = state.staff.find((s) => s.id === b.staffId);
-                  return <tr key={b.id}>
-                    <td><span className="table-primary">{customer?.name}</span><span className="table-secondary font-mono">{b.code}</span></td>
-                    <td><span className="table-primary">{service?.name}</span><span className="table-secondary">{service ? duration(service.duration) : ""}</span></td>
-                    <td className="whitespace-nowrap tabular-nums">{time(b.startTime)}<span className="table-secondary">until {time(b.endTime)}</span></td>
-                    <td><span className="flex items-center gap-2"><Avatar name={staff?.name ?? "Unassigned"} src={staff?.avatarUrl} /><span>{staff?.name ?? "Unassigned"}</span></span></td>
-                    <td><BookingStatus status={b.status} /></td>
-                    <td className="text-right"><button className="table-action" onClick={() => onBooking(b)} aria-label={`View reservation ${b.code}`}>View <IconChevronRight size={15} /></button></td>
-                  </tr>;
-                })}
+                <tr className="table-group">
+                  <th colSpan={6} scope="rowgroup">
+                    <span className="font-medium text-foreground">
+                      {d === TODAY ? "Today · " : ""}
+                      {dateLabel(d)}
+                    </span>
+                  </th>
+                </tr>
+                {bookings
+                  .filter((b) => b.startTime.startsWith(d))
+                  .map((b) => {
+                    const customer = state.customers.find(
+                      (c) => c.id === b.customerId,
+                    );
+                    const service = state.services.find(
+                      (s) => s.id === b.serviceId,
+                    );
+                    const staff = state.staff.find((s) => s.id === b.staffId);
+                    return (
+                      <tr key={b.id}>
+                        <td>
+                          <span className="table-primary">
+                            {customer?.name}
+                          </span>
+                          <span className="table-secondary font-mono">
+                            {b.code}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="table-primary">{service?.name}</span>
+                          <span className="table-secondary">
+                            {service ? duration(service.duration) : ""}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap tabular-nums">
+                          {time(b.startTime)}
+                          <span className="table-secondary">
+                            until {time(b.endTime)}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="flex items-center gap-2">
+                            <Avatar
+                              name={staff?.name ?? "Unassigned"}
+                              src={staff?.avatarUrl}
+                            />
+                            <span>{staff?.name ?? "Unassigned"}</span>
+                          </span>
+                        </td>
+                        <td>
+                          <BookingStatus status={b.status} />
+                        </td>
+                        <td className="text-right">
+                          <button
+                            className="table-action"
+                            onClick={() => onBooking(b)}
+                            aria-label={`View reservation ${b.code}`}
+                          >
+                            View <IconChevronRight size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </Fragment>
             ))}
           </tbody>
@@ -889,7 +1069,21 @@ export function BookingsPage({ onNew, onBooking }: Props) {
           <EmptyState
             title="No bookings found"
             description="Try another filter or search, or make a new reservation."
-            action={query || filter !== "All" ? <Button variant="outline" onClick={() => { setQuery(""); setFilter("All"); }}>Clear filters</Button> : <Button onClick={() => onNew()}>New booking</Button>}
+            action={
+              query || filter !== "All" ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQuery("");
+                    setFilter("All");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              ) : (
+                <Button onClick={() => onNew()}>New booking</Button>
+              )
+            }
           />
         )}
         <TableSummary count={bookings.length} noun="reservation" />
