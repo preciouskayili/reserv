@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { safeNextPath } from "@/lib/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Brand } from "./shared";
@@ -24,6 +25,16 @@ import {
  */
 const returnPath = () => safeNextPath(new URLSearchParams(window.location.search).get("next"));
 
+/** Where a signed-in user belongs: workspace setup if they have no workspace yet, otherwise where they were headed. */
+async function destination(): Promise<string> {
+  try {
+    const { workspaces } = await api.workspaces.list();
+    return workspaces.length ? returnPath() : "/onboarding";
+  } catch {
+    return returnPath(); // The workspace pages send users without a workspace to setup anyway.
+  }
+}
+
 export function LoginPage() {
   const router = useRouter();
   const { requestOtp, verifyOtp, isAuthenticated } = useAuth();
@@ -40,15 +51,13 @@ export function LoginPage() {
   const [signedIn, setSignedIn] = useState(false);
   const busy = isSubmitting || signedIn;
 
-  // Fetch the destination page in advance, so leaving the login page after verification is instant.
+  // Already signed in when the page opens: go where the user belongs, replacing the login page in history.
   useEffect(() => {
-    router.prefetch(returnPath());
-  }, [router]);
-
-  // Signed in (now, or already): replace the login page so Back does not return to it.
-  useEffect(() => {
-    if (isAuthenticated) router.replace(returnPath());
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated || signedIn) return;
+    let active = true;
+    void destination().then(path => { if (active) router.replace(path); });
+    return () => { active = false; };
+  }, [isAuthenticated, signedIn, router]);
 
   useEffect(() => {
     if (step !== "code" || countdown <= 0) return;
@@ -90,8 +99,9 @@ export function LoginPage() {
     setIsSubmitting(true);
     try {
       await verifyOtp(email, value);
-      // Navigation happens in the isAuthenticated effect; the lock stays held so nothing can be resubmitted.
+      // Signed in: the lock stays held while we send the user straight to setup or their workspace.
       setSignedIn(true);
+      router.replace(await destination());
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Please try again.",
