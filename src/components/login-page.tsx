@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { PageLoading } from "./feedback";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { safeNextPath } from "@/lib/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Brand } from "./shared";
@@ -18,18 +17,15 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-export function LoginPage() {
-  return (
-    <Suspense fallback={<PageLoading label="Loading sign-in…" />}>
-      <LoginForm />
-    </Suspense>
-  );
-}
+/**
+ * The return path (?next=) is read only when it is needed, after sign-in, rather than during render.
+ * Reading search params while rendering stops Next.js from prerendering the form, which made the
+ * page arrive as a loading skeleton instead of a ready-to-use form.
+ */
+const returnPath = () => safeNextPath(new URLSearchParams(window.location.search).get("next"));
 
-function LoginForm() {
+export function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextTarget = safeNextPath(searchParams.get("next"));
   const { requestOtp, verifyOtp, isAuthenticated } = useAuth();
 
   const [step, setStep] = useState<"email" | "code">("email");
@@ -40,11 +36,19 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
+  // Once the code is accepted the form stays locked until the destination replaces this page.
+  const [signedIn, setSignedIn] = useState(false);
+  const busy = isSubmitting || signedIn;
 
-  // If already signed in, redirect
+  // Fetch the destination page in advance, so leaving the login page after verification is instant.
   useEffect(() => {
-    if (isAuthenticated) router.replace(nextTarget);
-  }, [isAuthenticated, nextTarget, router]);
+    router.prefetch(returnPath());
+  }, [router]);
+
+  // Signed in (now, or already): replace the login page so Back does not return to it.
+  useEffect(() => {
+    if (isAuthenticated) router.replace(returnPath());
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (step !== "code" || countdown <= 0) return;
@@ -77,25 +81,30 @@ function LoginForm() {
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.trim().length !== 6) return;
+  const verify = async (value: string) => {
+    if (value.trim().length !== 6 || signedIn) return;
 
     if (submissionLock.current) return;
     submissionLock.current = true;
     setFormError("");
     setIsSubmitting(true);
     try {
-      await verifyOtp(email, code);
-      router.push(nextTarget);
+      await verifyOtp(email, value);
+      // Navigation happens in the isAuthenticated effect; the lock stays held so nothing can be resubmitted.
+      setSignedIn(true);
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Please try again.",
       );
-    } finally {
       submissionLock.current = false;
+    } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleVerifyCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    void verify(code);
   };
 
   const handleResend = async () => {
@@ -168,7 +177,7 @@ function LoginForm() {
               </span>
               <button
                 type="button"
-                onClick={() => setCode(devCode)}
+                onClick={() => { setCode(devCode); void verify(devCode); }}
                 className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
               >
                 Autofill
@@ -233,18 +242,22 @@ function LoginForm() {
                 </label>
                 <div className="relative">
                   <Input
-                disabled={isSubmitting}
+                    disabled={busy}
                     id="code"
                     type="text"
                     inputMode="numeric"
+                    autoComplete="one-time-code"
                     autoFocus
                     required
                     maxLength={6}
                     placeholder="••••••"
                     value={code}
-                    onChange={(e) =>
-                      setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      setCode(value);
+                      // Typing or pasting the sixth digit signs in straight away; no extra click.
+                      if (value.length === 6) void verify(value);
+                    }}
                     className="h-14 rounded-xl border-border bg-background text-center font-mono text-[24px] font-bold tracking-[0.35em] text-foreground placeholder:text-muted-foreground/40 shadow-none transition focus-visible:bg-card focus-visible:ring-1 focus-visible:ring-primary"
                   />
                 </div>
@@ -252,13 +265,13 @@ function LoginForm() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || code.length !== 6}
+                disabled={busy || code.length !== 6}
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
               >
-                {isSubmitting ? (
+                {busy ? (
                   <>
                     <IconLoader2 size={16} className="animate-spin" />
-                    Verifying code...
+                    {signedIn ? "Opening your workspace..." : "Verifying code..."}
                   </>
                 ) : (
                   <>
@@ -271,7 +284,7 @@ function LoginForm() {
               <div className="flex items-center justify-between pt-1 text-[12px] text-muted-foreground">
                 <button
                   type="button"
-                  disabled={isSubmitting}
+                  disabled={busy}
                   onClick={() => {
                     setFormError("");
                     setStep("email");
@@ -283,7 +296,7 @@ function LoginForm() {
                 </button>
                 <button
                   type="button"
-                  disabled={countdown > 0 || isSubmitting}
+                  disabled={countdown > 0 || busy}
                   onClick={handleResend}
                   className="font-medium text-primary disabled:text-muted-foreground hover:underline"
                 >

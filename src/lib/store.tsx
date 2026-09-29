@@ -86,10 +86,13 @@ function ScopedStore({children,pathname,publicPath}:{children:ReactNode;pathname
      try {
        if(publicPath) { const result=await fetchPublic();if(alive)acceptSnapshot(result); }
        else {
-         const {workspaces:list}=await api.workspaces.list();if(!alive)return;
+         // Fetch the last-used workspace alongside the list instead of after it: one round trip, not two.
+         const storedId=getStoredWorkspaceId();
+         const [{workspaces:list},stored]=await Promise.all([api.workspaces.list(),storedId?api.workspaces.getState(storedId).catch(()=>null):Promise.resolve(null)]);
+         if(!alive)return;
          setWorkspaces(list);setNeedsOnboarding(list.length===0);
-         if(list.length){const selected=list.find(w=>w.id===getStoredWorkspaceId())??list[0];
-           const result=await api.workspaces.getState(selected.id);if(!alive)return;
+         if(list.length){const selected=list.find(w=>w.id===storedId)??list[0];
+           const result=stored&&selected.id===storedId?stored:await api.workspaces.getState(selected.id);if(!alive)return;
            activeRef.current=selected.id;setActiveWorkspaceId(selected.id);setStoredWorkspaceId(selected.id);acceptSnapshot(result);
          }
        }
@@ -150,7 +153,9 @@ function ScopedStore({children,pathname,publicPath}:{children:ReactNode;pathname
  }
  const state=snapshot?normalizePayments(snapshot.state):{...emptyWorkspaceState,loaded:!isLoading};
  let content=children;
- if(!bypass&&isLoading)content=<RouteLoading pathname={pathname} withShell={!publicPath} />;
+ // Studio pages draw their own sidebar immediately and show a skeleton only where workspace data goes.
+ const shellHandlesLoading=!publicPath&&pathname!=="/onboarding";
+ if(!bypass&&isLoading&&!shellHandlesLoading)content=<RouteLoading pathname={pathname} />;
  else if(error)content=<main className="mx-auto max-w-2xl px-5 py-16"><InlineError title={notFound?"We couldn’t find that page.":"Couldn’t load your workspace."} message={error} onRetry={notFound?undefined:()=>{setError("");setIsLoading(true);setReload(value=>value+1);}} /><Link href="/reservation" className="mt-5 inline-flex text-sm text-primary">Find a reservation</Link></main>;
  return <Store.Provider value={{state,update,reset:()=>void refresh(),workspaces,activeWorkspaceId,switchWorkspace,createWorkspace,needsOnboarding,setNeedsOnboarding,isLoading,refresh,acceptSnapshot}}>{saving&&<div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs text-primary-foreground shadow-sm">Saving changes…</div>}{content}</Store.Provider>;
 }

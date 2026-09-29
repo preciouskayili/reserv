@@ -21,6 +21,8 @@ import {
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { InlineError, PageLoading } from "./feedback";
+import { RouteLoading } from "./page-loading";
+import { Skeleton } from "./ui/skeleton";
 import { Avatar, Brand, StudioMark } from "./shared";
 import { BookingFlow, type BookingPreset } from "./booking-flow";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -62,8 +64,11 @@ export function StudioShell({ children }: { children: ReactNode }) {
     activeWorkspaceId,
     switchWorkspace,
     needsOnboarding,
+    isLoading: workspaceLoading,
   } = useStore();
   const { user, isAuthenticated, isLoading: authLoading, sessionError, retrySession, logout } = useAuth();
+  // The sidebar, navigation and header render straight away; only data-bound parts wait for this.
+  const ready = isAuthenticated && !workspaceLoading;
   const [newBooking, setNewBooking] = useState<BookingPreset | null>(null);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
 
@@ -80,8 +85,6 @@ export function StudioShell({ children }: { children: ReactNode }) {
   );
 
   if (sessionError) return <main className="mx-auto max-w-2xl px-5 py-16"><InlineError title="Connection error" message={sessionError} onRetry={retrySession} /><button onClick={logout} className="mt-4 text-sm font-medium text-primary">Sign in again</button></main>;
-  if (authLoading || !isAuthenticated) return <PageLoading label="Checking your session…" />;
-
   if (needsOnboarding) return <PageLoading label="Opening workspace setup…" />;
 
   return (
@@ -102,12 +105,21 @@ export function StudioShell({ children }: { children: ReactNode }) {
                 className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-left text-[12px] transition hover:bg-accent"
               >
                 <StudioMark /><div className="min-w-0 flex-1">
-                  <strong className="block truncate font-semibold text-foreground">
-                    {state.business.name || "Select workspace"}
-                  </strong>
-                  <span className="block truncate text-[11px] text-muted-foreground">
-                    /b/{state.business.slug || "studio"}
-                  </span>
+                  {ready ? (
+                    <>
+                      <strong className="block truncate font-semibold text-foreground">
+                        {state.business.name || "Select workspace"}
+                      </strong>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        /b/{state.business.slug || "studio"}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="block space-y-1.5 py-0.5" aria-hidden="true">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-2.5 w-16" />
+                    </span>
+                  )}
                 </div>
                 <IconChevronDown size={14} className="shrink-0 text-muted-foreground" />
               </PopoverTrigger>
@@ -162,7 +174,8 @@ export function StudioShell({ children }: { children: ReactNode }) {
 
           <button
             onClick={() => setNewBooking({})}
-            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-primary-foreground transition hover:bg-primary/90"
+            disabled={!ready}
+            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
           >
             <IconPlus size={17} /> New booking
           </button>
@@ -179,18 +192,28 @@ export function StudioShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <Link
-            href={`/b/${state.business.slug}`}
-            className="mt-7 flex items-center gap-3 rounded-xl p-3 text-[12px] text-muted-foreground bg-muted hover:bg-accent"
-          >
-            <span className="min-w-0 flex-1">
-              <strong className="block truncate font-medium text-foreground">
-                {state.business.name}
-              </strong>
-              <span className="mt-1 block">View studio page</span>
-            </span>
-            <IconArrowUpRight size={15} />
-          </Link>
+          {ready ? (
+            <Link
+              href={`/b/${state.business.slug}`}
+              className="mt-7 flex items-center gap-3 rounded-xl p-3 text-[12px] text-muted-foreground bg-muted hover:bg-accent"
+            >
+              <span className="min-w-0 flex-1">
+                <strong className="block truncate font-medium text-foreground">
+                  {state.business.name}
+                </strong>
+                <span className="mt-1 block">View studio page</span>
+              </span>
+              <IconArrowUpRight size={15} />
+            </Link>
+          ) : (
+            <div aria-hidden="true" className="mt-7 flex items-center gap-3 rounded-xl bg-muted p-3 text-[12px] text-muted-foreground">
+              <span className="min-w-0 flex-1">
+                <Skeleton className="h-3.5 w-24" />
+                <span className="mt-1 block">View studio page</span>
+              </span>
+              <IconArrowUpRight size={15} />
+            </div>
+          )}
         </aside>
         <header
           className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-8 max-lg:h-16 max-lg:px-5"
@@ -249,8 +272,8 @@ export function StudioShell({ children }: { children: ReactNode }) {
               {current?.name || "Booking details"}
             </span>
           </span>
-          {authLoading ? (
-            <div className="h-8 w-24 animate-pulse rounded-full bg-muted" />
+          {!ready ? (
+            <div className="h-10 w-28 animate-pulse rounded-full bg-muted" />
           ) : isAuthenticated && user ? (
             <div className="flex items-center gap-2">
               <Link
@@ -303,7 +326,8 @@ export function StudioShell({ children }: { children: ReactNode }) {
           <button
             aria-label="New booking"
             onClick={() => setNewBooking({})}
-            className="shrink-0 rounded-full bg-primary px-3 text-primary-foreground"
+            disabled={!ready}
+            className="shrink-0 rounded-full bg-primary px-3 text-primary-foreground disabled:opacity-60"
           >
             <IconPlus size={17} />
           </button>
@@ -311,7 +335,11 @@ export function StudioShell({ children }: { children: ReactNode }) {
         <main
           className="mx-auto max-w-[1400px] px-8 pb-16 pt-5 max-lg:px-5 max-lg:pt-3"
         >
-          <div key={activeWorkspaceId}>{children}</div>
+          {ready ? (
+            <div key={activeWorkspaceId}>{children}</div>
+          ) : (
+            <RouteLoading pathname={pathname} label="Loading your workspace…" />
+          )}
         </main>
         {newBooking && (
           <BookingFlow

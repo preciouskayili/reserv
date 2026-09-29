@@ -271,7 +271,6 @@ export const api = {
       }>("/api/workspaces"),
 
     create: (payload: {
-      voiceCountry?: string;
       avatarUrl?: string;
       logoUrl?: string;
       icon?: "store" | "factory" | "warehouse" | "office" | "cottage" | "community" | "estate" | "hospital" | "bank" | "pavilion" | "flower" | "scissors" | "sparkles";

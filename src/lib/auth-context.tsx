@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -47,6 +48,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** Reads the user from an unexpired session token without verifying it; the server still verifies every request. */
+function sessionFromToken(token: string): AuthUser | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const bytes = Uint8Array.from(atob(part.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    if (typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now()) return null;
+    if (typeof payload.id !== "string" || typeof payload.email !== "string") return null;
+    return { id: payload.id, email: payload.email, name: String(payload.name ?? ""), role: payload.role, businessId: String(payload.businessId ?? "") };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient=useQueryClient();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -56,32 +74,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
-  // Check stored session on mount
-  useEffect(() => {
+  // Restore the stored session before the first paint. The token already carries the user, so the app
+  // renders immediately and the server check runs in the background instead of blocking every page load.
+  useIsomorphicLayoutEffect(() => {
     let active = true;
-    async function restoreSession() {
+    const savedToken = getStoredToken();
+    if (!savedToken) {
+      setIsLoading(false);
+      return;
+    }
+    const optimistic = sessionFromToken(savedToken);
+    if (optimistic) {
+      // Keep the cookie (read by the route guard) in step with local storage; a missing cookie caused login redirect loops.
+      setStoredToken(savedToken);
+      setToken(savedToken);
+      setUser(optimistic);
+      setIsLoading(false);
+    }
+    async function verify() {
       try {
-        const savedToken = getStoredToken();
-        if (!savedToken) return;
         const { user: fetchedUser } = await api.auth.getMe();
-        if (active) {
-          setToken(savedToken);
-          setUser(fetchedUser as AuthUser);
-        }
+        if (!active) return;
+        setToken(savedToken);
+        setUser(fetchedUser as AuthUser);
       } catch (error) {
         if (!active) return;
         if (error instanceof ApiError && error.status === 401) {
           clearStoredToken();
           setToken(null);
           setUser(null);
-        } else {
+        } else if (!optimistic) {
           setSessionError("We couldn’t check your session. Your sign-in has been kept; try reconnecting.");
         }
+        // With a readable, unexpired token a network blip keeps the session; the next request re-checks it.
       } finally {
         if (active) setIsLoading(false);
       }
     }
-    void restoreSession();
+    void verify();
     return () => { active = false; };
   }, [attempt]);
 
