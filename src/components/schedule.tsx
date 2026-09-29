@@ -44,8 +44,6 @@ const START_HOUR = 8;
 const END_HOUR = 19;
 const HOUR_HEIGHT = 78;
 
-// Strong, Google Calendar-style fills: one colour per team member. White text keeps at least
-// 4.5:1 contrast on every colour, in light and dark themes alike.
 const STAFF_COLORS = [
   "#3F51B5",
   "#0B8043",
