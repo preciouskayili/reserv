@@ -23,7 +23,8 @@ import {
  * Reading search params while rendering stops Next.js from prerendering the form, which made the
  * page arrive as a loading skeleton instead of a ready-to-use form.
  */
-const returnPath = () => safeNextPath(new URLSearchParams(window.location.search).get("next"));
+const returnPath = () =>
+  safeNextPath(new URLSearchParams(window.location.search).get("next"));
 
 /** Where a signed-in user belongs: workspace setup if they have no workspace yet, otherwise where they were headed. */
 async function destination(): Promise<string> {
@@ -55,8 +56,12 @@ export function LoginPage() {
   useEffect(() => {
     if (!isAuthenticated || signedIn) return;
     let active = true;
-    void destination().then(path => { if (active) router.replace(path); });
-    return () => { active = false; };
+    void destination().then((path) => {
+      if (active) router.replace(path);
+    });
+    return () => {
+      active = false;
+    };
   }, [isAuthenticated, signedIn, router]);
 
   useEffect(() => {
@@ -187,7 +192,10 @@ export function LoginPage() {
               </span>
               <button
                 type="button"
-                onClick={() => { setCode(devCode); void verify(devCode); }}
+                onClick={() => {
+                  setCode(devCode);
+                  void verify(devCode);
+                }}
                 className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
               >
                 Autofill
@@ -210,7 +218,7 @@ export function LoginPage() {
                     className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                   />
                   <Input
-                disabled={isSubmitting}
+                    disabled={isSubmitting}
                     id="email"
                     type="email"
                     autoFocus
@@ -263,7 +271,9 @@ export function LoginPage() {
                     placeholder="••••••"
                     value={code}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 6);
                       setCode(value);
                       // Typing or pasting the sixth digit signs in straight away; no extra click.
                       if (value.length === 6) void verify(value);
@@ -281,7 +291,9 @@ export function LoginPage() {
                 {busy ? (
                   <>
                     <IconLoader2 size={16} className="animate-spin" />
-                    {signedIn ? "Opening your workspace..." : "Verifying code..."}
+                    {signedIn
+                      ? "Opening your workspace..."
+                      : "Verifying code..."}
                   </>
                 ) : (
                   <>

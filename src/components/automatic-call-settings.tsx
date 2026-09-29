@@ -102,7 +102,8 @@ function CallSettingsForm({ initial }: { initial: CallPreferences }) {
   const { activeWorkspaceId } = useStore();
   const availability = useQuery({
     queryKey: ["automatic-call-status", activeWorkspaceId],
-    queryFn: () => request<{ available: boolean; phoneReady: boolean }>("/api/calls/status"),
+    queryFn: () =>
+      request<{ available: boolean; phoneReady: boolean }>("/api/calls/status"),
     enabled: !!activeWorkspaceId,
     refetchInterval: 60000,
     retry: false,
@@ -210,12 +211,19 @@ function CallSettingsForm({ initial }: { initial: CallPreferences }) {
             review.
           </p>
         </div>
-        <p role="status" className="text-[12px] leading-5 text-muted-foreground">
-          {availability.isError ? "Couldn’t check call availability. Try again shortly."
-            : availability.isPending ? "Checking call availability…"
-            : !availability.data?.phoneReady ? "Set up your business phone number to send automatic calls."
-            : !availability.data.available ? "Automatic calls are currently unavailable. Your preferences are saved. Contact support if this continues."
-            : "Automatic calls are available. Calls are checked every few minutes."}
+        <p
+          role="status"
+          className="text-[12px] leading-5 text-muted-foreground"
+        >
+          {availability.isError
+            ? "Couldn’t check call availability. Try again shortly."
+            : availability.isPending
+              ? "Checking call availability…"
+              : !availability.data?.phoneReady
+                ? "Set up your business phone number to send automatic calls."
+                : !availability.data.available
+                  ? "Automatic calls are currently unavailable. Your preferences are saved. Contact support if this continues."
+                  : "Automatic calls are available. Calls are checked every few minutes."}
         </p>
         <Button type="submit" disabled={isSaving} className="gap-2 rounded-xl">
           {isSaving ? (
